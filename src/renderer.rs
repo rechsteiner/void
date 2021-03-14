@@ -1,0 +1,41 @@
+use std::f64;
+use wasm_bindgen::JsCast;
+
+pub struct Renderer {
+    context: web_sys::CanvasRenderingContext2d,
+}
+
+impl Renderer {
+    pub fn new() -> Renderer {
+        let window = web_sys::window().expect("no global `window` exists");
+        let document: web_sys::Document =
+            window.document().expect("should have a document on window");
+        let canvas = document.get_element_by_id("canvas").unwrap();
+        let canvas: web_sys::HtmlCanvasElement = canvas
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .map_err(|_| ())
+            .unwrap();
+
+        let context: web_sys::CanvasRenderingContext2d = canvas
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .unwrap();
+
+        Renderer { context: context }
+    }
+
+    pub fn draw(&self) {
+        self.context.clear_rect(0.0, 0.0, 400.0, 400.0);
+
+        self.context.begin_path();
+
+        // Draw the outer circle.
+        self.context
+            .arc(50.0, 50.0, 10.0, 0.0, f64::consts::PI * 2.0)
+            .unwrap();
+
+        self.context.fill();
+    }
+}
