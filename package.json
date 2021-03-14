@@ -1,0 +1,18 @@
+{
+  "name": "static-void",
+  "version": "1.0.0",
+  "description": "A code-driven space program to explore the great void.",
+  "main": "index.js",
+  "scripts": {
+    "serve": "webpack serve"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rechsteiner/void.git"
+  },
+  "devDependencies": {
+    "webpack": "^5.25.1",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
