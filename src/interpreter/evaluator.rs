@@ -1,10 +1,10 @@
-use crate::ast::BlockStatement;
-use crate::ast::Expression;
-use crate::ast::Operator;
-use crate::ast::Program;
-use crate::ast::Statement;
-use crate::object::Environment;
-use crate::object::Object;
+use crate::interpreter::ast::BlockStatement;
+use crate::interpreter::ast::Expression;
+use crate::interpreter::ast::Operator;
+use crate::interpreter::ast::Program;
+use crate::interpreter::ast::Statement;
+use crate::interpreter::object::Environment;
+use crate::interpreter::object::Object;
 
 pub fn eval(program: Program, environment: &mut Environment) -> Object {
     let mut result = Object::Null;

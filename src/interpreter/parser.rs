@@ -1,10 +1,10 @@
-use crate::ast::BlockStatement;
-use crate::ast::Expression;
-use crate::ast::Operator;
-use crate::ast::Program;
-use crate::ast::Statement;
-use crate::lexer::Lexer;
-use crate::token::Token;
+use crate::interpreter::ast::BlockStatement;
+use crate::interpreter::ast::Expression;
+use crate::interpreter::ast::Operator;
+use crate::interpreter::ast::Program;
+use crate::interpreter::ast::Statement;
+use crate::interpreter::lexer::Lexer;
+use crate::interpreter::token::Token;
 
 type PrefixParseFn<'a> = fn(&mut Parser<'a>) -> Option<Expression>;
 type InfixParseFn<'a> = fn(&mut Parser<'a>, Expression) -> Option<Expression>;

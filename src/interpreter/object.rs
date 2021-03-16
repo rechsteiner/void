@@ -1,4 +1,4 @@
-use crate::ast::BlockStatement;
+use crate::interpreter::ast::BlockStatement;
 use std::collections::HashMap;
 use std::fmt;
 

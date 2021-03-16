@@ -1,4 +1,4 @@
-use crate::token::Token;
+use crate::interpreter::token::Token;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]

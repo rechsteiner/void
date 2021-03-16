@@ -26,14 +26,14 @@ impl Renderer {
         Renderer { context: context }
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, position: f64) {
         self.context.clear_rect(0.0, 0.0, 400.0, 400.0);
 
         self.context.begin_path();
 
         // Draw the outer circle.
         self.context
-            .arc(50.0, 50.0, 10.0, 0.0, f64::consts::PI * 2.0)
+            .arc(50.0, position as f64, 10.0, 0.0, f64::consts::PI * 2.0)
             .unwrap();
 
         self.context.fill();
