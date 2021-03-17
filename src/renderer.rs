@@ -1,6 +1,8 @@
 use std::f64;
 use wasm_bindgen::JsCast;
 
+use crate::simulation::SimulationState;
+
 pub struct Renderer {
     context: web_sys::CanvasRenderingContext2d,
 }
@@ -26,14 +28,20 @@ impl Renderer {
         Renderer { context: context }
     }
 
-    pub fn draw(&self, position: f64) {
+    pub fn draw(&self, state: &SimulationState) {
         self.context.clear_rect(0.0, 0.0, 400.0, 400.0);
 
         self.context.begin_path();
 
         // Draw the outer circle.
         self.context
-            .arc(50.0, position as f64, 10.0, 0.0, f64::consts::PI * 2.0)
+            .arc(
+                state.position.x,
+                state.position.y,
+                10.0,
+                0.0,
+                f64::consts::PI * 2.0,
+            )
             .unwrap();
 
         self.context.fill();
