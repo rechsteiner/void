@@ -8,7 +8,43 @@
   </head>
   <body>
     <script src="./index.js"></script>
+
     <canvas id="canvas" height="400" width="400"></canvas>
-    <textarea id="editor" cols="50" rows="20"></textarea>
+
+    <section class="editor-area">
+      <textarea id="editor" cols="50" rows="20"></textarea>
+      <button id="run-button">Run program</button>
+    </section>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        display: flex;
+        gap: 0.5em;
+      }
+
+      .editor-area {
+        display: flex;
+        flex-direction: column;
+        width: 320px;
+        gap: 0.5em;
+      }
+
+      #editor {
+        flex: auto;
+        padding: 1em;
+      }
+
+      button {
+        padding: 1em;
+      }
+
+      canvas {
+        border: 1px solid black;
+      }
+    </style>
   </body>
 </html>
