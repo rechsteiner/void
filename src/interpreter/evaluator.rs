@@ -262,8 +262,8 @@ fn is_truthy(condition: Object) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lexer::Lexer;
-    use crate::parser::Parser;
+    use crate::interpreter::lexer::Lexer;
+    use crate::interpreter::parser::Parser;
 
     #[test]
     fn test_eval_integer_expression() {
