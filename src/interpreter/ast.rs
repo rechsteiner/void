@@ -56,12 +56,10 @@ pub enum Expression {
         function: Box<Expression>,
         arguments: Vec<Expression>,
     },
-    Unknown,
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Operator {
-    Assign,
     Plus,
     Minus,
     Not,
@@ -154,7 +152,6 @@ impl fmt::Display for Expression {
                         .join(", ")
                 )
             }
-            Expression::Unknown => write!(f, "unknown"),
         }
     }
 }
@@ -184,7 +181,6 @@ impl fmt::Display for BlockStatement {
 impl fmt::Display for Operator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Operator::Assign => write!(f, "="),
             Operator::Plus => write!(f, "+"),
             Operator::Minus => write!(f, "-"),
             Operator::Not => write!(f, "!"),

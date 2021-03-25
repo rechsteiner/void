@@ -117,7 +117,6 @@ fn eval_expression(expression: Expression, environment: &mut Environment) -> Obj
                 _ => Object::Null,
             }
         }
-        _ => Object::Null,
     }
 }
 
