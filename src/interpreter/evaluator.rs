@@ -112,12 +112,12 @@ fn eval_expression(expression: Expression, environment: &mut Environment) -> Obj
                         _ => evaluated,
                     }
                 }
+                Object::Builtin { function } => function(arguments),
 
                 // TODO: Error handling
                 _ => Object::Null,
             }
         }
-        _ => Object::Null,
     }
 }
 
@@ -262,8 +262,8 @@ fn is_truthy(condition: Object) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lexer::Lexer;
-    use crate::parser::Parser;
+    use crate::interpreter::lexer::Lexer;
+    use crate::interpreter::parser::Parser;
 
     #[test]
     fn test_eval_integer_expression() {
@@ -514,6 +514,55 @@ mod tests {
         ";
         let object = test_eval(input);
         assert_eq!(object, Object::Integer(4));
+    }
+
+    #[test]
+    fn test_builtin_functions() {
+        let tests = vec![
+            ("add(1, 1)", Object::Integer(2)),
+            (
+                "add(true, false)",
+                Object::Error(String::from(
+                    "argument not supported, got boolean and boolean",
+                )),
+            ),
+            (
+                "add(0)",
+                Object::Error(String::from("wrong number of arguments. got=1, want=2")),
+            ),
+        ];
+
+        for (input, expected_output) in tests {
+            let lexer = Lexer::new(input);
+            let mut parser = Parser::new(lexer);
+            let program = parser.parse_program();
+            let mut environment = Environment::new();
+            environment.set(
+                String::from("add"),
+                Object::Builtin {
+                    function: |arguments| {
+                        if arguments.len() != 2 {
+                            return Object::Error(format!(
+                                "wrong number of arguments. got={}, want=2",
+                                arguments.len()
+                            ));
+                        }
+                        match (arguments[0].clone(), arguments[1].clone()) {
+                            (Object::Integer(lhs), Object::Integer(rhs)) => {
+                                Object::Integer(lhs + rhs)
+                            }
+                            _ => Object::Error(format!(
+                                "argument not supported, got {} and {}",
+                                arguments[0].name(),
+                                arguments[1].name()
+                            )),
+                        }
+                    },
+                },
+            );
+            let object = eval(program, &mut environment);
+            assert_eq!(object, expected_output);
+        }
     }
 
     fn test_eval(input: &'static str) -> Object {
