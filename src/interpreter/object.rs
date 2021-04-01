@@ -2,6 +2,8 @@ use crate::interpreter::ast::BlockStatement;
 use std::collections::HashMap;
 use std::fmt;
 
+pub type BuiltinFn = fn(Vec<Object>) -> Object;
+
 #[derive(PartialEq, Debug, Clone)]
 pub enum Object {
     Integer(isize),
@@ -12,6 +14,9 @@ pub enum Object {
         parameters: Vec<String>,
         body: BlockStatement,
         environment: Environment,
+    },
+    Builtin {
+        function: BuiltinFn,
     },
     Null,
 }
@@ -24,6 +29,7 @@ impl Object {
             Object::Return(_) => String::from("return"),
             Object::Error(_) => String::from("error"),
             Object::Function { .. } => String::from("function"),
+            Object::Builtin { .. } => String::from("builtin"),
             Object::Null => String::from("null"),
         }
     }
@@ -78,6 +84,9 @@ impl fmt::Display for Object {
                 parameters, body, ..
             } => {
                 write!(f, "({}) {}", parameters.join(","), body)
+            }
+            Object::Builtin { .. } => {
+                write!(f, "builtin function")
             }
             Object::Null => write!(f, "null"),
         }
