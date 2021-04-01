@@ -1,30 +1,32 @@
-use simulation::SimulationState;
+use simulation::Simulation;
 use wasm_bindgen::prelude::*;
 mod interpreter;
 mod renderer;
+mod scene;
 mod simulation;
 
 extern crate wasm_bindgen;
 use crate::interpreter::evaluator;
 use crate::interpreter::lexer::Lexer;
 use crate::interpreter::object::Environment;
-use crate::interpreter::object::Object;
 use crate::interpreter::parser::Parser;
 use crate::renderer::Renderer;
+use crate::scene::Scene;
 
 #[wasm_bindgen]
 pub struct Game {
     renderer: Renderer,
-    simulation_state: SimulationState,
+    simulation: Simulation,
 }
 
 #[wasm_bindgen]
 impl Game {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Game {
+        let scene = Scene::new();
         Game {
             renderer: Renderer::new(),
-            simulation_state: SimulationState::new(),
+            simulation: Simulation::new(scene),
         }
     }
 
@@ -37,7 +39,7 @@ impl Game {
     }
 
     pub fn next_simulation_step(&mut self) {
-        self.simulation_state.next_state();
-        self.renderer.draw(&self.simulation_state);
+        self.simulation.next_state();
+        self.renderer.draw(&self.simulation.scene);
     }
 }
