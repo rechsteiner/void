@@ -33,17 +33,19 @@ impl Renderer {
 
         self.context.begin_path();
 
-        // Draw the outer circle.
-        self.context
-            .arc(
-                state.position.x,
-                state.position.y,
-                10.0,
-                0.0,
-                f64::consts::PI * 2.0,
-            )
-            .unwrap();
+        for entity in state.entities() {
+            // Draw the outer circle.
+            self.context
+                .arc(
+                    entity.position.x,
+                    entity.position.y,
+                    10.0,
+                    0.0,
+                    f64::consts::PI * 2.0,
+                )
+                .unwrap();
 
-        self.context.fill();
+            self.context.fill();
+        }
     }
 }
