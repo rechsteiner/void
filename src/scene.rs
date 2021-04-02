@@ -5,6 +5,10 @@ use rapier2d::{
     geometry::ColliderBuilder,
 };
 
+pub enum Command {
+    SetThrust(usize),
+}
+
 pub struct Scene {
     pub gravity: Vector2<f32>,
     pub integration_parameters: IntegrationParameters,
@@ -13,6 +17,7 @@ pub struct Scene {
     pub bodies: RigidBodySet,
     pub colliders: ColliderSet,
     pub joints: JointSet,
+    // pub commands: Vec<Command>,
 }
 
 impl Scene {
