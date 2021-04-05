@@ -2,7 +2,12 @@ use crate::interpreter::ast::BlockStatement;
 use std::collections::HashMap;
 use std::fmt;
 
-pub type BuiltinFn = fn(Vec<Object>) -> Object;
+#[derive(PartialEq, Debug)]
+pub enum Command {
+    SetThrust { force: isize },
+}
+
+pub type CommandFn = fn(Vec<Object>) -> Result<Command, String>;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Object {
@@ -15,8 +20,8 @@ pub enum Object {
         body: BlockStatement,
         environment: Environment,
     },
-    Builtin {
-        function: BuiltinFn,
+    Command {
+        function: CommandFn,
     },
     Null,
 }
@@ -29,7 +34,7 @@ impl Object {
             Object::Return(_) => String::from("return"),
             Object::Error(_) => String::from("error"),
             Object::Function { .. } => String::from("function"),
-            Object::Builtin { .. } => String::from("builtin"),
+            Object::Command { .. } => String::from("command"),
             Object::Null => String::from("null"),
         }
     }
@@ -85,8 +90,8 @@ impl fmt::Display for Object {
             } => {
                 write!(f, "({}) {}", parameters.join(","), body)
             }
-            Object::Builtin { .. } => {
-                write!(f, "builtin function")
+            Object::Command { .. } => {
+                write!(f, "command function")
             }
             Object::Null => write!(f, "null"),
         }

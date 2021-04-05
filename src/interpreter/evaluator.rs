@@ -3,259 +3,275 @@ use crate::interpreter::ast::Expression;
 use crate::interpreter::ast::Operator;
 use crate::interpreter::ast::Program;
 use crate::interpreter::ast::Statement;
+use crate::interpreter::object::Command;
 use crate::interpreter::object::Environment;
 use crate::interpreter::object::Object;
 
-pub fn eval(program: Program, environment: &mut Environment) -> Object {
-    let mut result = Object::Null;
-    for statement in program.statements {
-        result = eval_statement(statement, environment);
-
-        match result {
-            Object::Return(return_value) => return *return_value,
-            Object::Error(_) => return result,
-            _ => (),
-        }
-    }
-    result
+pub struct Evaluator {
+    pub commands: Vec<Command>,
 }
 
-fn eval_statement(statement: Statement, environment: &mut Environment) -> Object {
-    match statement {
-        Statement::Return { expression } => {
-            let return_value = eval_expression(expression, environment);
-            if let Object::Error(_) = return_value {
-                return return_value;
-            }
-            Object::Return(Box::new(return_value))
-        }
-        Statement::Expression { expression } => eval_expression(expression, environment),
-        Statement::Let {
-            identifier,
-            expression,
-        } => {
-            let object = eval_expression(expression, environment);
-            if let Object::Error(_) = object {
-                return object;
-            }
-            environment.set(identifier, object.clone());
-            object
-        }
+impl Evaluator {
+    pub fn new() -> Evaluator {
+        Evaluator { commands: vec![] }
     }
-}
-
-fn eval_expression(expression: Expression, environment: &mut Environment) -> Object {
-    match expression {
-        Expression::Int(value) => Object::Integer(value),
-        Expression::Boolean(value) => Object::Boolean(value),
-        Expression::Prefix { operator, right } => {
-            let object = eval_expression(*right, environment);
-            if let Object::Error(_) = object {
-                return object;
+    pub fn eval(&mut self, program: Program, environment: &mut Environment) -> Object {
+        // Reset commands each time eval is called so we don't keep commands
+        // from previous executions.
+        self.commands = vec![];
+        let mut result = Object::Null;
+        for statement in program.statements {
+            result = self.eval_statement(statement, environment);
+            match result {
+                Object::Return(return_value) => return *return_value,
+                Object::Error(_) => return result,
+                _ => (),
             }
-            eval_prefix_expression(operator, object)
         }
-        Expression::Infix {
-            operator,
-            left,
-            right,
-        } => {
-            let left = eval_expression(*left, environment);
-            if let Object::Error(_) = left {
-                return left;
-            }
-            let right = eval_expression(*right, environment);
-            if let Object::Error(_) = right {
-                return right;
-            }
-            eval_infix_expression(operator, left, right)
-        }
-        Expression::If {
-            condition,
-            consequence,
-            alternative,
-        } => {
-            let condition = eval_expression(*condition, environment);
-            if let Object::Error(_) = condition {
-                return condition;
-            }
-            eval_if_expression(condition, consequence, alternative, environment)
-        }
-        Expression::Identifier(name) => eval_identifier(name, environment),
-        Expression::Function { parameters, body } => Object::Function {
-            parameters: parameters,
-            body: body,
-            environment: environment.clone(),
-        },
-        Expression::Call {
-            function,
-            arguments,
-        } => {
-            let function = eval_expression(*function, environment);
-            let arguments = eval_expressions(arguments, environment);
-
-            // TODO: Validate arguments
-
-            match function {
-                Object::Error(_) => function,
-                Object::Function {
-                    parameters,
-                    body,
-                    environment,
-                } => {
-                    let mut extended_environment =
-                        extend_function_environment(environment, parameters, arguments);
-                    let evaluated = eval_block_statement(body, &mut extended_environment);
-
-                    match evaluated {
-                        Object::Return(return_value) => *return_value,
-                        _ => evaluated,
-                    }
+        result
+    }
+    fn eval_statement(&mut self, statement: Statement, environment: &mut Environment) -> Object {
+        match statement {
+            Statement::Return { expression } => {
+                let return_value = self.eval_expression(expression, environment);
+                if let Object::Error(_) = return_value {
+                    return return_value;
                 }
-                Object::Builtin { function } => function(arguments),
-
-                // TODO: Error handling
-                _ => Object::Null,
+                Object::Return(Box::new(return_value))
+            }
+            Statement::Expression { expression } => self.eval_expression(expression, environment),
+            Statement::Let {
+                identifier,
+                expression,
+            } => {
+                let object = self.eval_expression(expression, environment);
+                if let Object::Error(_) = object {
+                    return object;
+                }
+                environment.set(identifier, object.clone());
+                object
             }
         }
     }
-}
-
-fn extend_function_environment(
-    environment: Environment,
-    parameters: Vec<String>,
-    arguments: Vec<Object>,
-) -> Environment {
-    let mut env = Environment::extend(environment);
-    for (index, argument) in arguments.iter().enumerate() {
-        let param = parameters[index].clone();
-        env.set(param, argument.clone());
-    }
-    env
-}
-
-fn eval_expressions(arguments: Vec<Expression>, environment: &mut Environment) -> Vec<Object> {
-    let mut result: Vec<Object> = vec![];
-
-    for argument in arguments {
-        let evaluated = eval_expression(argument, environment);
-        if let Object::Error(_) = evaluated {
-            return vec![evaluated];
+    fn eval_expression(&mut self, expression: Expression, environment: &mut Environment) -> Object {
+        match expression {
+            Expression::Int(value) => Object::Integer(value),
+            Expression::Boolean(value) => Object::Boolean(value),
+            Expression::Prefix { operator, right } => {
+                let object = self.eval_expression(*right, environment);
+                if let Object::Error(_) = object {
+                    return object;
+                }
+                self.eval_prefix_expression(operator, object)
+            }
+            Expression::Infix {
+                operator,
+                left,
+                right,
+            } => {
+                let left = self.eval_expression(*left, environment);
+                if let Object::Error(_) = left {
+                    return left;
+                }
+                let right = self.eval_expression(*right, environment);
+                if let Object::Error(_) = right {
+                    return right;
+                }
+                self.eval_infix_expression(operator, left, right)
+            }
+            Expression::If {
+                condition,
+                consequence,
+                alternative,
+            } => {
+                let condition = self.eval_expression(*condition, environment);
+                if let Object::Error(_) = condition {
+                    return condition;
+                }
+                self.eval_if_expression(condition, consequence, alternative, environment)
+            }
+            Expression::Identifier(name) => self.eval_identifier(name, environment),
+            Expression::Function { parameters, body } => Object::Function {
+                parameters: parameters,
+                body: body,
+                environment: environment.clone(),
+            },
+            Expression::Call {
+                function,
+                arguments,
+            } => {
+                let function = self.eval_expression(*function, environment);
+                let arguments = self.eval_expressions(arguments, environment);
+                // TODO: Validate arguments
+                match function {
+                    Object::Error(_) => function,
+                    Object::Function {
+                        parameters,
+                        body,
+                        environment,
+                    } => {
+                        let mut extended_environment =
+                            self.extend_function_environment(environment, parameters, arguments);
+                        let evaluated = self.eval_block_statement(body, &mut extended_environment);
+                        match evaluated {
+                            Object::Return(return_value) => *return_value,
+                            _ => evaluated,
+                        }
+                    }
+                    Object::Command { function } => match function(arguments) {
+                        Ok(command) => {
+                            self.commands.push(command);
+                            Object::Null
+                        }
+                        Err(error) => Object::Error(error),
+                    },
+                    // TODO: Error handling
+                    _ => Object::Null,
+                }
+            }
         }
-        result.push(evaluated);
     }
-
-    result
-}
-
-fn eval_identifier(name: String, environment: &mut Environment) -> Object {
-    match environment.get(&name) {
-        Some(value) => value.clone(),
-        None => Object::Error(format!("identifier not found: {}", name)),
-    }
-}
-
-fn eval_prefix_expression(operator: Operator, object: Object) -> Object {
-    match operator {
-        Operator::Not => eval_not_operator_expression(object),
-        Operator::Minus => eval_minus_prefix_operator(object),
-        _ => Object::Error(format!("unknown operator: {}{}", operator, object.name())),
-    }
-}
-
-fn eval_not_operator_expression(object: Object) -> Object {
-    match object {
-        Object::Boolean(true) => Object::Boolean(false),
-        Object::Boolean(false) => Object::Boolean(true),
-        Object::Null => Object::Boolean(true),
-        _ => Object::Boolean(false),
-    }
-}
-
-fn eval_minus_prefix_operator(object: Object) -> Object {
-    match object {
-        Object::Integer(value) => Object::Integer(-value),
-        _ => Object::Error(format!("unknown operator: -{}", object.name())),
-    }
-}
-
-fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Object {
-    // TODO: Figure out why we can't format these directly
-    let left_string = left.name();
-    let right_string = right.name();
-
-    match (left, right) {
-        (Object::Integer(left), Object::Integer(right)) => {
-            eval_integer_infix_expression(operator, left, right)
+    fn extend_function_environment(
+        &mut self,
+        environment: Environment,
+        parameters: Vec<String>,
+        arguments: Vec<Object>,
+    ) -> Environment {
+        let mut env = Environment::extend(environment);
+        for (index, argument) in arguments.iter().enumerate() {
+            let param = parameters[index].clone();
+            env.set(param, argument.clone());
         }
-        (Object::Boolean(left), Object::Boolean(right)) => {
-            eval_boolean_infix_expression(operator, left, right)
+        env
+    }
+    fn eval_expressions(
+        &mut self,
+        arguments: Vec<Expression>,
+        environment: &mut Environment,
+    ) -> Vec<Object> {
+        let mut result: Vec<Object> = vec![];
+        for argument in arguments {
+            let evaluated = self.eval_expression(argument, environment);
+            if let Object::Error(_) = evaluated {
+                return vec![evaluated];
+            }
+            result.push(evaluated);
         }
-        _ => Object::Error(format!(
-            "type mismatch: {} {} {}",
-            left_string, operator, right_string
-        )),
+        result
     }
-}
-
-fn eval_integer_infix_expression(operator: Operator, left: isize, right: isize) -> Object {
-    match operator {
-        Operator::Plus => Object::Integer(left + right),
-        Operator::Minus => Object::Integer(left - right),
-        Operator::Divide => Object::Integer(left / right),
-        Operator::Multiply => Object::Integer(left * right),
-        Operator::LessThan => Object::Boolean(left < right),
-        Operator::GreaterThan => Object::Boolean(left > right),
-        Operator::Equal => Object::Boolean(left == right),
-        Operator::NotEqual => Object::Boolean(left != right),
-        _ => Object::Error(format!("unknown operator: integer {} integer", operator)),
+    fn eval_identifier(&mut self, name: String, environment: &mut Environment) -> Object {
+        match environment.get(&name) {
+            Some(value) => value.clone(),
+            None => Object::Error(format!("identifier not found: {}", name)),
+        }
     }
-}
-
-fn eval_boolean_infix_expression(operator: Operator, left: bool, right: bool) -> Object {
-    match operator {
-        Operator::Equal => Object::Boolean(left == right),
-        Operator::NotEqual => Object::Boolean(left != right),
-        _ => Object::Error(format!("unknown operator: boolean {} boolean", operator)),
+    fn eval_prefix_expression(&mut self, operator: Operator, object: Object) -> Object {
+        match operator {
+            Operator::Not => self.eval_not_operator_expression(object),
+            Operator::Minus => self.eval_minus_prefix_operator(object),
+            _ => Object::Error(format!("unknown operator: {}{}", operator, object.name())),
+        }
     }
-}
-
-fn eval_block_statement(statement: BlockStatement, environment: &mut Environment) -> Object {
-    let mut object = Object::Null;
-    for statement in statement.statements {
-        object = eval_statement(statement, environment);
-
+    fn eval_not_operator_expression(&mut self, object: Object) -> Object {
         match object {
-            Object::Return(_) | Object::Error(_) => {
-                return object;
-            }
-            _ => (),
+            Object::Boolean(true) => Object::Boolean(false),
+            Object::Boolean(false) => Object::Boolean(true),
+            Object::Null => Object::Boolean(true),
+            _ => Object::Boolean(false),
         }
     }
-    return object;
-}
-
-fn eval_if_expression(
-    condition: Object,
-    consequence: BlockStatement,
-    alternative: Option<BlockStatement>,
-    environment: &mut Environment,
-) -> Object {
-    if is_truthy(condition) {
-        eval_block_statement(consequence, environment)
-    } else if let Some(alternative) = alternative {
-        eval_block_statement(alternative, environment)
-    } else {
-        Object::Null
+    fn eval_minus_prefix_operator(&mut self, object: Object) -> Object {
+        match object {
+            Object::Integer(value) => Object::Integer(-value),
+            _ => Object::Error(format!("unknown operator: -{}", object.name())),
+        }
     }
-}
-
-fn is_truthy(condition: Object) -> bool {
-    match condition {
-        Object::Null => false,
-        Object::Boolean(true) => true,
-        Object::Boolean(false) => false,
-        _ => true,
+    fn eval_infix_expression(&mut self, operator: Operator, left: Object, right: Object) -> Object {
+        // TODO: Figure out why we can't format these directly
+        let left_string = left.name();
+        let right_string = right.name();
+        match (left, right) {
+            (Object::Integer(left), Object::Integer(right)) => {
+                self.eval_integer_infix_expression(operator, left, right)
+            }
+            (Object::Boolean(left), Object::Boolean(right)) => {
+                self.eval_boolean_infix_expression(operator, left, right)
+            }
+            _ => Object::Error(format!(
+                "type mismatch: {} {} {}",
+                left_string, operator, right_string
+            )),
+        }
+    }
+    fn eval_integer_infix_expression(
+        &mut self,
+        operator: Operator,
+        left: isize,
+        right: isize,
+    ) -> Object {
+        match operator {
+            Operator::Plus => Object::Integer(left + right),
+            Operator::Minus => Object::Integer(left - right),
+            Operator::Divide => Object::Integer(left / right),
+            Operator::Multiply => Object::Integer(left * right),
+            Operator::LessThan => Object::Boolean(left < right),
+            Operator::GreaterThan => Object::Boolean(left > right),
+            Operator::Equal => Object::Boolean(left == right),
+            Operator::NotEqual => Object::Boolean(left != right),
+            _ => Object::Error(format!("unknown operator: integer {} integer", operator)),
+        }
+    }
+    fn eval_boolean_infix_expression(
+        &mut self,
+        operator: Operator,
+        left: bool,
+        right: bool,
+    ) -> Object {
+        match operator {
+            Operator::Equal => Object::Boolean(left == right),
+            Operator::NotEqual => Object::Boolean(left != right),
+            _ => Object::Error(format!("unknown operator: boolean {} boolean", operator)),
+        }
+    }
+    fn eval_block_statement(
+        &mut self,
+        statement: BlockStatement,
+        environment: &mut Environment,
+    ) -> Object {
+        let mut object = Object::Null;
+        for statement in statement.statements {
+            object = self.eval_statement(statement, environment);
+            match object {
+                Object::Return(_) | Object::Error(_) => {
+                    return object;
+                }
+                _ => (),
+            }
+        }
+        return object;
+    }
+    fn eval_if_expression(
+        &mut self,
+        condition: Object,
+        consequence: BlockStatement,
+        alternative: Option<BlockStatement>,
+        environment: &mut Environment,
+    ) -> Object {
+        if self.is_truthy(condition) {
+            self.eval_block_statement(consequence, environment)
+        } else if let Some(alternative) = alternative {
+            self.eval_block_statement(alternative, environment)
+        } else {
+            Object::Null
+        }
+    }
+    fn is_truthy(&mut self, condition: Object) -> bool {
+        match condition {
+            Object::Null => false,
+            Object::Boolean(true) => true,
+            Object::Boolean(false) => false,
+            _ => true,
+        }
     }
 }
 
@@ -517,51 +533,70 @@ mod tests {
     }
 
     #[test]
-    fn test_builtin_functions() {
+    fn test_command_functions() {
         let tests = vec![
-            ("add(1, 1)", Object::Integer(2)),
             (
-                "add(true, false)",
-                Object::Error(String::from(
-                    "argument not supported, got boolean and boolean",
-                )),
+                "set_thrust(10)",
+                vec![Command::SetThrust { force: 10 }],
+                Object::Null,
             ),
             (
-                "add(0)",
-                Object::Error(String::from("wrong number of arguments. got=1, want=2")),
+                "
+                let a = 10;
+                set_thrust(a)
+                let b = 20;
+                set_thrust(b);
+                ",
+                vec![
+                    Command::SetThrust { force: 10 },
+                    Command::SetThrust { force: 20 },
+                ],
+                Object::Null,
+            ),
+            (
+                "set_thrust(true)",
+                vec![],
+                Object::Error(String::from("argument not supported, got boolean")),
+            ),
+            (
+                "set_thrust(0, 1)",
+                vec![],
+                Object::Error(String::from("wrong number of arguments. got=2, want=1")),
             ),
         ];
 
-        for (input, expected_output) in tests {
+        for (input, expected_commands, expected_output) in tests {
             let lexer = Lexer::new(input);
             let mut parser = Parser::new(lexer);
             let program = parser.parse_program();
             let mut environment = Environment::new();
+            let mut evaluator = Evaluator::new();
+
             environment.set(
-                String::from("add"),
-                Object::Builtin {
+                String::from("set_thrust"),
+                Object::Command {
                     function: |arguments| {
-                        if arguments.len() != 2 {
-                            return Object::Error(format!(
-                                "wrong number of arguments. got={}, want=2",
+                        if arguments.len() != 1 {
+                            return Result::Err(format!(
+                                "wrong number of arguments. got={}, want=1",
                                 arguments.len()
                             ));
                         }
-                        match (arguments[0].clone(), arguments[1].clone()) {
-                            (Object::Integer(lhs), Object::Integer(rhs)) => {
-                                Object::Integer(lhs + rhs)
+                        match arguments[0].clone() {
+                            Object::Integer(value) => {
+                                Result::Ok(Command::SetThrust { force: value })
                             }
-                            _ => Object::Error(format!(
-                                "argument not supported, got {} and {}",
-                                arguments[0].name(),
-                                arguments[1].name()
+                            _ => Result::Err(format!(
+                                "argument not supported, got {}",
+                                arguments[0].name()
                             )),
                         }
                     },
                 },
             );
-            let object = eval(program, &mut environment);
+            let object = evaluator.eval(program, &mut environment);
             assert_eq!(object, expected_output);
+            assert_eq!(evaluator.commands, expected_commands);
         }
     }
 
@@ -570,6 +605,7 @@ mod tests {
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program();
         let mut environment = Environment::new();
-        return eval(program, &mut environment);
+        let mut evaluator = Evaluator::new();
+        return evaluator.eval(program, &mut environment);
     }
 }

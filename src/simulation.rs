@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::interpreter::object::Command;
 use crate::scene::{PhysicsMode, Point, Scene, Transform};
 use rapier2d::pipeline::PhysicsPipeline;
 use rapier2d::{dynamics::BodyStatus, na::Vector2};
@@ -16,6 +17,7 @@ pub struct Simulation {
     pipeline: PhysicsPipeline,
     world: PhysicsWorldParameters,
     pub entity_dictionary: HashMap<usize, RigidBodyHandle>,
+    pub commands: Vec<Command>,
 }
 
 impl Simulation {
@@ -61,10 +63,25 @@ impl Simulation {
             pipeline,
             world,
             entity_dictionary,
+            commands: vec![],
         }
     }
 
     pub fn next_state(&mut self) {
+        for command in self.commands.iter() {
+            match command {
+                Command::SetThrust { force } => {
+                    // TODO: Apply force on a specfic body with the correct vector
+                    let rigid_body = self
+                        .world
+                        .bodies
+                        .get_mut(*self.entity_dictionary.get(&2).unwrap())
+                        .unwrap();
+                    rigid_body.apply_impulse(Vector2::new(0.0, *force as f32), true);
+                }
+            }
+        }
+
         self.pipeline.step(
             &self.world.gravity,
             &self.world.integration_parameters,
@@ -75,7 +92,7 @@ impl Simulation {
             &mut self.world.joints,
             &(),
             &(),
-        )
+        );
     }
 
     pub fn get_entity_transform(&self, id: usize) -> Transform {
