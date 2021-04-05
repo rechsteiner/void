@@ -1,7 +1,7 @@
 use std::f64;
 use wasm_bindgen::JsCast;
 
-use crate::scene::Scene;
+use crate::{scene::Scene, simulation::Simulation};
 
 pub struct Renderer {
     context: web_sys::CanvasRenderingContext2d,
@@ -25,27 +25,23 @@ impl Renderer {
             .dyn_into::<web_sys::CanvasRenderingContext2d>()
             .unwrap();
 
-        Renderer { context: context }
+        Renderer { context }
     }
 
-    pub fn draw(&self, scene: &Scene) {
+    pub fn draw(&self, scene: &Scene, simulation: &Simulation) {
         self.context.clear_rect(0.0, 0.0, 400.0, 400.0);
 
-        self.context.begin_path();
+        for entity in scene.entities.iter() {
+            let transform = simulation.get_entity_transform(entity.id);
 
-        for (_, body) in scene.bodies.iter() {
-            // Draw the outer circle.
-            self.context
-                .arc(
-                    body.position().translation.x as f64,
-                    body.position().translation.y as f64,
-                    10.0,
-                    0.0,
-                    f64::consts::PI * 2.0,
-                )
-                .unwrap();
-
-            self.context.fill();
+            self.context.begin_path();
+            self.context.stroke_rect(
+                transform.position.x as f64,
+                (transform.position.y) as f64,
+                entity.shape.width as f64,
+                entity.shape.height as f64,
+            );
+            self.context.close_path();
         }
     }
 }
