@@ -1,6 +1,4 @@
-use std::ops::Index;
-
-use scene::Command;
+use scene::{Entity, PhysicsMode, Point, RigidBody, Shape, Transform};
 use simulation::Simulation;
 use wasm_bindgen::prelude::*;
 mod interpreter;
@@ -21,16 +19,92 @@ use crate::scene::Scene;
 pub struct Game {
     renderer: Renderer,
     simulation: Simulation,
+    scene: Scene,
 }
 
 #[wasm_bindgen]
 impl Game {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Game {
-        let scene = Scene::new();
+        let entities = vec![
+            Entity {
+                id: 0,
+                rigidbody: RigidBody {
+                    transform: Transform {
+                        position: Point { x: 80.0, y: 10.0 },
+                    },
+                    mass: 1.0,
+                },
+                physics_mode: PhysicsMode::Dynamic,
+                shape: Shape {
+                    width: 20.0,
+                    height: 20.0,
+                },
+            },
+            Entity {
+                id: 1,
+                rigidbody: RigidBody {
+                    transform: Transform {
+                        position: Point { x: 30.0, y: 2.0 },
+                    },
+                    mass: 1.0,
+                },
+                physics_mode: PhysicsMode::Dynamic,
+                shape: Shape {
+                    width: 10.0,
+                    height: 10.0,
+                },
+            },
+            Entity {
+                id: 2,
+                rigidbody: RigidBody {
+                    transform: Transform {
+                        position: Point { x: 150.0, y: 2.0 },
+                    },
+                    mass: 1.0,
+                },
+                physics_mode: PhysicsMode::Dynamic,
+                shape: Shape {
+                    width: 40.0,
+                    height: 40.0,
+                },
+            },
+            Entity {
+                id: 3,
+                rigidbody: RigidBody {
+                    transform: Transform {
+                        position: Point { x: 0.0, y: 390.0 },
+                    },
+                    mass: 1.0,
+                },
+                physics_mode: PhysicsMode::Static,
+                shape: Shape {
+                    width: 400.0,
+                    height: 10.0,
+                },
+            },
+            Entity {
+                id: 4,
+                rigidbody: RigidBody {
+                    transform: Transform {
+                        position: Point { x: 20.0, y: 100.0 },
+                    },
+                    mass: 1.0,
+                },
+                physics_mode: PhysicsMode::Static,
+                shape: Shape {
+                    width: 100.0,
+                    height: 20.0,
+                },
+            },
+        ];
+
+        let scene = Scene::new(entities);
+
         Game {
             renderer: Renderer::new(),
-            simulation: Simulation::new(scene),
+            simulation: Simulation::new(&scene),
+            scene,
         }
     }
 
@@ -40,20 +114,24 @@ impl Game {
         let program = parser.parse_program();
         let mut environment = Environment::new();
 
+        // let mut index: usize = 0;
+
         // environment.set(
         //     String::from("set_thrust"),
         //     Object::Builtin {
         //         function: |arguments| {
-        //             self.simulation.scene.commands.insert(Command.SetThrust(2));
+        //             index = 2;
+        //             // self.simulation.scene.commands.insert(Command.SetThrust(2));
+        //             Object::Integer(1)
         //         },
         //     },
         // );
 
-        let result = evaluator::eval(program, &mut environment);
+        // let result = evaluator::eval(program, &mut environment);
     }
 
     pub fn next_simulation_step(&mut self) {
         self.simulation.next_state();
-        self.renderer.draw(&self.simulation.scene);
+        self.renderer.draw(&self.scene, &self.simulation);
     }
 }
