@@ -7,8 +7,9 @@ mod scene;
 mod simulation;
 
 extern crate wasm_bindgen;
-use crate::interpreter::evaluator;
+use crate::interpreter::evaluator::Evaluator;
 use crate::interpreter::lexer::Lexer;
+use crate::interpreter::object::Command;
 use crate::interpreter::object::Environment;
 use crate::interpreter::object::Object;
 use crate::interpreter::parser::Parser;
@@ -113,21 +114,31 @@ impl Game {
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program();
         let mut environment = Environment::new();
+        let mut evaluator = Evaluator::new();
 
-        // let mut index: usize = 0;
+        environment.set(
+            String::from("set_thrust"),
+            Object::Command {
+                function: |arguments| {
+                    if arguments.len() != 1 {
+                        return Result::Err(format!(
+                            "wrong number of arguments. got={}, want=1",
+                            arguments.len()
+                        ));
+                    }
+                    match arguments[0].clone() {
+                        Object::Integer(value) => Result::Ok(Command::SetThrust { force: value }),
+                        _ => Result::Err(format!(
+                            "argument not supported, got {}",
+                            arguments[0].name()
+                        )),
+                    }
+                },
+            },
+        );
 
-        // environment.set(
-        //     String::from("set_thrust"),
-        //     Object::Builtin {
-        //         function: |arguments| {
-        //             index = 2;
-        //             // self.simulation.scene.commands.insert(Command.SetThrust(2));
-        //             Object::Integer(1)
-        //         },
-        //     },
-        // );
-
-        // let result = evaluator::eval(program, &mut environment);
+        let _ = evaluator.eval(program, &mut environment);
+        self.simulation.commands = evaluator.commands;
     }
 
     pub fn next_simulation_step(&mut self) {
