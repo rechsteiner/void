@@ -27,6 +27,7 @@ pub struct RigidBody {
 
 pub struct Transform {
     pub position: Point,
+    pub rotation: f32, // radians, so 2Pi == 360 deg
 }
 
 pub struct Point {

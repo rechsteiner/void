@@ -34,14 +34,22 @@ impl Renderer {
         for entity in scene.entities.iter() {
             let transform = simulation.get_entity_transform(entity.id);
 
+            self.context
+                .translate(transform.position.x as f64, transform.position.y as f64)
+                .unwrap();
+            self.context.rotate(transform.rotation as f64).unwrap();
+
             self.context.begin_path();
+
             self.context.stroke_rect(
-                transform.position.x as f64,
+                (transform.position.x) as f64,
                 (transform.position.y) as f64,
                 entity.shape.width as f64,
                 entity.shape.height as f64,
             );
+
             self.context.close_path();
+            self.context.reset_transform().unwrap();
         }
     }
 }

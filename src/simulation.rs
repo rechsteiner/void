@@ -44,6 +44,7 @@ impl Simulation {
                     entity.rigidbody.transform.position.x,
                     entity.rigidbody.transform.position.y,
                 )
+                .rotation(entity.rigidbody.transform.rotation)
                 .mass(entity.rigidbody.mass)
                 .build();
             let entity_handle = world.bodies.insert(entity_rb);
@@ -89,6 +90,7 @@ impl Simulation {
                 x: physics_state.position().translation.x,
                 y: physics_state.position().translation.y,
             },
+            rotation: physics_state.position().rotation.angle(),
         }
     }
 }

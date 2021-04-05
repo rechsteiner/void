@@ -32,6 +32,7 @@ impl Game {
                 rigidbody: RigidBody {
                     transform: Transform {
                         position: Point { x: 80.0, y: 10.0 },
+                        rotation: 1.0,
                     },
                     mass: 1.0,
                 },
@@ -41,60 +42,64 @@ impl Game {
                     height: 20.0,
                 },
             },
-            Entity {
-                id: 1,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 30.0, y: 2.0 },
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Dynamic,
-                shape: Shape {
-                    width: 10.0,
-                    height: 10.0,
-                },
-            },
-            Entity {
-                id: 2,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 150.0, y: 2.0 },
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Dynamic,
-                shape: Shape {
-                    width: 40.0,
-                    height: 40.0,
-                },
-            },
-            Entity {
-                id: 3,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 0.0, y: 390.0 },
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Static,
-                shape: Shape {
-                    width: 400.0,
-                    height: 10.0,
-                },
-            },
+            // Entity {
+            //     id: 1,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 30.0, y: 2.0 },
+            //             rotation: 1.0,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Dynamic,
+            //     shape: Shape {
+            //         width: 10.0,
+            //         height: 10.0,
+            //     },
+            // },
+            // Entity {
+            //     id: 2,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 100.0, y: 2.0 },
+            //             rotation: 3.0,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Dynamic,
+            //     shape: Shape {
+            //         width: 40.0,
+            //         height: 40.0,
+            //     },
+            // },
+            // Entity {
+            //     id: 3,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 0.0, y: 190.0 },
+            //             rotation: 0.0,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Static,
+            //     shape: Shape {
+            //         width: 400.0,
+            //         height: 10.0,
+            //     },
+            // },
             Entity {
                 id: 4,
                 rigidbody: RigidBody {
                     transform: Transform {
-                        position: Point { x: 20.0, y: 100.0 },
+                        position: Point { x: 10.0, y: 190.0 },
+                        rotation: 0.0,
                     },
                     mass: 1.0,
                 },
                 physics_mode: PhysicsMode::Static,
                 shape: Shape {
-                    width: 100.0,
-                    height: 20.0,
+                    width: 360.0,
+                    height: 10.0,
                 },
             },
         ];
