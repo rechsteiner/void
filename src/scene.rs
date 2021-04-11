@@ -8,6 +8,7 @@ pub struct Entity {
 pub struct Shape {
     pub width: f32,
     pub height: f32,
+    pub color: String, //Mosly for debug
 }
 
 pub struct Scene {

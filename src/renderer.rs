@@ -1,5 +1,5 @@
 use std::f64;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, JsValue};
 
 use crate::{scene::Scene, simulation::Simulation};
 
@@ -35,18 +35,18 @@ impl Renderer {
             let transform = simulation.get_entity_transform(entity.id);
 
             self.context
-                .translate(
-                    (transform.position.x - (entity.shape.width / 2.0)) as f64,
-                    (transform.position.y - (entity.shape.height / 2.0)) as f64,
-                )
+                .translate((transform.position.x) as f64, (transform.position.y) as f64)
                 .unwrap();
             self.context.rotate(transform.rotation as f64).unwrap();
+
+            self.context
+                .set_stroke_style(&JsValue::from(&entity.shape.color));
 
             self.context.begin_path();
 
             self.context.stroke_rect(
-                0.0,
-                0.0,
+                -(entity.shape.width / 2.0) as f64,
+                -(entity.shape.height / 2.0) as f64,
                 (entity.shape.width) as f64,
                 (entity.shape.height) as f64,
             );
