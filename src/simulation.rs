@@ -26,7 +26,7 @@ impl Simulation {
         let mut entity_dictionary: HashMap<usize, RigidBodyHandle> = HashMap::new();
 
         let mut world = PhysicsWorldParameters {
-            gravity: Vector2::new(0.0, 100.0),
+            gravity: Vector2::new(0.0, 0.0),
             integration_parameters: IntegrationParameters::default(),
             broad_phase: BroadPhase::new(),
             narrow_phase: NarrowPhase::new(),
@@ -72,13 +72,30 @@ impl Simulation {
         for command in self.commands.iter() {
             match command {
                 Command::SetThrust { force } => {
+                    let rot = self.get_entity_transform(0).rotation.clone();
+
                     // TODO: Apply force on a specfic body with the correct vector
                     let rigid_body = self
                         .world
                         .bodies
-                        .get_mut(*self.entity_dictionary.get(&2).unwrap())
+                        .get_mut(*self.entity_dictionary.get(&0).unwrap())
                         .unwrap();
-                    rigid_body.apply_impulse(Vector2::new(0.0, *force as f32), true);
+
+                    rigid_body.apply_impulse(
+                        Vector2::new(
+                            1.0 - (*force as f32) * rot.sin(), // cos(0) - sin(⍺) = 1 - sin(⍺)
+                            (*force as f32) * rot.cos(),       // sin(1) + cos(⍺) = 0 + cos(⍺)
+                        ),
+                        true,
+                    );
+                }
+                &Command::SetTorque { force } => {
+                    let rigid_body = self
+                        .world
+                        .bodies
+                        .get_mut(*self.entity_dictionary.get(&0).unwrap())
+                        .unwrap();
+                    rigid_body.apply_torque_impulse(force as f32, true)
                 }
             }
         }

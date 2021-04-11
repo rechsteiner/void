@@ -179,6 +179,33 @@ impl Game {
             },
         );
 
+        environment.set(
+            String::from("set_torque"),
+            Object::Command {
+                function: |arguments| {
+                    if arguments.len() != 1 {
+                        return Result::Err(format!(
+                            "wrong number of arguments. got={}, want=1",
+                            arguments.len()
+                        ));
+                    }
+                    match arguments[0].clone() {
+                        Object::Integer(value) => Result::Ok(Command::SetTorque { force: value }),
+                        _ => Result::Err(format!(
+                            "argument not supported, got {}",
+                            arguments[0].name()
+                        )),
+                    }
+                },
+            },
+        );
+
+        // Does not appear to update continuously, only gets its value on init
+        environment.set(
+            String::from("altitude"),
+            Object::Integer(self.simulation.get_entity_transform(0).position.y as isize),
+        );
+
         let _ = evaluator.eval(program, &mut environment);
         self.simulation.commands = evaluator.commands;
     }

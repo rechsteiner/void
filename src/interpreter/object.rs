@@ -5,6 +5,7 @@ use std::fmt;
 #[derive(PartialEq, Debug)]
 pub enum Command {
     SetThrust { force: isize },
+    SetTorque { force: isize },
 }
 
 pub type CommandFn = fn(Vec<Object>) -> Result<Command, String>;
