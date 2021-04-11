@@ -41,15 +41,16 @@ impl Simulation {
 
             let entity_rb = RigidBodyBuilder::new(body_status)
                 .translation(
-                    entity.rigidbody.transform.position.x,
-                    entity.rigidbody.transform.position.y,
+                    entity.rigidbody.transform.position.x + (entity.shape.width / 2.0),
+                    entity.rigidbody.transform.position.y + (entity.shape.height / 2.0),
                 )
                 .rotation(entity.rigidbody.transform.rotation)
                 .mass(entity.rigidbody.mass)
                 .build();
             let entity_handle = world.bodies.insert(entity_rb);
             let entity_collider =
-                ColliderBuilder::cuboid(entity.shape.width, entity.shape.height / 2.0).build();
+                ColliderBuilder::cuboid(entity.shape.width / 2.0, entity.shape.height / 2.0)
+                    .build();
             world
                 .colliders
                 .insert(entity_collider, entity_handle, &mut world.bodies);
