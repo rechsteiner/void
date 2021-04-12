@@ -1,14 +1,17 @@
-use std::f64;
 use wasm_bindgen::{JsCast, JsValue};
 
-use crate::{scene::Scene, simulation::Simulation};
+use crate::{
+    scene::{Point, Scene},
+    simulation::Simulation,
+};
 
 pub struct Renderer {
     context: web_sys::CanvasRenderingContext2d,
+    canvas: web_sys::HtmlCanvasElement,
 }
 
 impl Renderer {
-    pub fn new() -> Renderer {
+    pub fn new(x: usize, y: usize) -> Renderer {
         let window = web_sys::window().expect("no global `window` exists");
         let document: web_sys::Document =
             window.document().expect("should have a document on window");
@@ -25,17 +28,33 @@ impl Renderer {
             .dyn_into::<web_sys::CanvasRenderingContext2d>()
             .unwrap();
 
-        Renderer { context }
+        Renderer { context, canvas }
     }
 
     pub fn draw(&self, scene: &Scene, simulation: &Simulation) {
-        self.context.clear_rect(0.0, 0.0, 400.0, 400.0);
+        let scale: f32 = 1.5;
+        let camera_offset = Point {
+            x: self.canvas.width() as f32 / 4.0,
+            y: self.canvas.height() as f32 / 4.0,
+        };
+
+        self.context.clear_rect(
+            0.0,
+            0.0,
+            self.canvas.width() as f64,
+            self.canvas.height() as f64,
+        );
+
+        self.context.set_line_width(2.0);
 
         for entity in scene.entities.iter() {
             let transform = simulation.get_entity_transform(entity.id);
 
             self.context
-                .translate((transform.position.x) as f64, (transform.position.y) as f64)
+                .translate(
+                    (transform.position.x * scale + camera_offset.x - 200.0) as f64,
+                    (transform.position.y * scale + camera_offset.y - 0.0) as f64,
+                )
                 .unwrap();
             self.context.rotate(transform.rotation as f64).unwrap();
 
@@ -44,14 +63,16 @@ impl Renderer {
 
             self.context.begin_path();
             for vertex in &entity.shape.vertices {
-                self.context.line_to(vertex.x as f64, vertex.y as f64);
+                self.context
+                    .line_to((vertex.x * scale) as f64, (vertex.y * scale) as f64);
             }
 
             // Close the shape
             self.context.line_to(
-                entity.shape.vertices[0].x as f64,
-                entity.shape.vertices[0].y as f64,
+                (entity.shape.vertices[0].x * scale) as f64,
+                (entity.shape.vertices[0].y * scale) as f64,
             );
+
             self.context.stroke();
 
             // Debugging: dot at center of object

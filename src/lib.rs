@@ -1,7 +1,6 @@
 use scene::{ColorRGBA, Entity, PhysicsMode, Point, RigidBody, Shape, Transform};
 use simulation::Simulation;
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 mod interpreter;
 mod renderer;
 mod scene;
@@ -28,6 +27,20 @@ pub struct Game {
 impl Game {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Game {
+        let color_cyan = ColorRGBA {
+            r: 0,
+            g: 255,
+            b: 209,
+            a: 1.0,
+        };
+
+        let color_orange = ColorRGBA {
+            r: 255,
+            g: 153,
+            b: 34,
+            a: 1.0,
+        };
+
         let entities = vec![
             Entity {
                 id: 0,
@@ -46,12 +59,7 @@ impl Game {
                         Point { x: 15.0, y: 10.0 },
                         Point { x: -15.0, y: 10.0 },
                     ],
-                    color: ColorRGBA {
-                        r: 255,
-                        g: 0,
-                        b: 0,
-                        a: 1.0,
-                    },
+                    color: color_cyan,
                 },
             },
             Entity {
@@ -71,12 +79,7 @@ impl Game {
                         Point { x: 10.0, y: 10.0 },
                         Point { x: -10.0, y: 10.0 },
                     ],
-                    color: ColorRGBA {
-                        r: 0,
-                        g: 255,
-                        b: 0,
-                        a: 1.0,
-                    },
+                    color: color_orange,
                 },
             },
             // --- Static colliders ---
@@ -98,9 +101,9 @@ impl Game {
                         Point { x: -200.0, y: 5.0 },
                     ],
                     color: ColorRGBA {
-                        r: 0,
-                        g: 0,
-                        b: 0,
+                        r: 255,
+                        g: 255,
+                        b: 255,
                         a: 1.0,
                     },
                 },
@@ -123,9 +126,9 @@ impl Game {
                         Point { x: -80.0, y: 5.0 },
                     ],
                     color: ColorRGBA {
-                        r: 0,
-                        g: 0,
-                        b: 0,
+                        r: 255,
+                        g: 255,
+                        b: 255,
                         a: 1.0,
                     },
                 },
@@ -135,7 +138,7 @@ impl Game {
         let scene = Scene::new(entities);
 
         Game {
-            renderer: Renderer::new(),
+            renderer: Renderer::new(400, 400),
             simulation: Simulation::new(&scene),
             scene,
         }
@@ -219,16 +222,6 @@ impl Game {
             String::from("ang_vel"),
             Object::Integer((self.simulation.get_entity_radial_velocity(0)) as isize), // multiply to convert radians to deg
         );
-
-        // unsafe {
-        //     console::log_1(
-        //         &format!(
-        //             "alt_vel: {}",
-        //             self.simulation.get_entity_velocity(0).y as isize
-        //         )
-        //         .into(),
-        //     );
-        // }
 
         let _ = evaluator.eval(program, &mut environment);
         self.simulation.commands = evaluator.commands;
