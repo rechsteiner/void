@@ -13,7 +13,10 @@
 
     <section class="editor-area">
       <textarea id="editor" cols="50" rows="20"></textarea>
-      <button id="run-button">Run program</button>
+      <div class="button-row">
+        <button id="pause-button">Pause</button>
+        <button id="run-button">Run</button>
+      </div>
     </section>
 
     <style>
@@ -38,8 +41,21 @@
         padding: 1em;
       }
 
+      .button-row {
+        display: flex;
+        gap: 0.5em;
+      }
+
+      .button-row > * {
+        flex: 1;
+      }
+
       button {
         padding: 1em;
+      }
+
+      .hidden {
+        display: none;
       }
 
       canvas {

@@ -1,15 +1,30 @@
 import("./pkg/static_void.js").then((lib) => {
-  let editor = document.getElementById("editor");
-  let runButton = document.getElementById("run-button");
+  const editor = document.getElementById("editor");
+  const pauseButton = document.getElementById("pause-button");
+  const runButton = document.getElementById("run-button");
   let game = new lib.Game();
+  let isPaused = false;
+
+  runButton.classList.add("hidden");
+
+  pauseButton.addEventListener("click", function () {
+    isPaused = true;
+    pauseButton.classList.add("hidden");
+    runButton.classList.remove("hidden");
+  });
 
   runButton.addEventListener("click", function () {
-    console.log(editor.value);
-    game.change_program(editor.value);
+    isPaused = false;
+    pauseButton.classList.remove("hidden");
+    runButton.classList.add("hidden");
   });
 
   function animate() {
-    game.next_simulation_step();
+    if (!isPaused) {
+      game.change_program(editor.value);
+      game.next_simulation_step();
+    }
+
     requestAnimationFrame(() => animate());
   }
 
