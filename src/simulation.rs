@@ -43,16 +43,21 @@ impl Simulation {
 
             let entity_rb = RigidBodyBuilder::new(body_status)
                 .translation(
-                    entity.rigidbody.transform.position.x + (entity.shape.width / 2.0),
-                    entity.rigidbody.transform.position.y + (entity.shape.height / 2.0),
+                    entity.rigidbody.transform.position.x,
+                    entity.rigidbody.transform.position.y,
                 )
                 .rotation(entity.rigidbody.transform.rotation)
                 .mass(entity.rigidbody.mass)
                 .build();
             let entity_handle = world.bodies.insert(entity_rb);
-            let entity_collider =
-                ColliderBuilder::cuboid(entity.shape.width / 2.0, entity.shape.height / 2.0)
-                    .build();
+
+            let mut points = Vec::new();
+
+            for point in &entity.shape.vertices {
+                points.push(rapier2d::na::Point2::new(point.x, point.y));
+            }
+
+            let entity_collider = ColliderBuilder::convex_hull(&points).unwrap().build();
             world
                 .colliders
                 .insert(entity_collider, entity_handle, &mut world.bodies);

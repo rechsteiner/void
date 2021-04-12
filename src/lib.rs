@@ -39,104 +39,112 @@ impl Game {
                 },
                 physics_mode: PhysicsMode::Dynamic,
                 shape: Shape {
-                    width: 20.0,
-                    height: 20.0,
+                    vertices: vec![
+                        Point { x: -10.0, y: -15.0 },
+                        Point { x: 10.0, y: -15.0 },
+                        Point { x: 15.0, y: 10.0 },
+                        Point { x: -15.0, y: 10.0 },
+                    ],
                     color: String::from("#ff0000"),
                 },
             },
-            Entity {
-                id: 1,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 50.0, y: 50.0 },
-                        rotation: 1.0,
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Dynamic,
-                shape: Shape {
-                    width: 20.0,
-                    height: 20.0,
-                    color: String::from("#00ff00"),
-                },
-            },
-            Entity {
-                id: 2,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 60.0, y: 90.0 },
-                        rotation: 2.0,
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Dynamic,
-                shape: Shape {
-                    width: 20.0,
-                    height: 20.0,
-                    color: String::from("#0000ff"),
-                },
-            },
-            Entity {
-                id: 3,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 110.0, y: 150.0 },
-                        rotation: 2.7,
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Dynamic,
-                shape: Shape {
-                    width: 40.0,
-                    height: 20.0,
-                    color: String::from("#ff00ff"),
-                },
-            },
-            Entity {
-                id: 4,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 140.0, y: 50.0 },
-                        rotation: 4.0,
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Dynamic,
-                shape: Shape {
-                    width: 20.0,
-                    height: 20.0,
-                    color: String::from("#00ffff"),
-                },
-            },
-            Entity {
-                id: 998,
-                rigidbody: RigidBody {
-                    transform: Transform {
-                        position: Point { x: 0.0, y: 200.0 },
-                        rotation: 0.6,
-                    },
-                    mass: 1.0,
-                },
-                physics_mode: PhysicsMode::Static,
-                shape: Shape {
-                    width: 200.0,
-                    height: 10.0,
-                    color: String::from("#000000"),
-                },
-            },
+            // Entity {
+            //     id: 1,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 50.0, y: 50.0 },
+            //             rotation: 1.0,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Dynamic,
+            //     shape: Shape {
+            //         width: 20.0,
+            //         height: 20.0,
+            //         color: String::from("#00ff00"),
+            //     },
+            // },
+            // Entity {
+            //     id: 2,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 60.0, y: 90.0 },
+            //             rotation: 2.0,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Dynamic,
+            //     shape: Shape {
+            //         width: 20.0,
+            //         height: 20.0,
+            //         color: String::from("#0000ff"),
+            //     },
+            // },
+            // Entity {
+            //     id: 3,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 110.0, y: 150.0 },
+            //             rotation: 2.7,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Dynamic,
+            //     shape: Shape {
+            //         width: 40.0,
+            //         height: 20.0,
+            //         color: String::from("#ff00ff"),
+            //     },
+            // },
+            // Entity {
+            //     id: 4,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 140.0, y: 50.0 },
+            //             rotation: 4.0,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Dynamic,
+            //     shape: Shape {
+            //         width: 20.0,
+            //         height: 20.0,
+            //         color: String::from("#00ffff"),
+            //     },
+            // },
+            // Entity {
+            //     id: 998,
+            //     rigidbody: RigidBody {
+            //         transform: Transform {
+            //             position: Point { x: 0.0, y: 200.0 },
+            //             rotation: 0.6,
+            //         },
+            //         mass: 1.0,
+            //     },
+            //     physics_mode: PhysicsMode::Static,
+            //     shape: Shape {
+            //         width: 200.0,
+            //         height: 10.0,
+            //         color: String::from("#000000"),
+            //     },
+            // },
             Entity {
                 id: 999,
                 rigidbody: RigidBody {
                     transform: Transform {
-                        position: Point { x: 0.0, y: 390.0 },
-                        rotation: 0.0,
+                        position: Point { x: 200.0, y: 300.0 },
+                        rotation: 0.5,
                     },
                     mass: 1.0,
                 },
                 physics_mode: PhysicsMode::Static,
                 shape: Shape {
-                    width: 400.0,
-                    height: 10.0,
+                    vertices: vec![
+                        Point { x: -100.0, y: -5.0 },
+                        Point { x: 100.0, y: -5.0 },
+                        Point { x: 100.0, y: 5.0 },
+                        Point { x: -100.0, y: 5.0 },
+                    ],
                     color: String::from("#000000"),
                 },
             },

@@ -43,15 +43,22 @@ impl Renderer {
                 .set_stroke_style(&JsValue::from(&entity.shape.color));
 
             self.context.begin_path();
+            for vertex in &entity.shape.vertices {
+                self.context.line_to(vertex.x as f64, vertex.y as f64);
+            }
 
-            self.context.stroke_rect(
-                -(entity.shape.width / 2.0) as f64,
-                -(entity.shape.height / 2.0) as f64,
-                (entity.shape.width) as f64,
-                (entity.shape.height) as f64,
+            // Close the shape
+            self.context.line_to(
+                entity.shape.vertices[0].x as f64,
+                entity.shape.vertices[0].y as f64,
             );
+            self.context.stroke();
+
+            // Debugging: dot at center of object
+            self.context.stroke_rect(-1.0, -1.0, 2.0, 2.0);
 
             self.context.close_path();
+
             self.context.reset_transform().unwrap();
         }
     }
