@@ -1,6 +1,7 @@
-use scene::{Entity, PhysicsMode, Point, RigidBody, Shape, Transform};
+use scene::{ColorRGBA, Entity, PhysicsMode, Point, RigidBody, Shape, Transform};
 use simulation::Simulation;
 use wasm_bindgen::prelude::*;
+use web_sys::console;
 mod interpreter;
 mod renderer;
 mod scene;
@@ -45,7 +46,37 @@ impl Game {
                         Point { x: 15.0, y: 10.0 },
                         Point { x: -15.0, y: 10.0 },
                     ],
-                    color: String::from("#ff0000"),
+                    color: ColorRGBA {
+                        r: 255,
+                        g: 0,
+                        b: 0,
+                        a: 1.0,
+                    },
+                },
+            },
+            Entity {
+                id: 1,
+                rigidbody: RigidBody {
+                    transform: Transform {
+                        position: Point { x: 200.0, y: 160.0 },
+                        rotation: 0.0,
+                    },
+                    mass: 0.5,
+                },
+                physics_mode: PhysicsMode::Dynamic,
+                shape: Shape {
+                    vertices: vec![
+                        Point { x: -10.0, y: -10.0 },
+                        Point { x: 10.0, y: -10.0 },
+                        Point { x: 10.0, y: 10.0 },
+                        Point { x: -10.0, y: 10.0 },
+                    ],
+                    color: ColorRGBA {
+                        r: 0,
+                        g: 255,
+                        b: 0,
+                        a: 1.0,
+                    },
                 },
             },
             // --- Static colliders ---
@@ -66,7 +97,12 @@ impl Game {
                         Point { x: 200.0, y: 5.0 },
                         Point { x: -200.0, y: 5.0 },
                     ],
-                    color: String::from("#000000"),
+                    color: ColorRGBA {
+                        r: 0,
+                        g: 0,
+                        b: 0,
+                        a: 1.0,
+                    },
                 },
             },
             Entity {
@@ -86,7 +122,12 @@ impl Game {
                         Point { x: 80.0, y: 5.0 },
                         Point { x: -80.0, y: 5.0 },
                     ],
-                    color: String::from("#000000"),
+                    color: ColorRGBA {
+                        r: 0,
+                        g: 0,
+                        b: 0,
+                        a: 1.0,
+                    },
                 },
             },
         ];
@@ -149,11 +190,45 @@ impl Game {
             },
         );
 
-        // Does not appear to update continuously, only gets its value on init
         environment.set(
             String::from("altitude"),
             Object::Integer(400 - self.simulation.get_entity_transform(0).position.y as isize), // 400 is height of canvas
         );
+
+        environment.set(
+            String::from("longitude"),
+            Object::Integer(self.simulation.get_entity_transform(0).position.x as isize),
+        );
+
+        environment.set(
+            String::from("angle"),
+            Object::Integer((self.simulation.get_entity_transform(0).rotation * 58.122) as isize), // multiply to convert radians to deg
+        );
+
+        environment.set(
+            String::from("long_vel"),
+            Object::Integer((self.simulation.get_entity_velocity(0).x) as isize), // multiply to convert radians to deg
+        );
+
+        environment.set(
+            String::from("alt_vel"),
+            Object::Integer((self.simulation.get_entity_velocity(0).y) as isize), // multiply to convert radians to deg
+        );
+
+        environment.set(
+            String::from("ang_vel"),
+            Object::Integer((self.simulation.get_entity_radial_velocity(0)) as isize), // multiply to convert radians to deg
+        );
+
+        // unsafe {
+        //     console::log_1(
+        //         &format!(
+        //             "alt_vel: {}",
+        //             self.simulation.get_entity_velocity(0).y as isize
+        //         )
+        //         .into(),
+        //     );
+        // }
 
         let _ = evaluator.eval(program, &mut environment);
         self.simulation.commands = evaluator.commands;
@@ -164,3 +239,63 @@ impl Game {
         self.renderer.draw(&self.scene, &self.simulation);
     }
 }
+
+/*
+
+let target_alt = 200;
+let target_long = 200;
+let torque_strength = 20000;
+
+if (altitude < target_alt) {
+  set_thrust(-2200);
+} else {
+  set_thrust(-1200);
+}
+
+if (altitude < (target_alt / 2)) {
+  set_thrust(-3000);
+}
+
+if (longitude > target_long) {
+  if (angle < -5) {
+    set_torque(torque_strength);
+  } else {
+    set_torque(-torque_strength);
+  }
+} else {
+  if (angle < 5) {
+    set_torque(torque_strength);
+  } else {
+    set_torque(-torque_strength);
+  }
+}
+
+
+let target_long = 100;
+let target_alt = 300;
+let torque_strength = 14000;
+
+let future_alt = altitude - (alt_vel * 2);
+
+if (future_alt < target_alt) {
+    set_thrust(-3000)
+}
+
+let future_pos = longitude + (long_vel * 4);
+let future_sep = target_long - future_pos;
+
+if (future_pos > target_long) {
+  if (angle < -2) {
+    set_torque(torque_strength);
+  } else {
+    set_torque(-torque_strength);
+  }
+} else {
+  if (angle < 2) {
+    set_torque(torque_strength);
+  } else {
+    set_torque(-torque_strength);
+  }
+}
+
+*/

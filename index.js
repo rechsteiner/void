@@ -5,6 +5,14 @@ import("./pkg/static_void.js").then((lib) => {
   let game = new lib.Game();
   let isPaused = false;
 
+  editor.addEventListener("change", () => {
+    window.localStorage.setItem("editorValue", editor.value);
+  });
+
+  if (window.localStorage.getItem("editorValue")) {
+    editor.value = window.localStorage.getItem("editorValue");
+  }
+
   runButton.classList.add("hidden");
 
   pauseButton.addEventListener("click", function () {

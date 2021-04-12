@@ -40,7 +40,7 @@ impl Renderer {
             self.context.rotate(transform.rotation as f64).unwrap();
 
             self.context
-                .set_stroke_style(&JsValue::from(&entity.shape.color));
+                .set_stroke_style(&JsValue::from(format!("{}", &entity.shape.color)));
 
             self.context.begin_path();
             for vertex in &entity.shape.vertices {

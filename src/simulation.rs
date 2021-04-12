@@ -133,6 +133,29 @@ impl Simulation {
             rotation: physics_state.position().rotation.angle(),
         }
     }
+
+    pub fn get_entity_velocity(&self, id: usize) -> Point {
+        let physics_state = self
+            .world
+            .bodies
+            .get(*self.entity_dictionary.get(&id).unwrap())
+            .unwrap();
+
+        Point {
+            x: physics_state.linvel().x,
+            y: physics_state.linvel().y,
+        }
+    }
+
+    pub fn get_entity_radial_velocity(&self, id: usize) -> f32 {
+        let physics_state = self
+            .world
+            .bodies
+            .get(*self.entity_dictionary.get(&id).unwrap())
+            .unwrap();
+
+        physics_state.angvel()
+    }
 }
 
 struct PhysicsWorldParameters {

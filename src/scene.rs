@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub struct Entity {
     pub rigidbody: RigidBody,
     pub shape: Shape,
@@ -9,7 +11,7 @@ pub struct Shape {
     pub vertices: Vec<Point>,
     // pub width: f32,
     // pub height: f32,
-    pub color: String, //Mosly for debug
+    pub color: ColorRGBA, //Mosly for debug
 }
 
 pub struct Scene {
@@ -40,4 +42,17 @@ pub struct Point {
 pub enum PhysicsMode {
     Static,
     Dynamic,
+}
+
+pub struct ColorRGBA {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: f32,
+}
+
+impl fmt::Display for ColorRGBA {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "rgba({}, {}, {}, {})", self.r, self.g, self.b, self.a)
+    }
 }
