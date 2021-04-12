@@ -26,7 +26,7 @@ impl Simulation {
         let mut entity_dictionary: HashMap<usize, RigidBodyHandle> = HashMap::new();
 
         let mut world = PhysicsWorldParameters {
-            gravity: Vector2::new(0.0, 0.0),
+            gravity: Vector2::new(0.0, 10.0),
             integration_parameters: IntegrationParameters::default(),
             broad_phase: BroadPhase::new(),
             narrow_phase: NarrowPhase::new(),
