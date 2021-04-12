@@ -138,7 +138,7 @@ impl Game {
         let scene = Scene::new(entities);
 
         Game {
-            renderer: Renderer::new(400, 400),
+            renderer: Renderer::new(),
             simulation: Simulation::new(&scene),
             scene,
         }
