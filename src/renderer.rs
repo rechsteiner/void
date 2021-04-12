@@ -11,7 +11,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(x: usize, y: usize) -> Renderer {
+    pub fn new() -> Renderer {
         let window = web_sys::window().expect("no global `window` exists");
         let document: web_sys::Document =
             window.document().expect("should have a document on window");
