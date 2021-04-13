@@ -69,7 +69,7 @@ impl Game {
                         position: Point { x: 200.0, y: 160.0 },
                         rotation: 0.0,
                     },
-                    mass: 0.5,
+                    mass: 0.2,
                 },
                 physics_mode: PhysicsMode::Dynamic,
                 shape: Shape {
@@ -87,7 +87,7 @@ impl Game {
                 id: 998,
                 rigidbody: RigidBody {
                     transform: Transform {
-                        position: Point { x: 200.0, y: 395.0 },
+                        position: Point { x: 200.0, y: 400.0 },
                         rotation: 0.0,
                     },
                     mass: 1.0,
@@ -95,10 +95,13 @@ impl Game {
                 physics_mode: PhysicsMode::Static,
                 shape: Shape {
                     vertices: vec![
-                        Point { x: -200.0, y: -5.0 },
-                        Point { x: 200.0, y: -5.0 },
-                        Point { x: 200.0, y: 5.0 },
-                        Point { x: -200.0, y: 5.0 },
+                        Point {
+                            x: -300.0,
+                            y: -10.0,
+                        },
+                        Point { x: 300.0, y: -10.0 },
+                        Point { x: 300.0, y: 0.0 },
+                        Point { x: -300.0, y: 0.0 },
                     ],
                     color: ColorRGBA {
                         r: 255,
@@ -112,18 +115,21 @@ impl Game {
                 id: 999,
                 rigidbody: RigidBody {
                     transform: Transform {
-                        position: Point { x: 80.0, y: 300.0 },
-                        rotation: 0.6,
+                        position: Point { x: 0.0, y: 390.0 },
+                        rotation: 0.0,
                     },
                     mass: 1.0,
                 },
                 physics_mode: PhysicsMode::Static,
                 shape: Shape {
                     vertices: vec![
-                        Point { x: -80.0, y: -5.0 },
-                        Point { x: 80.0, y: -5.0 },
-                        Point { x: 80.0, y: 5.0 },
-                        Point { x: -80.0, y: 5.0 },
+                        Point {
+                            x: -40.0,
+                            y: -120.0,
+                        },
+                        Point { x: 40.0, y: -120.0 },
+                        Point { x: 40.0, y: 0.0 },
+                        Point { x: -40.0, y: 0.0 },
                     ],
                     color: ColorRGBA {
                         r: 255,
