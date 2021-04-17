@@ -41,6 +41,38 @@ import("./pkg/static_void.js").then((lib) => {
     canvas.setAttribute("width", window.innerWidth);
   });
 
+  // Navigate viewport
+  window.addEventListener("keydown", (e) => {
+    // Possibly a hack, but the idea is to only move the viewport when "nothing" is selected.
+    // Otherwise the viewport moves when typing into textarea.
+    if (document.activeElement.nodeName !== "BODY") return;
+
+    const movement_step = 15.0;
+    const zoom_step = 0.1;
+
+    // TODO: abstract away specific keys from this code
+    switch (e.key) {
+      case "w":
+        game.move_render_viewport(0.0, -movement_step, 0.0);
+        break;
+      case "s":
+        game.move_render_viewport(0.0, movement_step, 0.0);
+        break;
+      case "a":
+        game.move_render_viewport(-movement_step, 0.0, 0.0);
+        break;
+      case "d":
+        game.move_render_viewport(movement_step, 0.0, 0.0);
+        break;
+      case "z":
+        game.move_render_viewport(0.0, 0.0, -zoom_step);
+        break;
+      case "x":
+        game.move_render_viewport(0.0, 0.0, zoom_step);
+        break;
+    }
+  });
+
   // Run game loop on each frame
   function animate() {
     if (!isPaused) {

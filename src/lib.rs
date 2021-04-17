@@ -234,7 +234,13 @@ impl Game {
     }
 
     pub fn next_simulation_step(&mut self) {
+        self.renderer.move_viewport_toward_target(); // For smooth viewport motion
         self.simulation.next_state();
         self.renderer.draw(&self.scene, &self.simulation);
+    }
+
+    pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
+        self.renderer
+            .move_viewport_target(delta_x, delta_y, delta_zoom);
     }
 }

@@ -5,9 +5,17 @@ use crate::{
     simulation::Simulation,
 };
 
+struct Viewport {
+    position: Point,
+    target_position: Point,
+    zoom: f32,
+    target_zoom: f32,
+}
+
 pub struct Renderer {
     context: web_sys::CanvasRenderingContext2d,
     canvas: web_sys::HtmlCanvasElement,
+    viewport: Viewport,
 }
 
 impl Renderer {
@@ -28,16 +36,44 @@ impl Renderer {
             .dyn_into::<web_sys::CanvasRenderingContext2d>()
             .unwrap();
 
-        Renderer { context, canvas }
+        let viewport = Viewport {
+            position: Point { x: -300.0, y: 0.0 },
+            zoom: 1.0,
+            target_position: Point { x: -300.0, y: 0.0 },
+            target_zoom: 1.0,
+        };
+
+        Renderer {
+            context,
+            canvas,
+            viewport,
+        }
+    }
+
+    pub fn move_viewport_target(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
+        self.viewport.target_position.x += delta_x;
+        self.viewport.target_position.y += delta_y;
+        self.viewport.target_zoom += delta_zoom;
+    }
+
+    pub fn move_viewport_toward_target(&mut self) {
+        let smoothness_factor = 12.0; // Higher number gives more smooth motion
+
+        let curr_pos = &mut self.viewport.position;
+        let targ_pos = &mut self.viewport.target_position;
+
+        let curr_zoom = &mut self.viewport.zoom;
+        let targ_zoom = &mut self.viewport.target_zoom;
+
+        // Move slightly toward the target (supposed to run on each frame)
+        curr_pos.x += (targ_pos.x - curr_pos.x) / smoothness_factor;
+        curr_pos.y += (targ_pos.y - curr_pos.y) / smoothness_factor;
+
+        // Same with zoom
+        *curr_zoom += (*targ_zoom - *curr_zoom) / smoothness_factor;
     }
 
     pub fn draw(&self, scene: &Scene, simulation: &Simulation) {
-        let scale: f32 = 1.5;
-        let camera_offset = Point {
-            x: self.canvas.width() as f32 / 4.0,
-            y: self.canvas.height() as f32 / 4.0,
-        };
-
         self.context.clear_rect(
             0.0,
             0.0,
@@ -50,27 +86,33 @@ impl Renderer {
         for entity in scene.entities.iter() {
             let transform = simulation.get_entity_transform(entity.id);
 
+            // Move the sheet
             self.context
                 .translate(
-                    (transform.position.x * scale + camera_offset.x - 200.0) as f64,
-                    (transform.position.y * scale + camera_offset.y - 0.0) as f64,
+                    (transform.position.x * self.viewport.zoom - self.viewport.position.x) as f64,
+                    (transform.position.y * self.viewport.zoom - self.viewport.position.y) as f64,
                 )
                 .unwrap();
+
+            // Rotate the sheet
             self.context.rotate(transform.rotation as f64).unwrap();
 
+            // Pick the right crayon
             self.context
-                .set_stroke_style(&JsValue::from(format!("{}", &entity.shape.color)));
+                .set_stroke_style(&JsValue::from(format!("{}", &entity.shape.color))); // TODO: Might not be idiomatic
 
             self.context.begin_path();
             for vertex in &entity.shape.vertices {
-                self.context
-                    .line_to((vertex.x * scale) as f64, (vertex.y * scale) as f64);
+                self.context.line_to(
+                    (vertex.x * self.viewport.zoom) as f64,
+                    (vertex.y * self.viewport.zoom) as f64,
+                );
             }
 
             // Close the shape
             self.context.line_to(
-                (entity.shape.vertices[0].x * scale) as f64,
-                (entity.shape.vertices[0].y * scale) as f64,
+                (entity.shape.vertices[0].x * self.viewport.zoom) as f64,
+                (entity.shape.vertices[0].y * self.viewport.zoom) as f64,
             );
 
             self.context.stroke();
