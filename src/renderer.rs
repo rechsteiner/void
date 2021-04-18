@@ -37,9 +37,9 @@ impl Renderer {
             .unwrap();
 
         let viewport = Viewport {
-            position: Point { x: -300.0, y: 0.0 },
+            position: Point { x: -400.0, y: 0.0 },
             zoom: 1.0,
-            target_position: Point { x: -300.0, y: 0.0 },
+            target_position: Point { x: -400.0, y: 0.0 },
             target_zoom: 1.0,
         };
 
@@ -89,8 +89,14 @@ impl Renderer {
             // Move the sheet
             self.context
                 .translate(
-                    (transform.position.x * self.viewport.zoom - self.viewport.position.x) as f64,
-                    (transform.position.y * self.viewport.zoom - self.viewport.position.y) as f64,
+                    ((transform.position.x - (self.canvas.width() as f32 / 2.0))
+                        * self.viewport.zoom
+                        - self.viewport.position.x) as f64,
+                    ((transform.position.y
+                        - self.viewport.position.y
+                        - (self.canvas.height() as f32))
+                        * self.viewport.zoom
+                        - self.viewport.position.y) as f64,
                 )
                 .unwrap();
 
@@ -101,6 +107,7 @@ impl Renderer {
             self.context
                 .set_stroke_style(&JsValue::from(format!("{}", &entity.shape.color))); // TODO: Might not be idiomatic
 
+            // Draw by numbers
             self.context.begin_path();
             for vertex in &entity.shape.vertices {
                 self.context.line_to(
