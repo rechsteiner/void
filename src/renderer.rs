@@ -37,9 +37,9 @@ impl Renderer {
             .unwrap();
 
         let viewport = Viewport {
-            position: Point { x: -400.0, y: 0.0 },
+            position: Point { x: 200.0, y: 200.0 },
             zoom: 1.0,
-            target_position: Point { x: -400.0, y: 0.0 },
+            target_position: Point { x: 200.0, y: 200.0 },
             target_zoom: 1.0,
         };
 
@@ -97,11 +97,9 @@ impl Renderer {
             // Magical math to get zoom with focal point in center of screen
             self.context
                 .translate(
-                    (((transform.position.x - self.viewport.position.x - (screen_width / 2.0))
-                        * self.viewport.zoom)
+                    (((transform.position.x - self.viewport.position.x) * self.viewport.zoom)
                         + (screen_width / 2.0)) as f64,
-                    (((transform.position.y - self.viewport.position.y - (screen_height / 2.0))
-                        * self.viewport.zoom)
+                    (((transform.position.y - self.viewport.position.y) * self.viewport.zoom)
                         + (screen_height / 2.0)) as f64,
                 )
                 .unwrap();
