@@ -50,12 +50,20 @@ impl Renderer {
         }
     }
 
+    // Indirect way for user to move viewport
     pub fn move_viewport_target(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
-        self.viewport.target_position.x += delta_x;
-        self.viewport.target_position.y += delta_y;
-        self.viewport.target_zoom += delta_zoom;
+        // Input values are scaled by zoom value, for more natural and accurate movement
+        self.viewport.target_position.x += delta_x / self.viewport.zoom;
+        self.viewport.target_position.y += delta_y / self.viewport.zoom;
+
+        if self.viewport.target_zoom + delta_zoom > 0.2 {
+            self.viewport.target_zoom += delta_zoom * self.viewport.target_zoom;
+        } else {
+            self.viewport.target_zoom = 0.2;
+        }
     }
 
+    // Should run on every frame – moves the viewport toward the target gradually
     pub fn move_viewport_toward_target(&mut self) {
         let smoothness_factor = 12.0; // Higher number gives more smooth motion
 
@@ -74,12 +82,11 @@ impl Renderer {
     }
 
     pub fn draw(&self, scene: &Scene, simulation: &Simulation) {
-        self.context.clear_rect(
-            0.0,
-            0.0,
-            self.canvas.width() as f64,
-            self.canvas.height() as f64,
-        );
+        let screen_height = self.canvas.height() as f32;
+        let screen_width = self.canvas.width() as f32;
+
+        self.context
+            .clear_rect(0.0, 0.0, screen_width as f64, screen_height as f64);
 
         self.context.set_line_width(2.0);
 
@@ -87,10 +94,15 @@ impl Renderer {
             let transform = simulation.get_entity_transform(entity.id);
 
             // Move the sheet
+            // Magical math to get zoom with focal point in center of screen
             self.context
                 .translate(
-                    ((transform.position.x) * self.viewport.zoom - self.viewport.position.x) as f64,
-                    ((transform.position.y) * self.viewport.zoom - self.viewport.position.y) as f64,
+                    (((transform.position.x - self.viewport.position.x - (screen_width / 2.0))
+                        * self.viewport.zoom)
+                        + (screen_width / 2.0)) as f64,
+                    (((transform.position.y - self.viewport.position.y - (screen_height / 2.0))
+                        * self.viewport.zoom)
+                        + (screen_height / 2.0)) as f64,
                 )
                 .unwrap();
 
