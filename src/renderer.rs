@@ -89,14 +89,8 @@ impl Renderer {
             // Move the sheet
             self.context
                 .translate(
-                    ((transform.position.x - (self.canvas.width() as f32 / 2.0))
-                        * self.viewport.zoom
-                        - self.viewport.position.x) as f64,
-                    ((transform.position.y
-                        - self.viewport.position.y
-                        - (self.canvas.height() as f32))
-                        * self.viewport.zoom
-                        - self.viewport.position.y) as f64,
+                    ((transform.position.x) * self.viewport.zoom - self.viewport.position.x) as f64,
+                    ((transform.position.y) * self.viewport.zoom - self.viewport.position.y) as f64,
                 )
                 .unwrap();
 
