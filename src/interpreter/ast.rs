@@ -30,6 +30,7 @@ pub struct BlockStatement {
 pub enum Expression {
     Identifier(String),
     Int(isize),
+    Float(f64),
     Boolean(bool),
     // Need to use a Box here to avoid an infinitely large size on the
     // Expression type. Using Box means we just store a pointer to the
@@ -114,6 +115,7 @@ impl fmt::Display for Expression {
         match self {
             Expression::Identifier(name) => write!(f, "{}", name),
             Expression::Int(literal) => write!(f, "{}", literal),
+            Expression::Float(literal) => write!(f, "{}", literal),
             Expression::Boolean(boolean) => write!(f, "{}", boolean),
             Expression::Prefix { operator, right } => write!(f, "({}{})", operator, right),
             Expression::Infix {

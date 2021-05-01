@@ -157,6 +157,7 @@ impl<'a> Parser<'a> {
         match &self.current_token {
             Token::Identifier(_) => Some(Parser::parse_identifier),
             Token::Int(_) => Some(Parser::parse_integer),
+            Token::Float(_) => Some(Parser::parse_float),
             Token::Bang | Token::Minus => Some(Parser::parse_prefix_expression),
             Token::True | Token::False => Some(Parser::parse_boolean),
             Token::LeftParen => Some(Parser::parse_grouped_expression),
@@ -201,6 +202,20 @@ impl<'a> Parser<'a> {
                 Ok(literal) => Some(Expression::Int(literal)),
                 Err(_) => {
                     let error = format!("Could not parse {} as integer", value);
+                    self.errors.push(error);
+                    None
+                }
+            },
+            _ => None,
+        }
+    }
+
+    fn parse_float(&mut self) -> Option<Expression> {
+        match &self.current_token {
+            Token::Float(value) => match value.parse::<f64>() {
+                Ok(literal) => Some(Expression::Float(literal)),
+                Err(_) => {
+                    let error = format!("Could not parse {} as float", value);
                     self.errors.push(error);
                     None
                 }
@@ -550,6 +565,22 @@ fn test_integer_expression() {
         program.statements,
         vec![Statement::Expression {
             expression: Expression::Int(5)
+        }]
+    );
+}
+
+#[test]
+fn test_float_expression() {
+    let input = "1.0;";
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    let program = parser.parse_program();
+
+    assert_eq!(parser.errors, vec![] as Vec<String>);
+    assert_eq!(
+        program.statements,
+        vec![Statement::Expression {
+            expression: Expression::Float(1.0)
         }]
     );
 }

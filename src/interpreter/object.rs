@@ -4,8 +4,8 @@ use std::fmt;
 
 #[derive(PartialEq, Debug)]
 pub enum Command {
-    SetThrust { force: isize },
-    SetTorque { force: isize },
+    SetThrust { force: f64 },
+    SetTorque { force: f64 },
 }
 
 pub type CommandFn = fn(Vec<Object>) -> Result<Command, String>;
@@ -13,6 +13,7 @@ pub type CommandFn = fn(Vec<Object>) -> Result<Command, String>;
 #[derive(PartialEq, Debug, Clone)]
 pub enum Object {
     Integer(isize),
+    Float(f64),
     Boolean(bool),
     Return(Box<Object>),
     Error(String),
@@ -31,6 +32,7 @@ impl Object {
     pub fn name(&self) -> String {
         match self {
             Object::Integer(_) => String::from("integer"),
+            Object::Float(_) => String::from("float"),
             Object::Boolean(_) => String::from("boolean"),
             Object::Return(_) => String::from("return"),
             Object::Error(_) => String::from("error"),
@@ -83,6 +85,7 @@ impl fmt::Display for Object {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Object::Integer(value) => write!(f, "{}", value),
+            Object::Float(value) => write!(f, "{}", value),
             Object::Boolean(value) => write!(f, "{}", value),
             Object::Return(expression) => write!(f, "{}", *expression),
             Object::Error(error) => write!(f, "Error: {}", error),

@@ -60,8 +60,7 @@ impl<'a> Lexer<'a> {
                         _ => Token::Identifier(identitier),
                     }
                 } else if char.is_digit(10) {
-                    let integer = self.read_integer(char);
-                    Token::Int(integer)
+                    self.read_number(char)
                 } else {
                     Token::Illegal
                 }
@@ -92,14 +91,21 @@ impl<'a> Lexer<'a> {
         identitier
     }
 
-    fn read_integer(&mut self, char: char) -> String {
-        let mut integer = String::new();
-        integer.push(char);
+    fn read_number(&mut self, char: char) -> Token {
+        let mut chars = String::new();
+        let mut is_floating_point = false;
+        chars.push(char);
 
         while let Some(&char) = self.input.peek() {
             if char.is_digit(10) {
                 match self.input.next() {
-                    Some(char) => integer.push(char),
+                    Some(char) => chars.push(char),
+                    None => break,
+                }
+            } else if char == '.' {
+                is_floating_point = true;
+                match self.input.next() {
+                    Some(char) => chars.push(char),
                     None => break,
                 }
             } else {
@@ -107,7 +113,11 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        integer
+        if is_floating_point {
+            Token::Float(chars)
+        } else {
+            Token::Int(chars)
+        }
     }
 
     fn skip_whitespace(&mut self) {
@@ -145,6 +155,10 @@ fn test_next_token() {
     
     10 == 10;
     10 != 9;
+
+    1.00
+    1000.200
+
     ";
 
     let expected_tokens = vec![
@@ -221,6 +235,8 @@ fn test_next_token() {
         Token::NotEqual,
         Token::Int(String::from("9")),
         Token::Semicolon,
+        Token::Float(String::from("1.00")),
+        Token::Float(String::from("1000.200")),
         Token::Eof,
     ];
 

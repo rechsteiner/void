@@ -168,7 +168,10 @@ impl Game {
                         ));
                     }
                     match arguments[0].clone() {
-                        Object::Integer(value) => Result::Ok(Command::SetThrust { force: value }),
+                        Object::Integer(value) => Result::Ok(Command::SetThrust {
+                            force: value as f64,
+                        }),
+                        Object::Float(value) => Result::Ok(Command::SetThrust { force: value }),
                         _ => Result::Err(format!(
                             "argument not supported, got {}",
                             arguments[0].name()
@@ -189,7 +192,10 @@ impl Game {
                         ));
                     }
                     match arguments[0].clone() {
-                        Object::Integer(value) => Result::Ok(Command::SetTorque { force: value }),
+                        Object::Integer(value) => Result::Ok(Command::SetTorque {
+                            force: value as f64,
+                        }),
+                        Object::Float(value) => Result::Ok(Command::SetTorque { force: value }),
                         _ => Result::Err(format!(
                             "argument not supported, got {}",
                             arguments[0].name()

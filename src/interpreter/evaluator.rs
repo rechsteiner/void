@@ -56,6 +56,7 @@ impl Evaluator {
     fn eval_expression(&mut self, expression: Expression, environment: &mut Environment) -> Object {
         match expression {
             Expression::Int(value) => Object::Integer(value),
+            Expression::Float(value) => Object::Float(value),
             Expression::Boolean(value) => Object::Boolean(value),
             Expression::Prefix { operator, right } => {
                 let object = self.eval_expression(*right, environment);
@@ -183,6 +184,7 @@ impl Evaluator {
     fn eval_minus_prefix_operator(&mut self, object: Object) -> Object {
         match object {
             Object::Integer(value) => Object::Integer(-value),
+            Object::Float(value) => Object::Float(-value),
             _ => Object::Error(format!("unknown operator: -{}", object.name())),
         }
     }
@@ -197,12 +199,16 @@ impl Evaluator {
             (Object::Boolean(left), Object::Boolean(right)) => {
                 self.eval_boolean_infix_expression(operator, left, right)
             }
+            (Object::Float(left), Object::Float(right)) => {
+                self.eval_float_infix_expression(operator, left, right)
+            }
             _ => Object::Error(format!(
                 "type mismatch: {} {} {}",
                 left_string, operator, right_string
             )),
         }
     }
+
     fn eval_integer_infix_expression(
         &mut self,
         operator: Operator,
@@ -221,6 +227,21 @@ impl Evaluator {
             _ => Object::Error(format!("unknown operator: integer {} integer", operator)),
         }
     }
+
+    fn eval_float_infix_expression(&mut self, operator: Operator, left: f64, right: f64) -> Object {
+        match operator {
+            Operator::Plus => Object::Float(left + right),
+            Operator::Minus => Object::Float(left - right),
+            Operator::Divide => Object::Float(left / right),
+            Operator::Multiply => Object::Float(left * right),
+            Operator::LessThan => Object::Boolean(left < right),
+            Operator::GreaterThan => Object::Boolean(left > right),
+            Operator::Equal => Object::Boolean(left == right),
+            Operator::NotEqual => Object::Boolean(left != right),
+            _ => Object::Error(format!("unknown operator: float {} float", operator)),
+        }
+    }
+
     fn eval_boolean_infix_expression(
         &mut self,
         operator: Operator,
@@ -299,6 +320,35 @@ mod tests {
             ("3 * 3 * 3 + 10", Object::Integer(37)),
             ("3 * (3 * 3) + 10", Object::Integer(37)),
             ("(5 + 10 * 2 + 15 / 3) * 2 + -10", Object::Integer(50)),
+        ];
+
+        for (input, expected_output) in tests {
+            let object = test_eval(input);
+            assert_eq!(object, expected_output);
+        }
+    }
+
+    #[test]
+    fn test_eval_float_expression() {
+        let tests = vec![
+            ("5.0", Object::Float(5.0)),
+            ("10.0", Object::Float(10.0)),
+            ("-5.0", Object::Float(-5.0)),
+            ("-10.0", Object::Float(-10.0)),
+            ("5.0 + 5.0 + 5.0 + 5.0 - 10.0", Object::Float(10.0)),
+            ("2.0 * 2.0 * 2.0 * 2.0 * 2.0", Object::Float(32.0)),
+            ("-50.0 + 100.0 + -50.0", Object::Float(0.0)),
+            ("5.0 * 2.0 + 10.0", Object::Float(20.0)),
+            ("5.0 + 2.0 * 10.0", Object::Float(25.0)),
+            ("20.0 + 2.0 * -10.0", Object::Float(0.0)),
+            ("50.0 / 2.0 * 2.0 + 10.0", Object::Float(60.0)),
+            ("2.0 * (5.0 + 10.0)", Object::Float(30.0)),
+            ("3.0 * 3.0 * 3.0 + 10.0", Object::Float(37.0)),
+            ("3.0 * (3.0 * 3.0) + 10.0", Object::Float(37.0)),
+            (
+                "(5.0 + 10.0 * 2.0 + 15.0 / 3.0) * 2.0 + -10.0",
+                Object::Float(50.0),
+            ),
         ];
 
         for (input, expected_output) in tests {
@@ -537,7 +587,7 @@ mod tests {
         let tests = vec![
             (
                 "set_thrust(10)",
-                vec![Command::SetThrust { force: 10 }],
+                vec![Command::SetThrust { force: 10.0 }],
                 Object::Null,
             ),
             (
@@ -548,8 +598,8 @@ mod tests {
                 set_thrust(b);
                 ",
                 vec![
-                    Command::SetThrust { force: 10 },
-                    Command::SetThrust { force: 20 },
+                    Command::SetThrust { force: 10.0 },
+                    Command::SetThrust { force: 20.0 },
                 ],
                 Object::Null,
             ),
@@ -583,9 +633,9 @@ mod tests {
                             ));
                         }
                         match arguments[0].clone() {
-                            Object::Integer(value) => {
-                                Result::Ok(Command::SetThrust { force: value })
-                            }
+                            Object::Integer(value) => Result::Ok(Command::SetThrust {
+                                force: value as f64,
+                            }),
                             _ => Result::Err(format!(
                                 "argument not supported, got {}",
                                 arguments[0].name()
