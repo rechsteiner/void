@@ -500,9 +500,21 @@ mod tests {
     #[test]
     fn test_let_statements() {
         let tests = vec![
-            ("let a = 5; let b = a; b;", Object::Integer(5)),
             (
-                "let a = 5; let b = a; let c = a + b + 5; c;",
+                "
+            let a = 5
+            let b = a
+            b
+            ",
+                Object::Integer(5),
+            ),
+            (
+                "
+                let a = 5
+                let b = a
+                let c = a + b + 5
+                c
+                ",
                 Object::Integer(15),
             ),
         ];
@@ -515,7 +527,7 @@ mod tests {
 
     #[test]
     fn test_function_object() {
-        let input = "func(x) { x + 2; };";
+        let input = "func(x) { x + 2 }";
         let object = test_eval(input);
 
         assert_eq!(
@@ -540,26 +552,41 @@ mod tests {
     fn test_function_application() {
         let tests = vec![
             (
-                "let identity = func(x) { x; }; identity(5);",
+                "
+                let identity = func(x) { x }
+                identity(5)
+                ",
                 Object::Integer(5),
             ),
             (
-                "let identity = func(x) { return x; }; identity(5);",
+                "
+                let identity = func(x) { return x }
+                identity(5)
+                ",
                 Object::Integer(5),
             ),
             (
-                "let double = func(x) { x * 2; }; double(5);",
+                "
+                let double = func(x) { x * 2 }
+                double(5)
+                ",
                 Object::Integer(10),
             ),
             (
-                "let add = func(x, y) { x + y; }; add(5, 5);",
+                "
+                let add = func(x, y) { x + y }
+                add(5, 5)
+                ",
                 Object::Integer(10),
             ),
             (
-                "let add = func(x) { return x; }; add(add(20));",
+                "
+                let add = func(x) { return x }
+                add(add(20))
+                ",
                 Object::Integer(20),
             ),
-            ("func(x) { x; }(5);", Object::Integer(5)),
+            ("func(x) { x }(5)", Object::Integer(5)),
         ];
 
         for (input, expected_output) in tests {
@@ -572,11 +599,11 @@ mod tests {
     fn test_closures() {
         let input = "
         let newAdder = func(x) {
-            func(y) { x + y };
-        };
+            func(y) { x + y }
+        }
 
-        let addTwo = newAdder(2);
-        addTwo(2);
+        let addTwo = newAdder(2)
+        addTwo(2)
         ";
         let object = test_eval(input);
         assert_eq!(object, Object::Integer(4));
@@ -592,10 +619,10 @@ mod tests {
             ),
             (
                 "
-                let a = 10;
+                let a = 10
                 set_thrust(a)
-                let b = 20;
-                set_thrust(b);
+                let b = 20
+                set_thrust(b)
                 ",
                 vec![
                     Command::SetThrust { force: 10.0 },

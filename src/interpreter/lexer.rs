@@ -14,9 +14,12 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
+        if let Some(newline_token) = self.read_whitespace() {
+            return newline_token;
+        }
 
         match self.input.next() {
+            Some(';') => Token::Illegal,
             Some('=') => match self.input.peek() {
                 Some('=') => {
                     self.input.next();
@@ -31,7 +34,6 @@ impl<'a> Lexer<'a> {
                 }
                 _ => Token::Bang,
             },
-            Some(';') => Token::Semicolon,
             Some('(') => Token::LeftParen,
             Some(')') => Token::RightParen,
             Some(',') => Token::Comma,
@@ -120,13 +122,23 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn skip_whitespace(&mut self) {
+    fn read_whitespace(&mut self) -> Option<Token> {
+        let mut contains_newline: bool = false;
         while let Some(&char) = self.input.peek() {
             if char.is_whitespace() {
+                // TODO: Look into checking for the unicode definition of newline
+                if char == '\n' {
+                    contains_newline = true;
+                }
                 self.input.next();
             } else {
                 break;
             }
+        }
+        if contains_newline {
+            Some(Token::Newline)
+        } else {
+            None
         }
     }
 }
@@ -136,25 +148,25 @@ fn test_next_token() {
     let input = "
     
     
-    let five = 5;
-    let ten = 10;
-    
+    let five = 5
+    let ten = 10
+
     let add = func(x, y) {
-        x + y;
-    };
-    
-    let result = add(five, ten);
-    !-/*5;
-    5 < 10 > 5;
-    
-    if (5 < 10) {
-        return true;
-    } else {
-        return false;
+        x + y
     }
-    
-    10 == 10;
-    10 != 9;
+
+    let result = add(five, ten)
+    !-/*5
+    5 < 10 > 5
+
+    if (5 < 10) {
+        return true
+    } else {
+        return false
+    }
+
+    10 == 10
+    10 != 9
 
     1.00
     1000.200
@@ -162,16 +174,17 @@ fn test_next_token() {
     ";
 
     let expected_tokens = vec![
+        Token::Newline,
         Token::Let,
         Token::Identifier(String::from("five")),
         Token::Assign,
         Token::Int(String::from("5")),
-        Token::Semicolon,
+        Token::Newline,
         Token::Let,
         Token::Identifier(String::from("ten")),
         Token::Assign,
         Token::Int(String::from("10")),
-        Token::Semicolon,
+        Token::Newline,
         Token::Let,
         Token::Identifier(String::from("add")),
         Token::Assign,
@@ -182,12 +195,13 @@ fn test_next_token() {
         Token::Identifier(String::from("y")),
         Token::RightParen,
         Token::LeftBrackets,
+        Token::Newline,
         Token::Identifier(String::from("x")),
         Token::Plus,
         Token::Identifier(String::from("y")),
-        Token::Semicolon,
+        Token::Newline,
         Token::RightBrackets,
-        Token::Semicolon,
+        Token::Newline,
         Token::Let,
         Token::Identifier(String::from("result")),
         Token::Assign,
@@ -197,19 +211,19 @@ fn test_next_token() {
         Token::Comma,
         Token::Identifier(String::from("ten")),
         Token::RightParen,
-        Token::Semicolon,
+        Token::Newline,
         Token::Bang,
         Token::Minus,
         Token::Slash,
         Token::Asterisk,
         Token::Int(String::from("5")),
-        Token::Semicolon,
+        Token::Newline,
         Token::Int(String::from("5")),
         Token::LessThan,
         Token::Int(String::from("10")),
         Token::GreaterThan,
         Token::Int(String::from("5")),
-        Token::Semicolon,
+        Token::Newline,
         Token::If,
         Token::LeftParen,
         Token::Int(String::from("5")),
@@ -217,26 +231,31 @@ fn test_next_token() {
         Token::Int(String::from("10")),
         Token::RightParen,
         Token::LeftBrackets,
+        Token::Newline,
         Token::Return,
         Token::True,
-        Token::Semicolon,
+        Token::Newline,
         Token::RightBrackets,
         Token::Else,
         Token::LeftBrackets,
+        Token::Newline,
         Token::Return,
         Token::False,
-        Token::Semicolon,
+        Token::Newline,
         Token::RightBrackets,
+        Token::Newline,
         Token::Int(String::from("10")),
         Token::Equal,
         Token::Int(String::from("10")),
-        Token::Semicolon,
+        Token::Newline,
         Token::Int(String::from("10")),
         Token::NotEqual,
         Token::Int(String::from("9")),
-        Token::Semicolon,
+        Token::Newline,
         Token::Float(String::from("1.00")),
+        Token::Newline,
         Token::Float(String::from("1000.200")),
+        Token::Newline,
         Token::Eof,
     ];
 

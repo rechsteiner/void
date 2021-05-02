@@ -19,7 +19,7 @@ pub enum Token {
     GreaterThan,
     // Delimiters
     Comma,
-    Semicolon,
+    Newline,
     LeftParen,
     RightParen,
     LeftBrackets,
