@@ -406,13 +406,13 @@ mod tests {
     #[test]
     fn test_if_else_expressions() {
         let tests = vec![
-            ("if (true) { 10 }", Object::Integer(10)),
-            ("if (false) { 10 }", Object::Null),
-            ("if (1) { 10 }", Object::Integer(10)),
-            ("if (1 < 2) { 10 }", Object::Integer(10)),
-            ("if (1 > 2) { 10 }", Object::Null),
-            ("if (1 > 2) { 10 } else { 20 }", Object::Integer(20)),
-            ("if (1 < 2) { 10 } else { 20 }", Object::Integer(10)),
+            ("if (true) do 10 end", Object::Integer(10)),
+            ("if (false) do 10 end", Object::Null),
+            ("if (1) do 10 end", Object::Integer(10)),
+            ("if (1 < 2) do 10 end", Object::Integer(10)),
+            ("if (1 > 2) do 10 ", Object::Null),
+            ("if (1 > 2) do 10 else 20 end", Object::Integer(20)),
+            ("if (1 < 2) do 10 else 20 end", Object::Integer(10)),
         ];
 
         for (input, expected_output) in tests {
@@ -527,7 +527,7 @@ mod tests {
 
     #[test]
     fn test_function_object() {
-        let input = "func(x) { x + 2 }";
+        let input = "func(x) do x + 2 end";
         let object = test_eval(input);
 
         assert_eq!(
@@ -553,40 +553,40 @@ mod tests {
         let tests = vec![
             (
                 "
-                let identity = func(x) { x }
+                let identity = func(x) do x end
                 identity(5)
                 ",
                 Object::Integer(5),
             ),
             (
                 "
-                let identity = func(x) { return x }
+                let identity = func(x) do return x end
                 identity(5)
                 ",
                 Object::Integer(5),
             ),
             (
                 "
-                let double = func(x) { x * 2 }
+                let double = func(x) do x * 2 end
                 double(5)
                 ",
                 Object::Integer(10),
             ),
             (
                 "
-                let add = func(x, y) { x + y }
+                let add = func(x, y) do x + y end
                 add(5, 5)
                 ",
                 Object::Integer(10),
             ),
             (
                 "
-                let add = func(x) { return x }
+                let add = func(x) do return x end
                 add(add(20))
                 ",
                 Object::Integer(20),
             ),
-            ("func(x) { x }(5)", Object::Integer(5)),
+            ("func(x) do x end(5)", Object::Integer(5)),
         ];
 
         for (input, expected_output) in tests {
@@ -598,9 +598,9 @@ mod tests {
     #[test]
     fn test_closures() {
         let input = "
-        let newAdder = func(x) {
-            func(y) { x + y }
-        }
+        let newAdder = func(x) do
+            func(y) do x + y end
+        end
 
         let addTwo = newAdder(2)
         addTwo(2)

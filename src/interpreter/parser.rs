@@ -291,26 +291,22 @@ impl<'a> Parser<'a> {
             if !self.expect_peek(Token::RightParen) {
                 return None;
             }
-            if !self.expect_peek(Token::LeftBrackets) {
+            if !self.expect_peek(Token::Do) {
                 return None;
             }
             let consequence = self.parse_block_statement();
 
-            if self.peek_token == Token::Else {
-                self.next_token();
-
-                if !self.expect_peek(Token::LeftBrackets) {
-                    return None;
-                }
-
+            if self.current_token == Token::Else {
                 let alternative = self.parse_block_statement();
 
-                return Some(Expression::If {
-                    condition: Box::new(condition),
-                    consequence: consequence,
-                    alternative: Some(alternative),
-                });
-            } else {
+                if self.expect_current(Token::End) {
+                    return Some(Expression::If {
+                        condition: Box::new(condition),
+                        consequence: consequence,
+                        alternative: Some(alternative),
+                    });
+                }
+            } else if self.expect_current(Token::End) {
                 return Some(Expression::If {
                     condition: Box::new(condition),
                     consequence: consequence,
@@ -328,17 +324,19 @@ impl<'a> Parser<'a> {
         }
 
         if let Some(parameters) = self.parse_function_parameters() {
-            if !self.expect_peek(Token::LeftBrackets) {
+            if !self.expect_peek(Token::Do) {
                 return None;
             }
             let body = self.parse_block_statement();
-            Some(Expression::Function {
-                parameters: parameters,
-                body: body,
-            })
-        } else {
-            None
+            if self.expect_current(Token::End) {
+                return Some(Expression::Function {
+                    parameters: parameters,
+                    body: body,
+                });
+            }
         }
+
+        None
     }
 
     fn parse_function_parameters(&mut self) -> Option<Vec<String>> {
@@ -375,7 +373,10 @@ impl<'a> Parser<'a> {
         self.next_token();
         let mut statements: Vec<Statement> = vec![];
 
-        while self.current_token != Token::RightBrackets && self.current_token != Token::Eof {
+        while self.current_token != Token::End
+            && self.current_token != Token::Else
+            && self.current_token != Token::Eof
+        {
             if let Some(statement) = self.parse_statement() {
                 statements.push(statement);
             }
@@ -443,6 +444,23 @@ impl<'a> Parser<'a> {
         let error = format!(
             "Expected next token to be {:?}, got {:?} instead",
             token, self.peek_token
+        );
+        self.errors.push(error);
+    }
+
+    fn expect_current(&mut self, token: Token) -> bool {
+        if self.current_token == token {
+            true
+        } else {
+            self.current_error(token);
+            false
+        }
+    }
+
+    fn current_error(&mut self, token: Token) {
+        let error = format!(
+            "Expected current token to be {:?}, got {:?} instead",
+            token, self.current_token
         );
         self.errors.push(error);
     }
@@ -743,7 +761,7 @@ fn test_operator_precedence_parsing() {
 
 #[test]
 fn test_if_expression() {
-    let input = "if (x < y) { x }";
+    let input = "if (x < y) do x end";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -771,7 +789,7 @@ fn test_if_expression() {
 
 #[test]
 fn test_if_else_expression() {
-    let input = "if (x < y) { x } else { y }";
+    let input = "if (x < y) do x else y end";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -803,7 +821,7 @@ fn test_if_else_expression() {
 
 #[test]
 fn test_function_expression() {
-    let input = "func(x, y) { x + y }";
+    let input = "func(x, y) do x + y end";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -831,10 +849,10 @@ fn test_function_expression() {
 #[test]
 fn test_function_parameters() {
     let tests = vec![
-        ("func() {}", vec![]),
-        ("func(x) {}", vec![String::from("x")]),
+        ("func() do end", vec![]),
+        ("func(x) do end", vec![String::from("x")]),
         (
-            "func(x, y, z) {}",
+            "func(x, y, z) do end",
             vec![String::from("x"), String::from("y"), String::from("z")],
         ),
     ];

@@ -39,8 +39,6 @@ impl<'a> Lexer<'a> {
             Some(',') => Token::Comma,
             Some('+') => Token::Plus,
             Some('-') => Token::Minus,
-            Some('{') => Token::LeftBrackets,
-            Some('}') => Token::RightBrackets,
             Some('/') => Token::Slash,
             Some('*') => Token::Asterisk,
             Some('<') => Token::LessThan,
@@ -59,6 +57,8 @@ impl<'a> Lexer<'a> {
                         "if" => Token::If,
                         "else" => Token::Else,
                         "return" => Token::Return,
+                        "do" => Token::Do,
+                        "end" => Token::End,
                         _ => Token::Identifier(identitier),
                     }
                 } else if char.is_digit(10) {
@@ -151,19 +151,19 @@ fn test_next_token() {
     let five = 5
     let ten = 10
 
-    let add = func(x, y) {
+    let add = func(x, y) do
         x + y
-    }
+    end
 
     let result = add(five, ten)
     !-/*5
     5 < 10 > 5
 
-    if (5 < 10) {
+    if (5 < 10) do
         return true
-    } else {
+    else
         return false
-    }
+    end
 
     10 == 10
     10 != 9
@@ -194,13 +194,13 @@ fn test_next_token() {
         Token::Comma,
         Token::Identifier(String::from("y")),
         Token::RightParen,
-        Token::LeftBrackets,
+        Token::Do,
         Token::Newline,
         Token::Identifier(String::from("x")),
         Token::Plus,
         Token::Identifier(String::from("y")),
         Token::Newline,
-        Token::RightBrackets,
+        Token::End,
         Token::Newline,
         Token::Let,
         Token::Identifier(String::from("result")),
@@ -230,19 +230,17 @@ fn test_next_token() {
         Token::LessThan,
         Token::Int(String::from("10")),
         Token::RightParen,
-        Token::LeftBrackets,
+        Token::Do,
         Token::Newline,
         Token::Return,
         Token::True,
         Token::Newline,
-        Token::RightBrackets,
         Token::Else,
-        Token::LeftBrackets,
         Token::Newline,
         Token::Return,
         Token::False,
         Token::Newline,
-        Token::RightBrackets,
+        Token::End,
         Token::Newline,
         Token::Int(String::from("10")),
         Token::Equal,
