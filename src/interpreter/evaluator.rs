@@ -406,13 +406,13 @@ mod tests {
     #[test]
     fn test_if_else_expressions() {
         let tests = vec![
-            ("if (true) do 10 end", Object::Integer(10)),
-            ("if (false) do 10 end", Object::Null),
-            ("if (1) do 10 end", Object::Integer(10)),
-            ("if (1 < 2) do 10 end", Object::Integer(10)),
-            ("if (1 > 2) do 10 ", Object::Null),
-            ("if (1 > 2) do 10 else 20 end", Object::Integer(20)),
-            ("if (1 < 2) do 10 else 20 end", Object::Integer(10)),
+            ("if true do 10 end", Object::Integer(10)),
+            ("if false do 10 end", Object::Null),
+            ("if 1 do 10 end", Object::Integer(10)),
+            ("if 1 < 2 do 10 end", Object::Integer(10)),
+            ("if 1 > 2 do 10 ", Object::Null),
+            ("if 1 > 2 do 10 else 20 end", Object::Integer(20)),
+            ("if 1 < 2 do 10 else 20 end", Object::Integer(10)),
         ];
 
         for (input, expected_output) in tests {
@@ -430,12 +430,12 @@ mod tests {
             ("9; return 2 * 5; 9;", Object::Integer(10)),
             (
                 "
-            if (10 > 1) {
-                if (10 > 1) {
+            if 10 > 1 do
+                if 10 > 1 do
                     return 10;
-                }
+                end
                 return 1;
-            }
+            end
             ",
                 Object::Integer(10),
             ),
@@ -451,11 +451,14 @@ mod tests {
     fn test_error_handling() {
         let tests = vec![
             (
-                "5 + true;",
+                "5 + true",
                 Object::Error(String::from("type mismatch: integer + boolean")),
             ),
             (
-                "5 + true; 5;",
+                "
+                5 + true
+                5
+                ",
                 Object::Error(String::from("type mismatch: integer + boolean")),
             ),
             (
@@ -467,21 +470,23 @@ mod tests {
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
             (
-                "5; true + false; 5",
+                "5
+                true + false
+                5",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
             (
-                "if (10 > 1) { true + false; }",
+                "if 10 > 1 do true + false end",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
             (
                 "
-                if (10 > 1) {
-                    if (10 > 1) {
-                        return true + false;
-                    }
-                    return 1;
-                }
+                if 10 > 1 do
+                    if 10 > 1 do
+                        return true + false
+                    end
+                    return 1
+                end
                 ",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
@@ -527,7 +532,7 @@ mod tests {
 
     #[test]
     fn test_function_object() {
-        let input = "func(x) do x + 2 end";
+        let input = "func x do x + 2 end";
         let object = test_eval(input);
 
         assert_eq!(
@@ -553,40 +558,40 @@ mod tests {
         let tests = vec![
             (
                 "
-                let identity = func(x) do x end
+                let identity = func x do x end
                 identity(5)
                 ",
                 Object::Integer(5),
             ),
             (
                 "
-                let identity = func(x) do return x end
+                let identity = func x do return x end
                 identity(5)
                 ",
                 Object::Integer(5),
             ),
             (
                 "
-                let double = func(x) do x * 2 end
+                let double = func x do x * 2 end
                 double(5)
                 ",
                 Object::Integer(10),
             ),
             (
                 "
-                let add = func(x, y) do x + y end
+                let add = func x y do x + y end
                 add(5, 5)
                 ",
                 Object::Integer(10),
             ),
             (
                 "
-                let add = func(x) do return x end
+                let add = func x do return x end
                 add(add(20))
                 ",
                 Object::Integer(20),
             ),
-            ("func(x) do x end(5)", Object::Integer(5)),
+            ("func x do x end(5)", Object::Integer(5)),
         ];
 
         for (input, expected_output) in tests {
@@ -598,8 +603,8 @@ mod tests {
     #[test]
     fn test_closures() {
         let input = "
-        let newAdder = func(x) do
-            func(y) do x + y end
+        let newAdder = func x do
+            func y do x + y end
         end
 
         let addTwo = newAdder(2)

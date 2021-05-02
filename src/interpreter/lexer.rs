@@ -151,7 +151,7 @@ fn test_next_token() {
     let five = 5
     let ten = 10
 
-    let add = func(x, y) do
+    let add = func x y do
         x + y
     end
 
@@ -159,7 +159,7 @@ fn test_next_token() {
     !-/*5
     5 < 10 > 5
 
-    if (5 < 10) do
+    if 5 < 10 do
         return true
     else
         return false
@@ -189,11 +189,8 @@ fn test_next_token() {
         Token::Identifier(String::from("add")),
         Token::Assign,
         Token::Function,
-        Token::LeftParen,
         Token::Identifier(String::from("x")),
-        Token::Comma,
         Token::Identifier(String::from("y")),
-        Token::RightParen,
         Token::Do,
         Token::Newline,
         Token::Identifier(String::from("x")),
@@ -225,11 +222,9 @@ fn test_next_token() {
         Token::Int(String::from("5")),
         Token::Newline,
         Token::If,
-        Token::LeftParen,
         Token::Int(String::from("5")),
         Token::LessThan,
         Token::Int(String::from("10")),
-        Token::RightParen,
         Token::Do,
         Token::Newline,
         Token::Return,
