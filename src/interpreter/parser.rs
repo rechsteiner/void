@@ -44,6 +44,10 @@ impl<'a> Parser<'a> {
         let mut program = Program::new();
 
         while self.current_token != Token::Eof {
+            if self.current_token == Token::Newline {
+                self.next_token();
+            }
+
             let statement = self.parse_statement();
 
             if let Some(statement) = statement {
@@ -75,7 +79,7 @@ impl<'a> Parser<'a> {
 
                 self.next_token();
                 if let Some(expression) = self.parse_expression(Precedence::Lowest) {
-                    if !self.expect_peek(Token::Semicolon) {
+                    if !self.expect_peek(Token::Newline) {
                         return None;
                     }
 
@@ -101,7 +105,7 @@ impl<'a> Parser<'a> {
                 expression: expression,
             };
 
-            if self.peek_token == Token::Semicolon {
+            if self.peek_token == Token::Newline {
                 self.next_token();
             }
 
@@ -113,7 +117,7 @@ impl<'a> Parser<'a> {
 
     fn parse_expression_statement(&mut self) -> Option<Statement> {
         if let Some(expression) = self.parse_expression(Precedence::Lowest) {
-            if self.peek_token == Token::Semicolon {
+            if self.peek_token == Token::Newline {
                 self.next_token();
             }
             let statement = Statement::Expression {
@@ -129,7 +133,7 @@ impl<'a> Parser<'a> {
         if let Some(prefix_fn) = self.prefix_parse_fn() {
             if let Some(left_expression) = prefix_fn(self) {
                 let mut left_expression = left_expression;
-                while self.peek_token != Token::Semicolon && precedence < self.peek_precedence() {
+                while self.peek_token != Token::Newline && precedence < self.peek_precedence() {
                     match self.infix_parse_fn() {
                         Some(infix_fn) => {
                             self.next_token();
@@ -469,7 +473,7 @@ impl<'a> Parser<'a> {
 
 #[test]
 fn test_new() {
-    let lexer = Lexer::new("let a = 1;");
+    let lexer = Lexer::new("let a = 1");
     let parser = Parser::new(lexer);
 
     assert_eq!(parser.current_token, Token::Let);
@@ -479,9 +483,9 @@ fn test_new() {
 #[test]
 fn test_let_statement() {
     let input = "
-    let x = 5;
-    let y = 10;
-    let foobar = 838383;
+    let x = 5
+    let y = 10
+    let foobar = 838383
     ";
 
     let lexer = Lexer::new(input);
@@ -511,9 +515,9 @@ fn test_let_statement() {
 #[test]
 fn test_return_statement() {
     let input = "
-    return 5;
-    return 10;
-    return 993322;
+    return 5
+    return 10
+    return 993322
     ";
 
     let lexer = Lexer::new(input);
@@ -555,7 +559,7 @@ fn test_identifier_expression() {
 
 #[test]
 fn test_integer_expression() {
-    let input = "5;";
+    let input = "5";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -571,7 +575,7 @@ fn test_integer_expression() {
 
 #[test]
 fn test_float_expression() {
-    let input = "1.0;";
+    let input = "1.0";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -588,8 +592,8 @@ fn test_float_expression() {
 #[test]
 fn test_prefix_expression() {
     let input = "
-    !5;
-    -15;
+    !5
+    -15
     ";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
@@ -618,14 +622,14 @@ fn test_prefix_expression() {
 #[test]
 fn test_infix_expression() {
     let input = "
-    5 + 5;
-    5 - 5;
-    5 * 5;
-    5 / 5;
-    5 > 5;
-    5 < 5;
-    5 == 5;
-    5 != 5;
+    5 + 5
+    5 - 5
+    5 * 5
+    5 / 5
+    5 > 5
+    5 < 5
+    5 == 5
+    5 != 5
     ";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
@@ -661,8 +665,8 @@ fn test_infix_expression() {
 #[test]
 fn test_boolean_expression() {
     let input = "
-    true;
-    false;
+    true
+    false
     ";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
@@ -693,7 +697,13 @@ fn test_operator_precedence_parsing() {
         ("a * b / c", "((a * b) / c)"),
         ("a + b / c", "(a + (b / c))"),
         ("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
-        ("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+        (
+            "
+        3 + 4
+        -5 * 5
+        ",
+            "(3 + 4)((-5) * 5)",
+        ),
         ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
         ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
         (
@@ -793,7 +803,7 @@ fn test_if_else_expression() {
 
 #[test]
 fn test_function_expression() {
-    let input = "func(x, y) { x + y; }";
+    let input = "func(x, y) { x + y }";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -849,7 +859,7 @@ fn test_function_parameters() {
 
 #[test]
 fn test_call_expression() {
-    let input = "add(1, 2 * 3, 4 + 5);";
+    let input = "add(1, 2 * 3, 4 + 5)";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
