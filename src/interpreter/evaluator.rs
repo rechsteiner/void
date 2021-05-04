@@ -360,8 +360,8 @@ mod tests {
     #[test]
     fn test_eval_boolean_expression() {
         let tests = vec![
-            ("true", Object::Boolean(true)),
-            ("false", Object::Boolean(false)),
+            ("TRUE", Object::Boolean(true)),
+            ("FALSE", Object::Boolean(false)),
             ("1 < 2", Object::Boolean(true)),
             ("1 > 2", Object::Boolean(false)),
             ("1 < 1", Object::Boolean(false)),
@@ -370,14 +370,14 @@ mod tests {
             ("1 != 1", Object::Boolean(false)),
             ("1 == 2", Object::Boolean(false)),
             ("1 != 2", Object::Boolean(true)),
-            ("true == true", Object::Boolean(true)),
-            ("false == false", Object::Boolean(true)),
-            ("true == false", Object::Boolean(false)),
-            ("true != false", Object::Boolean(true)),
-            ("(1 < 2) == true", Object::Boolean(true)),
-            ("(1 < 2) == false", Object::Boolean(false)),
-            ("(1 > 2) == true", Object::Boolean(false)),
-            ("(1 > 2) == false", Object::Boolean(true)),
+            ("TRUE == TRUE", Object::Boolean(true)),
+            ("FALSE == FALSE", Object::Boolean(true)),
+            ("TRUE == FALSE", Object::Boolean(false)),
+            ("TRUE != FALSE", Object::Boolean(true)),
+            ("(1 < 2) == TRUE", Object::Boolean(true)),
+            ("(1 < 2) == FALSE", Object::Boolean(false)),
+            ("(1 > 2) == TRUE", Object::Boolean(false)),
+            ("(1 > 2) == FALSE", Object::Boolean(true)),
         ];
 
         for (input, expected_output) in tests {
@@ -389,11 +389,11 @@ mod tests {
     #[test]
     fn test_not_operator() {
         let tests = vec![
-            ("!true", Object::Boolean(false)),
-            ("!false", Object::Boolean(true)),
+            ("!TRUE", Object::Boolean(false)),
+            ("!FALSE", Object::Boolean(true)),
             ("!5", Object::Boolean(false)),
-            ("!!true", Object::Boolean(true)),
-            ("!!false", Object::Boolean(false)),
+            ("!!TRUE", Object::Boolean(true)),
+            ("!!FALSE", Object::Boolean(false)),
             ("!!5", Object::Boolean(true)),
         ];
 
@@ -406,13 +406,13 @@ mod tests {
     #[test]
     fn test_if_else_expressions() {
         let tests = vec![
-            ("if true do 10 end", Object::Integer(10)),
-            ("if false do 10 end", Object::Null),
-            ("if 1 do 10 end", Object::Integer(10)),
-            ("if 1 < 2 do 10 end", Object::Integer(10)),
-            ("if 1 > 2 do 10 ", Object::Null),
-            ("if 1 > 2 do 10 else 20 end", Object::Integer(20)),
-            ("if 1 < 2 do 10 else 20 end", Object::Integer(10)),
+            ("IF TRUE DO 10 END", Object::Integer(10)),
+            ("IF FALSE DO 10 END", Object::Null),
+            ("IF 1 DO 10 END", Object::Integer(10)),
+            ("IF 1 < 2 DO 10 END", Object::Integer(10)),
+            ("IF 1 > 2 DO 10 ", Object::Null),
+            ("IF 1 > 2 DO 10 ELSE 20 END", Object::Integer(20)),
+            ("IF 1 < 2 DO 10 ELSE 20 END", Object::Integer(10)),
         ];
 
         for (input, expected_output) in tests {
@@ -424,18 +424,18 @@ mod tests {
     #[test]
     fn test_return_statements() {
         let tests = vec![
-            ("return 10;", Object::Integer(10)),
-            ("return 10; 9;", Object::Integer(10)),
-            ("return 2 * 5; 9", Object::Integer(10)),
-            ("9; return 2 * 5; 9;", Object::Integer(10)),
+            ("RETURN 10;", Object::Integer(10)),
+            ("RETURN 10; 9;", Object::Integer(10)),
+            ("RETURN 2 * 5; 9", Object::Integer(10)),
+            ("9; RETURN 2 * 5; 9;", Object::Integer(10)),
             (
                 "
-            if 10 > 1 do
-                if 10 > 1 do
-                    return 10;
-                end
-                return 1;
-            end
+            IF 10 > 1 DO
+                IF 10 > 1 DO
+                    RETURN 10;
+                END
+                RETURN 1;
+            END
             ",
                 Object::Integer(10),
             ),
@@ -451,42 +451,42 @@ mod tests {
     fn test_error_handling() {
         let tests = vec![
             (
-                "5 + true",
+                "5 + TRUE",
                 Object::Error(String::from("type mismatch: integer + boolean")),
             ),
             (
                 "
-                5 + true
+                5 + TRUE
                 5
                 ",
                 Object::Error(String::from("type mismatch: integer + boolean")),
             ),
             (
-                "-true",
+                "-TRUE",
                 Object::Error(String::from("unknown operator: -boolean")),
             ),
             (
-                "true + false;",
+                "TRUE + FALSE;",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
             (
                 "5
-                true + false
+                TRUE + FALSE
                 5",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
             (
-                "if 10 > 1 do true + false end",
+                "IF 10 > 1 DO TRUE + FALSE END",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
             (
                 "
-                if 10 > 1 do
-                    if 10 > 1 do
-                        return true + false
-                    end
-                    return 1
-                end
+                IF 10 > 1 DO
+                    IF 10 > 1 DO
+                        RETURN TRUE + FALSE
+                    END
+                    RETURN 1
+                END
                 ",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
@@ -507,18 +507,18 @@ mod tests {
         let tests = vec![
             (
                 "
-            let a = 5
-            let b = a
-            b
+            LET A = 5
+            LET B = A
+            B
             ",
                 Object::Integer(5),
             ),
             (
                 "
-                let a = 5
-                let b = a
-                let c = a + b + 5
-                c
+                LET A = 5
+                LET B = A
+                LET C = A + B + 5
+                C
                 ",
                 Object::Integer(15),
             ),
@@ -532,18 +532,18 @@ mod tests {
 
     #[test]
     fn test_function_object() {
-        let input = "func x do x + 2 end";
+        let input = "FUNC X DO X + 2 END";
         let object = test_eval(input);
 
         assert_eq!(
             object,
             Object::Function {
-                parameters: vec![String::from("x")],
+                parameters: vec![String::from("X")],
                 body: BlockStatement {
                     statements: vec![Statement::Expression {
                         expression: Expression::Infix {
                             operator: Operator::Plus,
-                            left: Box::new(Expression::Identifier(String::from("x"))),
+                            left: Box::new(Expression::Identifier(String::from("X"))),
                             right: Box::new(Expression::Int(2)),
                         }
                     }]
@@ -558,40 +558,40 @@ mod tests {
         let tests = vec![
             (
                 "
-                let identity = func x do x end
-                identity(5)
+                LET IDENTITY = FUNC X DO X END
+                IDENTITY(5)
                 ",
                 Object::Integer(5),
             ),
             (
                 "
-                let identity = func x do return x end
-                identity(5)
+                LET IDENTITY = FUNC X DO RETURN X END
+                IDENTITY(5)
                 ",
                 Object::Integer(5),
             ),
             (
                 "
-                let double = func x do x * 2 end
-                double(5)
+                LET DOUBLE = FUNC X DO X * 2 END
+                DOUBLE(5)
                 ",
                 Object::Integer(10),
             ),
             (
                 "
-                let add = func x y do x + y end
-                add(5, 5)
+                LET ADD = FUNC X Y DO X + Y END
+                ADD(5, 5)
                 ",
                 Object::Integer(10),
             ),
             (
                 "
-                let add = func x do return x end
-                add(add(20))
+                LET ADD = FUNC X DO RETURN X END
+                ADD(ADD(20))
                 ",
                 Object::Integer(20),
             ),
-            ("func x do x end(5)", Object::Integer(5)),
+            ("FUNC X DO X END(5)", Object::Integer(5)),
         ];
 
         for (input, expected_output) in tests {
@@ -603,12 +603,12 @@ mod tests {
     #[test]
     fn test_closures() {
         let input = "
-        let newAdder = func x do
-            func y do x + y end
-        end
+        LET NEW_ADDER = FUNC X DO
+            FUNC Y DO X + Y END
+        END
 
-        let addTwo = newAdder(2)
-        addTwo(2)
+        LET ADD_TWO = NEW_ADDER(2)
+        ADD_TWO(2)
         ";
         let object = test_eval(input);
         assert_eq!(object, Object::Integer(4));
@@ -618,16 +618,16 @@ mod tests {
     fn test_command_functions() {
         let tests = vec![
             (
-                "set_thrust(10)",
+                "SET_THRUST(10)",
                 vec![Command::SetThrust { force: 10.0 }],
                 Object::Null,
             ),
             (
                 "
-                let a = 10
-                set_thrust(a)
-                let b = 20
-                set_thrust(b)
+                LET A = 10
+                SET_THRUST(A)
+                LET B = 20
+                SET_THRUST(B)
                 ",
                 vec![
                     Command::SetThrust { force: 10.0 },
@@ -636,12 +636,12 @@ mod tests {
                 Object::Null,
             ),
             (
-                "set_thrust(true)",
+                "SET_THRUST(TRUE)",
                 vec![],
                 Object::Error(String::from("argument not supported, got boolean")),
             ),
             (
-                "set_thrust(0, 1)",
+                "SET_THRUST(0, 1)",
                 vec![],
                 Object::Error(String::from("wrong number of arguments. got=2, want=1")),
             ),
@@ -655,7 +655,7 @@ mod tests {
             let mut evaluator = Evaluator::new();
 
             environment.set(
-                String::from("set_thrust"),
+                String::from("SET_THRUST"),
                 Object::Command {
                     function: |arguments| {
                         if arguments.len() != 1 {

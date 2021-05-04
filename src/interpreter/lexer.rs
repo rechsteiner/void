@@ -50,15 +50,15 @@ impl<'a> Lexer<'a> {
                     let identitier = self.read_identifier(char);
                     // Match against "reserved keywords"
                     match identitier.as_str() {
-                        "func" => Token::Function,
-                        "let" => Token::Let,
-                        "true" => Token::True,
-                        "false" => Token::False,
-                        "if" => Token::If,
-                        "else" => Token::Else,
-                        "return" => Token::Return,
-                        "do" => Token::Do,
-                        "end" => Token::End,
+                        "FUNC" => Token::Function,
+                        "LET" => Token::Let,
+                        "TRUE" => Token::True,
+                        "FALSE" => Token::False,
+                        "IF" => Token::If,
+                        "ELSE" => Token::Else,
+                        "RETURN" => Token::Return,
+                        "DO" => Token::Do,
+                        "END" => Token::End,
                         _ => Token::Identifier(identitier),
                     }
                 } else if char.is_digit(10) {
@@ -148,22 +148,22 @@ fn test_next_token() {
     let input = "
     
     
-    let five = 5
-    let ten = 10
+    LET FIVE = 5
+    LET TEN = 10
 
-    let add = func x y do
-        x + y
-    end
+    LET ADD = FUNC X Y DO
+        X + Y
+    END
 
-    let result = add(five, ten)
+    LET RESULT = ADD(FIVE, TEN)
     !-/*5
     5 < 10 > 5
 
-    if 5 < 10 do
-        return true
-    else
-        return false
-    end
+    IF 5 < 10 DO
+        RETURN TRUE
+    ELSE
+        RETURN FALSE
+    END
 
     10 == 10
     10 != 9
@@ -176,37 +176,37 @@ fn test_next_token() {
     let expected_tokens = vec![
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("five")),
+        Token::Identifier(String::from("FIVE")),
         Token::Assign,
         Token::Int(String::from("5")),
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("ten")),
+        Token::Identifier(String::from("TEN")),
         Token::Assign,
         Token::Int(String::from("10")),
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("add")),
+        Token::Identifier(String::from("ADD")),
         Token::Assign,
         Token::Function,
-        Token::Identifier(String::from("x")),
-        Token::Identifier(String::from("y")),
+        Token::Identifier(String::from("X")),
+        Token::Identifier(String::from("Y")),
         Token::Do,
         Token::Newline,
-        Token::Identifier(String::from("x")),
+        Token::Identifier(String::from("X")),
         Token::Plus,
-        Token::Identifier(String::from("y")),
+        Token::Identifier(String::from("Y")),
         Token::Newline,
         Token::End,
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("result")),
+        Token::Identifier(String::from("RESULT")),
         Token::Assign,
-        Token::Identifier(String::from("add")),
+        Token::Identifier(String::from("ADD")),
         Token::LeftParen,
-        Token::Identifier(String::from("five")),
+        Token::Identifier(String::from("FIVE")),
         Token::Comma,
-        Token::Identifier(String::from("ten")),
+        Token::Identifier(String::from("TEN")),
         Token::RightParen,
         Token::Newline,
         Token::Bang,

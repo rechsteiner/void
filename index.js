@@ -120,7 +120,7 @@ import("./pkg/static_void.js").then((lib) => {
     move_viewport();
 
     if (!isPaused) {
-      game.change_program(editor.value);
+      game.change_program(editor.value.toUpperCase());
       game.next_simulation_step();
     }
 
