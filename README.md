@@ -16,37 +16,36 @@ Enter code to control the ship
 This will hover the ship and let it glide to your desired longitude and altitude.
 
 ```
-let target_long = 200
-let target_alt = 300
+LET TARGET_LONG = 200
+LET TARGET_ALT = 300
 
-let future_alt = altitude - (alt_vel * 2)
-let future_pos = longitude + (long_vel * 2)
-let future_angle = angle + (ang_vel * 10)
+LET FUTURE_ALT = ALTITUDE - (ALT_VEL * 2)
+LET FUTURE_POS = LONGITUDE + (LONG_VEL * 2)
+LET FUTURE_ANGLE = ANGLE + (ANG_VEL * 10)
 
-if future_alt < target_alt do
-  set_thrust(-3000)
-end
+IF FUTURE_ALT < TARGET_ALT DO
+  SET_THRUST(-3000)
+END
 
-if alt_vel > 20 do
-  set_thrust(-3000)
-end
+IF ALT_VEL > 20 DO
+  SET_THRUST(-3000)
+END
 
-let corr_angle = func do
-  if future_pos < target_long - 30 do
-    return 10
-  end
+LET CORR_ANGLE = FUNC DO
+  IF FUTURE_POS < TARGET_LONG - 30 DO
+    RETURN 10
+  END
 
-  if future_pos > target_long + 30 do
-    return -10
-  end
+  IF FUTURE_POS > TARGET_LONG + 30 DO
+    RETURN -10
+  END
 
   0
-end
+END
 
-if future_angle < corr_angle() do
-  set_torque(13000)
-else
-  set_torque(-13000)
-end
-
+IF FUTURE_ANGLE < CORR_ANGLE() DO
+  SET_TORQUE(13000)
+ELSE
+  SET_TORQUE(-13000)
+END
 ```
