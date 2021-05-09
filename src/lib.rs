@@ -158,7 +158,7 @@ impl Game {
         let mut evaluator = Evaluator::new();
 
         environment.set(
-            String::from("set_thrust"),
+            String::from("SET_THRUST"),
             Object::Command {
                 function: |arguments| {
                     if arguments.len() != 1 {
@@ -182,7 +182,7 @@ impl Game {
         );
 
         environment.set(
-            String::from("set_torque"),
+            String::from("SET_TORQUE"),
             Object::Command {
                 function: |arguments| {
                     if arguments.len() != 1 {
@@ -206,32 +206,32 @@ impl Game {
         );
 
         environment.set(
-            String::from("altitude"),
+            String::from("ALTITUDE"),
             Object::Integer(400 - self.simulation.get_entity_transform(0).position.y as isize), // 400 is height of canvas
         );
 
         environment.set(
-            String::from("longitude"),
+            String::from("LONGITUDE"),
             Object::Integer(self.simulation.get_entity_transform(0).position.x as isize),
         );
 
         environment.set(
-            String::from("angle"),
+            String::from("ANGLE"),
             Object::Integer((self.simulation.get_entity_transform(0).rotation * 58.122) as isize), // multiply to convert radians to deg
         );
 
         environment.set(
-            String::from("long_vel"),
+            String::from("LONG_VEL"),
             Object::Integer((self.simulation.get_entity_velocity(0).x) as isize), // multiply to convert radians to deg
         );
 
         environment.set(
-            String::from("alt_vel"),
+            String::from("ALT_VEL"),
             Object::Integer((self.simulation.get_entity_velocity(0).y) as isize), // multiply to convert radians to deg
         );
 
         environment.set(
-            String::from("ang_vel"),
+            String::from("ANG_VEL"),
             Object::Integer((self.simulation.get_entity_radial_velocity(0)) as isize), // multiply to convert radians to deg
         );
 

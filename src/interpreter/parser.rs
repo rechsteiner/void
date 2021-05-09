@@ -281,36 +281,25 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_if_expression(&mut self) -> Option<Expression> {
-        if !self.expect_peek(Token::LeftParen) {
-            return None;
-        }
-
         self.next_token();
 
         if let Some(condition) = self.parse_expression(Precedence::Lowest) {
-            if !self.expect_peek(Token::RightParen) {
-                return None;
-            }
-            if !self.expect_peek(Token::LeftBrackets) {
+            if !self.expect_peek(Token::Do) {
                 return None;
             }
             let consequence = self.parse_block_statement();
 
-            if self.peek_token == Token::Else {
-                self.next_token();
-
-                if !self.expect_peek(Token::LeftBrackets) {
-                    return None;
-                }
-
+            if self.current_token == Token::Else {
                 let alternative = self.parse_block_statement();
 
-                return Some(Expression::If {
-                    condition: Box::new(condition),
-                    consequence: consequence,
-                    alternative: Some(alternative),
-                });
-            } else {
+                if self.expect_current(Token::End) {
+                    return Some(Expression::If {
+                        condition: Box::new(condition),
+                        consequence: consequence,
+                        alternative: Some(alternative),
+                    });
+                }
+            } else if self.expect_current(Token::End) {
                 return Some(Expression::If {
                     condition: Box::new(condition),
                     consequence: consequence,
@@ -323,27 +312,24 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_function_expression(&mut self) -> Option<Expression> {
-        if !self.expect_peek(Token::LeftParen) {
-            return None;
-        }
-
         if let Some(parameters) = self.parse_function_parameters() {
-            if !self.expect_peek(Token::LeftBrackets) {
+            if !self.expect_peek(Token::Do) {
                 return None;
             }
             let body = self.parse_block_statement();
-            Some(Expression::Function {
-                parameters: parameters,
-                body: body,
-            })
-        } else {
-            None
+            if self.expect_current(Token::End) {
+                return Some(Expression::Function {
+                    parameters: parameters,
+                    body: body,
+                });
+            }
         }
+
+        None
     }
 
     fn parse_function_parameters(&mut self) -> Option<Vec<String>> {
-        if self.peek_token == Token::RightParen {
-            self.next_token();
+        if self.peek_token == Token::Do {
             return Some(vec![]);
         }
 
@@ -354,18 +340,13 @@ impl<'a> Parser<'a> {
         if let Some(Expression::Identifier(identifier)) = self.parse_identifier() {
             identifiers.push(identifier);
 
-            while self.peek_token == Token::Comma {
-                self.next_token();
+            while self.peek_token != Token::Do {
                 self.next_token();
 
                 if let Some(Expression::Identifier(identifier)) = self.parse_identifier() {
                     identifiers.push(identifier);
                 }
             }
-        }
-
-        if !self.expect_peek(Token::RightParen) {
-            return None;
         }
 
         Some(identifiers)
@@ -375,7 +356,10 @@ impl<'a> Parser<'a> {
         self.next_token();
         let mut statements: Vec<Statement> = vec![];
 
-        while self.current_token != Token::RightBrackets && self.current_token != Token::Eof {
+        while self.current_token != Token::End
+            && self.current_token != Token::Else
+            && self.current_token != Token::Eof
+        {
             if let Some(statement) = self.parse_statement() {
                 statements.push(statement);
             }
@@ -447,6 +431,23 @@ impl<'a> Parser<'a> {
         self.errors.push(error);
     }
 
+    fn expect_current(&mut self, token: Token) -> bool {
+        if self.current_token == token {
+            true
+        } else {
+            self.current_error(token);
+            false
+        }
+    }
+
+    fn current_error(&mut self, token: Token) {
+        let error = format!(
+            "Expected current token to be {:?}, got {:?} instead",
+            token, self.current_token
+        );
+        self.errors.push(error);
+    }
+
     fn peek_precedence(&self) -> Precedence {
         self.precedence_for_token(self.peek_token.clone())
     }
@@ -473,19 +474,19 @@ impl<'a> Parser<'a> {
 
 #[test]
 fn test_new() {
-    let lexer = Lexer::new("let a = 1");
+    let lexer = Lexer::new("LET A = 1");
     let parser = Parser::new(lexer);
 
     assert_eq!(parser.current_token, Token::Let);
-    assert_eq!(parser.peek_token, Token::Identifier(String::from("a")));
+    assert_eq!(parser.peek_token, Token::Identifier(String::from("A")));
 }
 
 #[test]
 fn test_let_statement() {
     let input = "
-    let x = 5
-    let y = 10
-    let foobar = 838383
+    LET X = 5
+    LET Y = 10
+    LET FOOBAR = 838383
     ";
 
     let lexer = Lexer::new(input);
@@ -497,15 +498,15 @@ fn test_let_statement() {
         program.statements,
         vec![
             Statement::Let {
-                identifier: String::from("x"),
+                identifier: String::from("X"),
                 expression: Expression::Int(5),
             },
             Statement::Let {
-                identifier: String::from("y"),
+                identifier: String::from("Y"),
                 expression: Expression::Int(10),
             },
             Statement::Let {
-                identifier: String::from("foobar"),
+                identifier: String::from("FOOBAR"),
                 expression: Expression::Int(838383),
             }
         ]
@@ -515,9 +516,9 @@ fn test_let_statement() {
 #[test]
 fn test_return_statement() {
     let input = "
-    return 5
-    return 10
-    return 993322
+    RETURN 5
+    RETURN 10
+    RETURN 993322
     ";
 
     let lexer = Lexer::new(input);
@@ -665,8 +666,8 @@ fn test_infix_expression() {
 #[test]
 fn test_boolean_expression() {
     let input = "
-    true
-    false
+    TRUE
+    FALSE
     ";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
@@ -710,11 +711,11 @@ fn test_operator_precedence_parsing() {
             "3 + 4 * 5 == 3 * 1 + 4 * 5",
             "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
         ),
-        ("true", "true"),
-        ("false", "false"),
-        ("3 > 5 == false", "((3 > 5) == false)"),
-        ("3 < 5 == true", "((3 < 5) == true)"),
-        ("!(true == true)", "(!(true == true))"),
+        ("TRUE", "true"),
+        ("FALSE", "false"),
+        ("3 > 5 == FALSE", "((3 > 5) == false)"),
+        ("3 < 5 == TRUE", "((3 < 5) == true)"),
+        ("!(TRUE == TRUE)", "(!(true == true))"),
         ("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
         ("(5 + 5) * 2", "((5 + 5) * 2)"),
         ("2 / (5 + 5)", "(2 / (5 + 5))"),
@@ -743,7 +744,7 @@ fn test_operator_precedence_parsing() {
 
 #[test]
 fn test_if_expression() {
-    let input = "if (x < y) { x }";
+    let input = "IF X < Y DO X END";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -755,12 +756,12 @@ fn test_if_expression() {
             expression: Expression::If {
                 condition: Box::new(Expression::Infix {
                     operator: Operator::LessThan,
-                    left: Box::new(Expression::Identifier(String::from("x"))),
-                    right: Box::new(Expression::Identifier(String::from("y"))),
+                    left: Box::new(Expression::Identifier(String::from("X"))),
+                    right: Box::new(Expression::Identifier(String::from("Y"))),
                 }),
                 consequence: BlockStatement {
                     statements: vec![Statement::Expression {
-                        expression: Expression::Identifier(String::from("x"))
+                        expression: Expression::Identifier(String::from("X"))
                     }]
                 },
                 alternative: None
@@ -771,7 +772,7 @@ fn test_if_expression() {
 
 #[test]
 fn test_if_else_expression() {
-    let input = "if (x < y) { x } else { y }";
+    let input = "IF X < Y DO X ELSE Y END";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -783,17 +784,17 @@ fn test_if_else_expression() {
             expression: Expression::If {
                 condition: Box::new(Expression::Infix {
                     operator: Operator::LessThan,
-                    left: Box::new(Expression::Identifier(String::from("x"))),
-                    right: Box::new(Expression::Identifier(String::from("y"))),
+                    left: Box::new(Expression::Identifier(String::from("X"))),
+                    right: Box::new(Expression::Identifier(String::from("Y"))),
                 }),
                 consequence: BlockStatement {
                     statements: vec![Statement::Expression {
-                        expression: Expression::Identifier(String::from("x"))
+                        expression: Expression::Identifier(String::from("X"))
                     }]
                 },
                 alternative: Some(BlockStatement {
                     statements: vec![Statement::Expression {
-                        expression: Expression::Identifier(String::from("y"))
+                        expression: Expression::Identifier(String::from("Y"))
                     }]
                 })
             }
@@ -803,7 +804,7 @@ fn test_if_else_expression() {
 
 #[test]
 fn test_function_expression() {
-    let input = "func(x, y) { x + y }";
+    let input = "FUNC X Y DO X + Y END";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -813,13 +814,13 @@ fn test_function_expression() {
         program.statements,
         vec![Statement::Expression {
             expression: Expression::Function {
-                parameters: vec![String::from("x"), String::from("y"),],
+                parameters: vec![String::from("X"), String::from("Y"),],
                 body: BlockStatement {
                     statements: vec![Statement::Expression {
                         expression: Expression::Infix {
                             operator: Operator::Plus,
-                            left: Box::new(Expression::Identifier(String::from("x"))),
-                            right: Box::new(Expression::Identifier(String::from("y"))),
+                            left: Box::new(Expression::Identifier(String::from("X"))),
+                            right: Box::new(Expression::Identifier(String::from("Y"))),
                         }
                     }]
                 }
@@ -831,11 +832,11 @@ fn test_function_expression() {
 #[test]
 fn test_function_parameters() {
     let tests = vec![
-        ("func() {}", vec![]),
-        ("func(x) {}", vec![String::from("x")]),
+        ("FUNC DO END", vec![]),
+        ("FUNC X DO END", vec![String::from("X")]),
         (
-            "func(x, y, z) {}",
-            vec![String::from("x"), String::from("y"), String::from("z")],
+            "FUNC X Y Z DO END",
+            vec![String::from("X"), String::from("Y"), String::from("Z")],
         ),
     ];
 
@@ -859,7 +860,7 @@ fn test_function_parameters() {
 
 #[test]
 fn test_call_expression() {
-    let input = "add(1, 2 * 3, 4 + 5)";
+    let input = "ADD(1, 2 * 3, 4 + 5)";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -869,7 +870,7 @@ fn test_call_expression() {
         program.statements,
         vec![Statement::Expression {
             expression: Expression::Call {
-                function: Box::new(Expression::Identifier(String::from("add"))),
+                function: Box::new(Expression::Identifier(String::from("ADD"))),
                 arguments: vec![
                     Expression::Int(1),
                     Expression::Infix {

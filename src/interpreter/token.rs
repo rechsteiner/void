@@ -22,8 +22,6 @@ pub enum Token {
     Newline,
     LeftParen,
     RightParen,
-    LeftBrackets,
-    RightBrackets,
     // Keywords
     Function,
     Let,
@@ -32,4 +30,6 @@ pub enum Token {
     If,
     Else,
     Return,
+    Do,
+    End,
 }

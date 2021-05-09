@@ -39,8 +39,6 @@ impl<'a> Lexer<'a> {
             Some(',') => Token::Comma,
             Some('+') => Token::Plus,
             Some('-') => Token::Minus,
-            Some('{') => Token::LeftBrackets,
-            Some('}') => Token::RightBrackets,
             Some('/') => Token::Slash,
             Some('*') => Token::Asterisk,
             Some('<') => Token::LessThan,
@@ -52,13 +50,15 @@ impl<'a> Lexer<'a> {
                     let identitier = self.read_identifier(char);
                     // Match against "reserved keywords"
                     match identitier.as_str() {
-                        "func" => Token::Function,
-                        "let" => Token::Let,
-                        "true" => Token::True,
-                        "false" => Token::False,
-                        "if" => Token::If,
-                        "else" => Token::Else,
-                        "return" => Token::Return,
+                        "FUNC" => Token::Function,
+                        "LET" => Token::Let,
+                        "TRUE" => Token::True,
+                        "FALSE" => Token::False,
+                        "IF" => Token::If,
+                        "ELSE" => Token::Else,
+                        "RETURN" => Token::Return,
+                        "DO" => Token::Do,
+                        "END" => Token::End,
                         _ => Token::Identifier(identitier),
                     }
                 } else if char.is_digit(10) {
@@ -148,22 +148,22 @@ fn test_next_token() {
     let input = "
     
     
-    let five = 5
-    let ten = 10
+    LET FIVE = 5
+    LET TEN = 10
 
-    let add = func(x, y) {
-        x + y
-    }
+    LET ADD = FUNC X Y DO
+        X + Y
+    END
 
-    let result = add(five, ten)
+    LET RESULT = ADD(FIVE, TEN)
     !-/*5
     5 < 10 > 5
 
-    if (5 < 10) {
-        return true
-    } else {
-        return false
-    }
+    IF 5 < 10 DO
+        RETURN TRUE
+    ELSE
+        RETURN FALSE
+    END
 
     10 == 10
     10 != 9
@@ -176,40 +176,37 @@ fn test_next_token() {
     let expected_tokens = vec![
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("five")),
+        Token::Identifier(String::from("FIVE")),
         Token::Assign,
         Token::Int(String::from("5")),
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("ten")),
+        Token::Identifier(String::from("TEN")),
         Token::Assign,
         Token::Int(String::from("10")),
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("add")),
+        Token::Identifier(String::from("ADD")),
         Token::Assign,
         Token::Function,
-        Token::LeftParen,
-        Token::Identifier(String::from("x")),
-        Token::Comma,
-        Token::Identifier(String::from("y")),
-        Token::RightParen,
-        Token::LeftBrackets,
+        Token::Identifier(String::from("X")),
+        Token::Identifier(String::from("Y")),
+        Token::Do,
         Token::Newline,
-        Token::Identifier(String::from("x")),
+        Token::Identifier(String::from("X")),
         Token::Plus,
-        Token::Identifier(String::from("y")),
+        Token::Identifier(String::from("Y")),
         Token::Newline,
-        Token::RightBrackets,
+        Token::End,
         Token::Newline,
         Token::Let,
-        Token::Identifier(String::from("result")),
+        Token::Identifier(String::from("RESULT")),
         Token::Assign,
-        Token::Identifier(String::from("add")),
+        Token::Identifier(String::from("ADD")),
         Token::LeftParen,
-        Token::Identifier(String::from("five")),
+        Token::Identifier(String::from("FIVE")),
         Token::Comma,
-        Token::Identifier(String::from("ten")),
+        Token::Identifier(String::from("TEN")),
         Token::RightParen,
         Token::Newline,
         Token::Bang,
@@ -225,24 +222,20 @@ fn test_next_token() {
         Token::Int(String::from("5")),
         Token::Newline,
         Token::If,
-        Token::LeftParen,
         Token::Int(String::from("5")),
         Token::LessThan,
         Token::Int(String::from("10")),
-        Token::RightParen,
-        Token::LeftBrackets,
+        Token::Do,
         Token::Newline,
         Token::Return,
         Token::True,
         Token::Newline,
-        Token::RightBrackets,
         Token::Else,
-        Token::LeftBrackets,
         Token::Newline,
         Token::Return,
         Token::False,
         Token::Newline,
-        Token::RightBrackets,
+        Token::End,
         Token::Newline,
         Token::Int(String::from("10")),
         Token::Equal,
