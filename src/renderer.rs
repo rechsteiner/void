@@ -88,10 +88,11 @@ impl Renderer {
         self.context
             .clear_rect(0.0, 0.0, screen_width as f64, screen_height as f64);
 
-        self.context.set_line_width(2.0);
+        self.context
+            .set_line_width(f64::max((self.viewport.zoom as f64) * 2.0, 2.0)); // Let line width be adaptive to zoom (but min 2.0)
 
-        for entity in scene.entities.iter() {
-            let transform = simulation.get_entity_transform(entity.id);
+        for (entity_id, entity) in scene.entities.iter() {
+            let transform = simulation.get_entity_transform(*entity_id);
 
             // Move the sheet
             // Magical math to get zoom with focal point in center of screen
