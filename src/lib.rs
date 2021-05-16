@@ -53,6 +53,7 @@ impl Game {
                 },
                 physics_mode: PhysicsMode::Dynamic,
                 shape: Shape {
+                    is_sensor: false,
                     vertices: vec![
                         Point { x: -10.0, y: -15.0 },
                         Point { x: 10.0, y: -15.0 },
@@ -73,6 +74,7 @@ impl Game {
                 },
                 physics_mode: PhysicsMode::Dynamic,
                 shape: Shape {
+                    is_sensor: false,
                     vertices: vec![
                         Point { x: -10.0, y: -10.0 },
                         Point { x: 10.0, y: -10.0 },
@@ -80,6 +82,32 @@ impl Game {
                         Point { x: -10.0, y: 10.0 },
                     ],
                     color: color_orange,
+                },
+            },
+            Entity {
+                id: 3,
+                rigidbody: RigidBody {
+                    transform: Transform {
+                        position: Point { x: 200.0, y: 160.0 },
+                        rotation: 0.0,
+                    },
+                    mass: 0.2,
+                },
+                physics_mode: PhysicsMode::Static,
+                shape: Shape {
+                    is_sensor: true,
+                    vertices: vec![
+                        Point { x: -10.0, y: -10.0 },
+                        Point { x: 10.0, y: -10.0 },
+                        Point { x: 10.0, y: 10.0 },
+                        Point { x: -10.0, y: 10.0 },
+                    ],
+                    color: ColorRGBA {
+                        r: 255,
+                        g: 255,
+                        b: 255,
+                        a: 1.0,
+                    },
                 },
             },
             // --- Static colliders ---
@@ -94,6 +122,7 @@ impl Game {
                 },
                 physics_mode: PhysicsMode::Static,
                 shape: Shape {
+                    is_sensor: false,
                     vertices: vec![
                         Point {
                             x: -300.0,
@@ -122,6 +151,7 @@ impl Game {
                 },
                 physics_mode: PhysicsMode::Static,
                 shape: Shape {
+                    is_sensor: false,
                     vertices: vec![
                         Point {
                             x: -40.0,

@@ -1,9 +1,15 @@
+use rapier2d::crossbeam;
 use std::collections::HashMap;
+use web_sys::console;
 
 use crate::interpreter::object::Command;
 use crate::scene::{PhysicsMode, Point, Scene, Transform};
-use rapier2d::pipeline::PhysicsPipeline;
-use rapier2d::{dynamics::BodyStatus, na::Vector2};
+use rapier2d::{
+    dynamics::BodyStatus,
+    geometry::IntersectionEvent,
+    na::Vector2,
+    pipeline::{ChannelEventCollector, EventHandler},
+};
 use rapier2d::{
     dynamics::RigidBodyHandle,
     geometry::{BroadPhase, ColliderSet, NarrowPhase},
@@ -12,6 +18,7 @@ use rapier2d::{
     dynamics::{IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodySet},
     geometry::ColliderBuilder,
 };
+use rapier2d::{geometry::ContactEvent, pipeline::PhysicsPipeline};
 
 pub struct Simulation {
     pipeline: PhysicsPipeline,
@@ -57,7 +64,10 @@ impl Simulation {
                 points.push(rapier2d::na::Point2::new(point.x, point.y));
             }
 
-            let entity_collider = ColliderBuilder::convex_hull(&points).unwrap().build();
+            let entity_collider = ColliderBuilder::convex_hull(&points)
+                .unwrap()
+                .sensor(entity.shape.is_sensor)
+                .build();
             world
                 .colliders
                 .insert(entity_collider, entity_handle, &mut world.bodies);
@@ -105,6 +115,10 @@ impl Simulation {
             }
         }
 
+        let (contact_send, contact_recv) = crossbeam::channel::unbounded();
+        let (intersection_send, intersection_recv) = crossbeam::channel::unbounded();
+        let event_handler = ChannelEventCollector::new(intersection_send, contact_send);
+
         self.pipeline.step(
             &self.world.gravity,
             &self.world.integration_parameters,
@@ -114,8 +128,27 @@ impl Simulation {
             &mut self.world.colliders,
             &mut self.world.joints,
             &(),
-            &(),
+            &event_handler,
         );
+
+        while let Ok(intersection_event) = intersection_recv.try_recv() {
+            let parent = self
+                .world
+                .colliders
+                .get(intersection_event.collider1)
+                .unwrap()
+                .parent();
+
+            unsafe {
+                console::log_1(&"It intersects".into());
+            }
+        }
+
+        while let Ok(contact_event) = contact_recv.try_recv() {
+            unsafe {
+                console::log_1(&"It contacts".into());
+            }
+        }
     }
 
     pub fn get_entity_transform(&self, id: usize) -> Transform {
