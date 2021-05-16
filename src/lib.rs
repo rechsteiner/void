@@ -3,21 +3,18 @@ use wasm_bindgen::prelude::*;
 mod interpreter;
 mod renderer;
 mod scene;
+mod scenes;
 mod setup_environment;
 mod simulation;
 
 extern crate wasm_bindgen;
 use crate::interpreter::evaluator::Evaluator;
 use crate::interpreter::lexer::Lexer;
-use crate::interpreter::object::Command;
 use crate::interpreter::object::Environment;
-use crate::interpreter::object::Object;
 use crate::interpreter::parser::Parser;
 use crate::renderer::Renderer;
 use crate::scene::Scene;
-
-mod scenes;
-pub use crate::scenes::scene_1;
+use crate::scenes::scene_1;
 
 #[wasm_bindgen]
 pub struct Game {
