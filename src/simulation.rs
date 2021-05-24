@@ -42,7 +42,7 @@ impl Simulation {
             joints: JointSet::new(),
         };
 
-        for entity in &scene.entities {
+        for (entity_id, entity) in &scene.entities {
             let body_status = match entity.physics_mode {
                 PhysicsMode::Dynamic => BodyStatus::Dynamic,
                 PhysicsMode::Static => BodyStatus::Static,
@@ -72,7 +72,7 @@ impl Simulation {
                 .colliders
                 .insert(entity_collider, entity_handle, &mut world.bodies);
 
-            entity_dictionary.insert(entity.id, entity_handle);
+            entity_dictionary.insert(*entity_id, entity_handle);
         }
 
         Simulation {
@@ -132,7 +132,7 @@ impl Simulation {
         );
 
         while let Ok(intersection_event) = intersection_recv.try_recv() {
-            let parent = self
+            let parent1 = self
                 .world
                 .colliders
                 .get(intersection_event.collider1)

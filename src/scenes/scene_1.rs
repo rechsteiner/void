@@ -1,4 +1,9 @@
-use crate::scene::{ColorRGBA, Entity, PhysicsMode, Point, RigidBody, Scene, Shape, Transform};
+use std::collections::HashMap;
+
+use crate::scene::{
+    ColorRGBA, Entity, Objective, ObjectiveType, PhysicsMode, Point, RigidBody, Scene, Shape,
+    Transform,
+};
 
 pub fn generate_scene() -> Scene {
     let color_cyan = ColorRGBA {
@@ -15,9 +20,11 @@ pub fn generate_scene() -> Scene {
         a: 1.0,
     };
 
-    let entities = vec![
+    let mut entities = HashMap::new();
+
+    entities.insert(
+        0,
         Entity {
-            id: 0,
             rigidbody: RigidBody {
                 transform: Transform {
                     position: Point { x: 200.0, y: 200.0 },
@@ -37,8 +44,11 @@ pub fn generate_scene() -> Scene {
                 color: color_cyan,
             },
         },
+    );
+
+    entities.insert(
+        1,
         Entity {
-            id: 1,
             rigidbody: RigidBody {
                 transform: Transform {
                     position: Point { x: 200.0, y: 160.0 },
@@ -58,8 +68,10 @@ pub fn generate_scene() -> Scene {
                 color: color_orange,
             },
         },
+    );
+    entities.insert(
+        2,
         Entity {
-            id: 3,
             rigidbody: RigidBody {
                 transform: Transform {
                     position: Point { x: 200.0, y: 160.0 },
@@ -84,9 +96,12 @@ pub fn generate_scene() -> Scene {
                 },
             },
         },
-        // --- Static colliders ---
+    );
+
+    // --- Static colliders ---
+    entities.insert(
+        998,
         Entity {
-            id: 998,
             rigidbody: RigidBody {
                 transform: Transform {
                     position: Point { x: 200.0, y: 400.0 },
@@ -114,8 +129,11 @@ pub fn generate_scene() -> Scene {
                 },
             },
         },
+    );
+
+    entities.insert(
+        999,
         Entity {
-            id: 999,
             rigidbody: RigidBody {
                 transform: Transform {
                     position: Point { x: 0.0, y: 390.0 },
@@ -143,9 +161,14 @@ pub fn generate_scene() -> Scene {
                 },
             },
         },
-    ];
+    );
 
-    let objectives = vec![];
+    let objectives = vec![Objective {
+        objective_type: ObjectiveType::Target {
+            ship_id: 0,
+            target_id: 2,
+        },
+    }];
 
     Scene::new(entities, objectives)
 }

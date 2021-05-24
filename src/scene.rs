@@ -1,9 +1,8 @@
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
 pub struct Entity {
     pub rigidbody: RigidBody,
     pub shape: Shape,
-    pub id: usize,
     pub physics_mode: PhysicsMode,
 }
 
@@ -13,13 +12,26 @@ pub struct Shape {
     pub is_sensor: bool,
 }
 
+pub enum ObjectiveType {
+    Target { target_id: usize, ship_id: usize },
+    Orbit,
+}
+
+pub struct Objective {
+    pub objective_type: ObjectiveType,
+}
+
 pub struct Scene {
-    pub entities: Vec<Entity>,
+    pub entities: HashMap<usize, Entity>,
+    pub objectives: Vec<Objective>,
 }
 
 impl Scene {
-    pub fn new(entities: Vec<Entity>) -> Scene {
-        Scene { entities }
+    pub fn new(entities: HashMap<usize, Entity>, objectives: Vec<Objective>) -> Scene {
+        Scene {
+            entities,
+            objectives,
+        }
     }
 }
 
