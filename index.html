@@ -12,7 +12,7 @@
     <canvas id="canvas" height="400" width="400"></canvas>
 
     <section class="editor-area">
-      <textarea id="editor" cols="50" rows="20"></textarea>
+      <div id="editor"></div>
       <div class="button-row">
         <button id="pause-button">Pause</button>
         <button id="run-button">Run</button>
@@ -55,7 +55,7 @@
         color: #00ffd1;
         padding: 1em;
         line-height: 1.4;
-        text-transform: uppercase;
+        width: 400px;
       }
 
       #editor:focus,
@@ -93,6 +93,20 @@
         left: 0;
         right: 0;
         bottom: 0;
+      }
+
+      .ͼ2 .cm-gutters {
+        background: none;
+        border-right: none;
+        color: rgba(255, 255, 255, 0.1);
+      }
+
+      .ͼ2 .cm-content {
+        caret-color: #00ffd1;
+      }
+
+      .ͼ1.cm-focused {
+        outline: none;
       }
     </style>
   </body>
