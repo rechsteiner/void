@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "es2020",
+    "target": "es2020",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true
+  }
+}
