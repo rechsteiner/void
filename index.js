@@ -1,9 +1,19 @@
+import { Editor } from "./editor";
+
 import("./pkg/static_void.js").then((lib) => {
-  const editor = document.getElementById("editor");
   const pauseButton = document.getElementById("pause-button");
   const runButton = document.getElementById("run-button");
   const canvas = document.getElementsByTagName("canvas")[0];
+  const editorElement = document.getElementById("editor");
+
   let game = new lib.Game();
+
+  let editor = new Editor(editorElement, {
+    onChange: (document) => {
+      game.change_program(document);
+    },
+  });
+
   let isPaused = false;
   let viewport_movement_input = {
     x: 0.0,
@@ -14,15 +24,6 @@ import("./pkg/static_void.js").then((lib) => {
   // Set canvas size attributes to match physical size of window
   canvas.setAttribute("height", window.innerHeight);
   canvas.setAttribute("width", window.innerWidth);
-
-  // Save editor text
-  editor.addEventListener("change", () => {
-    window.localStorage.setItem("editorValue", editor.value);
-  });
-
-  if (window.localStorage.getItem("editorValue")) {
-    editor.value = window.localStorage.getItem("editorValue");
-  }
 
   // Hide buttons when not in use
   runButton.classList.add("hidden");
@@ -120,7 +121,10 @@ import("./pkg/static_void.js").then((lib) => {
     move_viewport();
 
     if (!isPaused) {
-      game.change_program(editor.value.toUpperCase());
+      // TODO: Only update the program when the editor changes. We currently
+      // re-interpret the whole program on each frame which is very unnecessary.
+      game.change_program(editor.document);
+
       game.next_simulation_step();
     }
 

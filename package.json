@@ -14,5 +14,12 @@
     "webpack": "^5.25.1",
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^0.18.1",
+    "@codemirror/gutter": "^0.18.2",
+    "@codemirror/history": "^0.18.1",
+    "@codemirror/state": "^0.18.7",
+    "@codemirror/view": "^0.18.11"
   }
 }
