@@ -1,78 +1,145 @@
+use std::any::TypeId;
+use std::collections::HashMap;
 
-struct HealthComponent {
-	entity_id: usize,
-	health: usize
+// Any struct that conforms to the Component trait is a valid component. There
+// are no requirements when it comes to the data it stores.
+trait Component {}
+
+struct Velocity {
+	x: f32,
+	y: f32,
 }
 
-struct Component {
-	entity_id: usize,
+struct Location {
+	x: f32,
+	y: f32,
 }
 
+impl Component for Velocity {}
+impl Component for Location {}
 
-impl Component for HealthComponent {}
+// A trait used to represent a vector of components. This is needed in order to
+// convert a vector of dynamic components into a specific generic type when
+// querying our world.
+trait ComponentVec {
+	fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+}
 
-struct RenderComponent {}
+impl<T: 'static> ComponentVec for Vec<T> {
+	fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+		self as &mut dyn std::any::Any
+	}
+}
 
-impl Component for RenderComponent {}
-
+// Our world holds all our components. It's stored in a hash map where each
+// component type is the key and the value is all the components of that type.
 struct World {
+	components: HashMap<TypeId, Box<dyn ComponentVec>>,
 }
 
 impl World {
-
-	fn get_entities() -> Vec<Entity> {}
-	fn find_components_by_type<T>(component: T) -> Vec<T> where T: Component {
-		return vec![];
+	pub fn new() -> Self {
+		World {
+			components: HashMap::new(),
+		}
 	}
 
-	fn find_by_entity() -> Vec<Component> {
-		return vec![];
+	pub fn get_components_by_type<T: 'static + Component>(&mut self) -> &mut Vec<T> {
+		// Generate a unique identifier based on the generic type
+		let id = TypeId::of::<T>();
+
+		// Look for all component for that type identifier. If it returns none
+		// we insert an empty array and use that instead.
+		let components_vec = self
+			.components
+			.entry(id)
+			.or_insert(Box::new(Vec::<T>::new()));
+
+		// Downcast the dynamic trait to our generic type. If the downcast fails
+		// the program will panic.
+		return components_vec
+			.as_any_mut()
+			.downcast_mut::<Vec<T>>()
+			.unwrap();
 	}
 
-	fn insert_entity(entity: usize) {}
-	fn update_entity(entity: usize) {}
-	fn remove_entity(entity: usize) {}
+	// TODO: Replace this with a more advanced Entity builder.
+	pub fn insert_component<T: 'static + Component>(&mut self, component: T) {
+		let id = TypeId::of::<T>();
+
+		match self.components.get_mut(&id) {
+			Some(components) => {
+				components
+					.as_any_mut()
+					.downcast_mut::<Vec<T>>()
+					.unwrap()
+					.push(component);
+			}
+			None => {
+				self.components.insert(id, Box::new(vec![component]));
+			}
+		}
+	}
 }
 
+// The system trait allows each system to read and mutate the world. Any changes
+// to the world will be available for the next system.
 trait System {
-	fn on_tick(world: World) -> World {}
+	fn update(&self, world: &mut World);
 }
 
 struct RenderSystem {}
 
 impl System for RenderSystem {
-		fn on_tick(world: World) {
-			for component in world.find_components_by_type(RenderComponent.Type) {
-				//canvas.draw(component.stroke)
-			}
+	fn update(&self, world: &mut World) {
+		for component in world.get_components_by_type::<Location>() {
+			println!("rendering component: #{} #{}", component.x, component.y);
 		}
+	}
 }
 
-struct KillSystem {}
+struct PhysicsSystem {}
 
-impl System for KillSystem {
-		fn on_tick(world: World) {
-			for component in world.find_components_by_type(HealthComponent.Type) {
-				if component.health <= 0 {
-					world.remove_entity(component.entity_id)
-				}
-			}
+impl System for PhysicsSystem {
+	fn update(&self, world: &mut World) {
+		for component in world.get_components_by_type::<Location>() {
+			component.x = 20.0;
+			println!(
+				"updating physics for component: #{} #{}",
+				component.x, component.y
+			);
 		}
+	}
 }
 
-struct PhysicsSystem {
-	pipeline: Pipeline
-}
+fn main() {
+	// Initialize our world with some components.
+	let mut world = World::new();
+	world.insert_component(Location { x: 2.0, y: 10.0 });
+	world.insert_component(Velocity { x: 100.0, y: 100.0 });
 
-impl System for KillSystem {
-		fn on_tick(world: World) {
-			for component in world.find_components_by_type(PhysicsComponent.Type) {
-				// Map components to Rapier world
-				pipeline.tick(rapier_world);
-				// Map Rapier world to components
-				for entity in entities {
-					world.update(...)
-				}
-			}
-		}
+	for component in world.get_components_by_type::<Location>() {
+		println!("location before: #{} #{}", component.x, component.y);
+	}
+
+	for component in world.get_components_by_type::<Velocity>() {
+		println!("velocity before: #{} #{}", component.x, component.y);
+	}
+
+	// Create a vector of all our systems for a given scene. The order here is
+	// important as each system can mutate the world.
+	let systems: Vec<Box<dyn System>> = vec![Box::new(PhysicsSystem {}), Box::new(RenderSystem {})];
+
+	// Loop through each system in order and update the world.
+	for system in systems {
+		system.update(&mut world);
+	}
+
+	for component in world.get_components_by_type::<Location>() {
+		println!("location after: #{} #{}", component.x, component.y);
+	}
+
+	for component in world.get_components_by_type::<Velocity>() {
+		println!("velocity after: #{} #{}", component.x, component.y);
+	}
 }
