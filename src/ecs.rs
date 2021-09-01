@@ -37,7 +37,7 @@ impl World {
 		}
 	}
 
-	pub fn get_components_by_type<T: 'static>(&mut self) -> &mut Vec<T> {
+	pub fn query<T: 'static>(&mut self) -> &mut Vec<T> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
 
@@ -85,7 +85,7 @@ struct RenderSystem {}
 
 impl System for RenderSystem {
 	fn update(&self, world: &mut World) {
-		for component in world.get_components_by_type::<Location>() {
+		for component in world.query::<Location>() {
 			println!("rendering component: #{} #{}", component.x, component.y);
 		}
 	}
@@ -95,7 +95,7 @@ struct PhysicsSystem {}
 
 impl System for PhysicsSystem {
 	fn update(&self, world: &mut World) {
-		for component in world.get_components_by_type::<Location>() {
+		for component in world.query::<Location>() {
 			component.x = 20.0;
 			println!(
 				"updating physics for component: #{} #{}",
@@ -111,11 +111,11 @@ fn main() {
 	world.insert_component(Location { x: 2.0, y: 10.0 });
 	world.insert_component(Velocity { x: 100.0, y: 100.0 });
 
-	for component in world.get_components_by_type::<Location>() {
+	for component in world.query::<Location>() {
 		println!("location before: #{} #{}", component.x, component.y);
 	}
 
-	for component in world.get_components_by_type::<Velocity>() {
+	for component in world.query::<Velocity>() {
 		println!("velocity before: #{} #{}", component.x, component.y);
 	}
 
@@ -128,11 +128,11 @@ fn main() {
 		system.update(&mut world);
 	}
 
-	for component in world.get_components_by_type::<Location>() {
+	for component in world.query::<Location>() {
 		println!("location after: #{} #{}", component.x, component.y);
 	}
 
-	for component in world.get_components_by_type::<Velocity>() {
+	for component in world.query::<Velocity>() {
 		println!("velocity after: #{} #{}", component.x, component.y);
 	}
 }
