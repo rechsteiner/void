@@ -1,9 +1,5 @@
-use std::any::TypeId;
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
-
-// Any struct that conforms to the Component trait is a valid component. There
-// are no requirements when it comes to the data it stores.
-trait Component {}
 
 struct Velocity {
 	x: f32,
@@ -15,19 +11,16 @@ struct Location {
 	y: f32,
 }
 
-impl Component for Velocity {}
-impl Component for Location {}
-
 // A trait used to represent a vector of components. This is needed in order to
 // convert a vector of dynamic components into a specific generic type when
 // querying our world.
 trait ComponentVec {
-	fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+	fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl<T: 'static> ComponentVec for Vec<T> {
-	fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-		self as &mut dyn std::any::Any
+	fn as_any_mut(&mut self) -> &mut dyn Any {
+		self
 	}
 }
 
@@ -44,7 +37,7 @@ impl World {
 		}
 	}
 
-	pub fn get_components_by_type<T: 'static + Component>(&mut self) -> &mut Vec<T> {
+	pub fn get_components_by_type<T: 'static>(&mut self) -> &mut Vec<T> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
 
@@ -64,7 +57,7 @@ impl World {
 	}
 
 	// TODO: Replace this with a more advanced Entity builder.
-	pub fn insert_component<T: 'static + Component>(&mut self, component: T) {
+	pub fn insert_component<T: 'static>(&mut self, component: T) {
 		let id = TypeId::of::<T>();
 
 		match self.components.get_mut(&id) {
