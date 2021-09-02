@@ -14,6 +14,8 @@ import("./pkg/static_void.js").then((lib) => {
     },
   });
 
+  game.change_program(editor.document);
+
   let isPaused = false;
   let viewport_movement_input = {
     x: 0.0,
@@ -123,9 +125,7 @@ import("./pkg/static_void.js").then((lib) => {
     if (!isPaused) {
       // TODO: Only update the program when the editor changes. We currently
       // re-interpret the whole program on each frame which is very unnecessary.
-      game.change_program(editor.document);
-
-      game.next_simulation_step();
+      game.tick();
     }
 
     requestAnimationFrame(() => animate());

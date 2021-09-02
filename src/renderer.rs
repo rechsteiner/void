@@ -1,9 +1,8 @@
 use wasm_bindgen::{JsCast, JsValue};
 
-use crate::{
-    scene::{Point, Scene},
-    simulation::Simulation,
-};
+use crate::components::rigid_body::RigidBody;
+use crate::components::shape::{Point, Shape};
+use crate::ecs::{System, World};
 
 struct Viewport {
     position: Point,
@@ -80,8 +79,10 @@ impl Renderer {
         // Same with zoom
         *curr_zoom += (*targ_zoom - *curr_zoom) / smoothness_factor;
     }
+}
 
-    pub fn draw(&self, scene: &Scene, simulation: &Simulation) {
+impl System for Renderer {
+    fn update(&self, world: &mut World) {
         let screen_height = self.canvas.height() as f32;
         let screen_width = self.canvas.width() as f32;
 
@@ -90,9 +91,11 @@ impl Renderer {
 
         self.context.set_line_width(2.0);
 
-        for entity in scene.entities.iter() {
-            let transform = simulation.get_entity_transform(entity.id);
+        let rigid_bodies = world.query::<RigidBody>().unwrap().into_iter();
+        let shapes = world.query::<Shape>().unwrap().into_iter();
 
+        for (rigid_body, shape) in rigid_bodies.zip(shapes) {
+            let transform = &rigid_body.transform;
             // Move the sheet
             // Magical math to get zoom with focal point in center of screen
             self.context
@@ -109,11 +112,11 @@ impl Renderer {
 
             // Pick the right crayon
             self.context
-                .set_stroke_style(&JsValue::from(format!("{}", &entity.shape.color))); // TODO: Might not be idiomatic
+                .set_stroke_style(&JsValue::from(format!("{}", shape.color))); // TODO: Might not be idiomatic
 
             // Draw by numbers
             self.context.begin_path();
-            for vertex in &entity.shape.vertices {
+            for vertex in &shape.vertices {
                 self.context.line_to(
                     (vertex.x * self.viewport.zoom) as f64,
                     (vertex.y * self.viewport.zoom) as f64,
@@ -122,8 +125,8 @@ impl Renderer {
 
             // Close the shape
             self.context.line_to(
-                (entity.shape.vertices[0].x * self.viewport.zoom) as f64,
-                (entity.shape.vertices[0].y * self.viewport.zoom) as f64,
+                (shape.vertices[0].x * self.viewport.zoom) as f64,
+                (shape.vertices[0].y * self.viewport.zoom) as f64,
             );
 
             self.context.stroke();
