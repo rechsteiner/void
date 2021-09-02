@@ -15,10 +15,14 @@ struct Location {
 // convert a vector of dynamic components into a specific generic type when
 // querying our world.
 trait ComponentVec {
+	fn as_any(&self) -> &dyn Any;
 	fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl<T: 'static> ComponentVec for Vec<T> {
+	fn as_any(&self) -> &dyn Any {
+		self
+	}
 	fn as_any_mut(&mut self) -> &mut dyn Any {
 		self
 	}
@@ -37,7 +41,20 @@ impl World {
 		}
 	}
 
-	pub fn query<T: 'static>(&mut self) -> &mut Vec<T> {
+	pub fn query<T: 'static>(&self) -> Option<&Vec<T>> {
+		// Generate a unique identifier based on the generic type
+		let id = TypeId::of::<T>();
+
+		// Look for all component for that type identifier. Downcast the dynamic
+		// trait to our generic type. If the downcast fails the program will
+		// panic.
+		return self
+			.components
+			.get(&id)
+			.map(|c| c.as_any().downcast_ref::<Vec<T>>().unwrap());
+	}
+
+	pub fn query_mut<T: 'static>(&mut self) -> &mut Vec<T> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
 
