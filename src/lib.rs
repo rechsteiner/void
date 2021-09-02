@@ -1,8 +1,6 @@
 mod components;
 mod ecs;
 mod interpreter;
-mod renderer;
-mod simulation;
 mod systems;
 
 extern crate wasm_bindgen;
@@ -11,9 +9,9 @@ use components::physics_mode::PhysicsMode;
 use components::rigid_body::{RigidBody, Transform};
 use components::shape::{ColorRGBA, Point, Shape};
 use ecs::{System, World};
-use renderer::Renderer;
-use simulation::Simulation;
 use systems::interpreter::InterpreterSystem;
+use systems::renderer::RenderSystem;
+use systems::simulation::SimulationSystem;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -156,8 +154,8 @@ impl Game {
             world: world,
             systems: vec![
                 Box::new(InterpreterSystem::new()),
-                Box::new(Simulation::new()),
-                Box::new(Renderer::new()),
+                Box::new(SimulationSystem::new()),
+                Box::new(RenderSystem::new()),
             ],
         }
     }

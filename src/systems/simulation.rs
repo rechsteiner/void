@@ -11,15 +11,15 @@ use rapier2d::{
     geometry::ColliderBuilder,
 };
 
-pub struct Simulation {}
+pub struct SimulationSystem {}
 
-impl Simulation {
-    pub fn new() -> Simulation {
-        Simulation {}
+impl SimulationSystem {
+    pub fn new() -> SimulationSystem {
+        SimulationSystem {}
     }
 }
 
-impl System for Simulation {
+impl System for SimulationSystem {
     fn update(&self, world: &mut World) {
         let mut physics_pipeline = PhysicsPipeline::new();
         let mut physics_world = PhysicsWorldParameters {

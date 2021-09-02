@@ -11,14 +11,14 @@ struct Viewport {
     target_zoom: f32,
 }
 
-pub struct Renderer {
+pub struct RenderSystem {
     context: web_sys::CanvasRenderingContext2d,
     canvas: web_sys::HtmlCanvasElement,
     viewport: Viewport,
 }
 
-impl Renderer {
-    pub fn new() -> Renderer {
+impl RenderSystem {
+    pub fn new() -> RenderSystem {
         let window = web_sys::window().expect("no global `window` exists");
         let document: web_sys::Document =
             window.document().expect("should have a document on window");
@@ -42,7 +42,7 @@ impl Renderer {
             target_zoom: 1.0,
         };
 
-        Renderer {
+        RenderSystem {
             context,
             canvas,
             viewport,
@@ -81,7 +81,7 @@ impl Renderer {
     }
 }
 
-impl System for Renderer {
+impl System for RenderSystem {
     fn update(&self, world: &mut World) {
         let screen_height = self.canvas.height() as f32;
         let screen_width = self.canvas.width() as f32;
