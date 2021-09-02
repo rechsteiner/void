@@ -91,10 +91,7 @@ impl System for RenderSystem {
 
         self.context.set_line_width(2.0);
 
-        let rigid_bodies = world.query::<RigidBody>().unwrap().into_iter();
-        let shapes = world.query::<Shape>().unwrap().into_iter();
-
-        for (rigid_body, shape) in rigid_bodies.zip(shapes) {
+        for (rigid_body, shape) in world.query2::<RigidBody, Shape>() {
             let transform = &rigid_body.transform;
             // Move the sheet
             // Magical math to get zoom with focal point in center of screen

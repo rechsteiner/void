@@ -31,15 +31,12 @@ impl System for SimulationSystem {
             colliders: ColliderSet::new(),
             joints: JointSet::new(),
         };
-
-        let physics_modes = world.query::<PhysicsMode>().unwrap().into_iter();
-        let shapes = world.query::<Shape>().unwrap().into_iter();
-        let rigid_bodies = world.query::<RigidBody>().unwrap().into_iter();
-
         let mut spaceship_handle: Option<RigidBodyHandle> = None;
 
-        for (index, ((rigid_body, shape), physics_mode)) in
-            rigid_bodies.zip(shapes).zip(physics_modes).enumerate()
+        for (index, (rigid_body, shape, physics_mode)) in world
+            .query3::<RigidBody, Shape, PhysicsMode>()
+            .iter()
+            .enumerate()
         {
             let body_status = match physics_mode {
                 PhysicsMode::Dynamic => BodyStatus::Dynamic,

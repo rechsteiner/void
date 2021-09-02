@@ -68,6 +68,25 @@ impl World {
 			.unwrap();
 	}
 
+	pub fn query2<T: 'static, U: 'static>(&self) -> Vec<(&T, &U)> {
+		let first = self.query::<T>().unwrap();
+		let second = self.query::<U>().unwrap();
+		return first.iter().zip(second.iter()).collect();
+	}
+
+	pub fn query3<T: 'static, U: 'static, V: 'static>(&self) -> Vec<(&T, &U, &V)> {
+		let first = self.query::<T>().unwrap();
+		let second = self.query::<U>().unwrap();
+		let third = self.query::<V>().unwrap();
+
+		let combined = first
+			.iter()
+			.zip(second.iter().zip(third.iter()))
+			.map(|(first, (second, third))| (first, second, third));
+
+		return combined.collect();
+	}
+
 	// TODO: Replace this with a more advanced Entity builder.
 	pub fn insert_component<T: 'static>(&mut self, component: T) {
 		let id = TypeId::of::<T>();
