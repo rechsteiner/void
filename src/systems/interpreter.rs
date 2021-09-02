@@ -15,7 +15,7 @@ impl InterpreterSystem {
 }
 
 impl System for InterpreterSystem {
-    fn update(&self, world: &mut World) {
+    fn update(&mut self, world: &mut World) {
         let lexer = Lexer::new(&world.program);
         let mut parser = Parser::new(lexer);
         let program = parser.parse_program();

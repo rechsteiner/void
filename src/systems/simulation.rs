@@ -11,70 +11,80 @@ use rapier2d::{
     geometry::ColliderBuilder,
 };
 
-pub struct SimulationSystem {}
+pub struct SimulationSystem {
+    spaceship_handle: Option<RigidBodyHandle>,
+    physics_pipeline: PhysicsPipeline,
+    physics_world: PhysicsWorldParameters,
+}
 
 impl SimulationSystem {
     pub fn new() -> SimulationSystem {
-        SimulationSystem {}
+        SimulationSystem {
+            spaceship_handle: None,
+            physics_pipeline: PhysicsPipeline::new(),
+            physics_world: PhysicsWorldParameters {
+                gravity: Vector2::new(0.0, 100.0),
+                integration_parameters: IntegrationParameters::default(),
+                broad_phase: BroadPhase::new(),
+                narrow_phase: NarrowPhase::new(),
+                bodies: RigidBodySet::new(),
+                colliders: ColliderSet::new(),
+                joints: JointSet::new(),
+            },
+        }
     }
 }
 
 impl System for SimulationSystem {
-    fn update(&self, world: &mut World) {
-        let mut physics_pipeline = PhysicsPipeline::new();
-        let mut physics_world = PhysicsWorldParameters {
-            gravity: Vector2::new(0.0, 100.0),
-            integration_parameters: IntegrationParameters::default(),
-            broad_phase: BroadPhase::new(),
-            narrow_phase: NarrowPhase::new(),
-            bodies: RigidBodySet::new(),
-            colliders: ColliderSet::new(),
-            joints: JointSet::new(),
-        };
-        let mut spaceship_handle: Option<RigidBodyHandle> = None;
+    fn update(&mut self, world: &mut World) {
+        // TODO: For now we are just checking weather the bodies are empty and
+        // so we only insert our components once. This won't work when we start
+        // adding and removing components.
+        if self.physics_world.bodies.len() == 0 {
+            for (index, (rigid_body, shape, physics_mode)) in world
+                .query3::<RigidBody, Shape, PhysicsMode>()
+                .iter()
+                .enumerate()
+            {
+                let body_status = match physics_mode {
+                    PhysicsMode::Dynamic => BodyStatus::Dynamic,
+                    PhysicsMode::Static => BodyStatus::Static,
+                };
+                let entity_rb = RigidBodyBuilder::new(body_status)
+                    .translation(
+                        rigid_body.transform.position.x,
+                        rigid_body.transform.position.y,
+                    )
+                    .rotation(rigid_body.transform.rotation)
+                    .mass(rigid_body.mass)
+                    .build();
 
-        for (index, (rigid_body, shape, physics_mode)) in world
-            .query3::<RigidBody, Shape, PhysicsMode>()
-            .iter()
-            .enumerate()
-        {
-            let body_status = match physics_mode {
-                PhysicsMode::Dynamic => BodyStatus::Dynamic,
-                PhysicsMode::Static => BodyStatus::Static,
-            };
-            let entity_rb = RigidBodyBuilder::new(body_status)
-                .translation(
-                    rigid_body.transform.position.x,
-                    rigid_body.transform.position.y,
-                )
-                .rotation(rigid_body.transform.rotation)
-                .mass(rigid_body.mass)
-                .build();
+                let entity_handle = self.physics_world.bodies.insert(entity_rb);
 
-            let entity_handle = physics_world.bodies.insert(entity_rb);
+                if index == 0 {
+                    self.spaceship_handle = Some(entity_handle);
+                }
 
-            if index == 0 {
-                spaceship_handle = Some(entity_handle);
+                let mut points = Vec::new();
+
+                for point in &shape.vertices {
+                    points.push(rapier2d::na::Point2::new(point.x, point.y));
+                }
+
+                let entity_collider = ColliderBuilder::convex_hull(&points).unwrap().build();
+                self.physics_world.colliders.insert(
+                    entity_collider,
+                    entity_handle,
+                    &mut self.physics_world.bodies,
+                );
             }
-
-            let mut points = Vec::new();
-
-            for point in &shape.vertices {
-                points.push(rapier2d::na::Point2::new(point.x, point.y));
-            }
-
-            let entity_collider = ColliderBuilder::convex_hull(&points).unwrap().build();
-            physics_world.colliders.insert(
-                entity_collider,
-                entity_handle,
-                &mut physics_world.bodies,
-            );
         }
 
         // TODO: Apply force on a specfic body with the correct vector
-        let spaceship_body = physics_world
+        let spaceship_body = self
+            .physics_world
             .bodies
-            .get_mut(spaceship_handle.unwrap())
+            .get_mut(self.spaceship_handle.unwrap())
             .unwrap();
 
         for command in world.commands.iter() {
@@ -96,19 +106,19 @@ impl System for SimulationSystem {
             }
         }
 
-        physics_pipeline.step(
-            &physics_world.gravity,
-            &physics_world.integration_parameters,
-            &mut physics_world.broad_phase,
-            &mut physics_world.narrow_phase,
-            &mut physics_world.bodies,
-            &mut physics_world.colliders,
-            &mut physics_world.joints,
+        self.physics_pipeline.step(
+            &self.physics_world.gravity,
+            &self.physics_world.integration_parameters,
+            &mut self.physics_world.broad_phase,
+            &mut self.physics_world.narrow_phase,
+            &mut self.physics_world.bodies,
+            &mut self.physics_world.colliders,
+            &mut self.physics_world.joints,
             &(),
             &(),
         );
 
-        let physics_bodies = physics_world.bodies.iter();
+        let physics_bodies = self.physics_world.bodies.iter();
         let rigid_bodies = world.query_mut::<RigidBody>().into_iter();
 
         for ((_handle, physics_body), rigid_body) in physics_bodies.zip(rigid_bodies) {

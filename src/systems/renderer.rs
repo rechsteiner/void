@@ -82,7 +82,7 @@ impl RenderSystem {
 }
 
 impl System for RenderSystem {
-    fn update(&self, world: &mut World) {
+    fn update(&mut self, world: &mut World) {
         let screen_height = self.canvas.height() as f32;
         let screen_width = self.canvas.width() as f32;
 

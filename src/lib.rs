@@ -167,7 +167,7 @@ impl Game {
     pub fn tick(&mut self) {
         // self.renderer.move_viewport_toward_target(); // For smooth viewport motion
 
-        for system in &self.systems {
+        for system in self.systems.iter_mut() {
             system.update(&mut self.world);
         }
     }
