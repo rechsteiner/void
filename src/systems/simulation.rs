@@ -1,8 +1,9 @@
 use crate::components::physics_mode::PhysicsMode;
 use crate::components::rigid_body::{RigidBody, Transform};
 use crate::components::shape::{Point, Shape};
-use crate::ecs::{System, World};
 use crate::interpreter::object::Command;
+use crate::systems::System;
+use crate::world::World;
 use rapier2d::geometry::{BroadPhase, ColliderSet, NarrowPhase};
 use rapier2d::pipeline::PhysicsPipeline;
 use rapier2d::{dynamics::BodyStatus, na::Vector2};

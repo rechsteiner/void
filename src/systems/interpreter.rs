@@ -1,10 +1,10 @@
 use crate::components::rigid_body::RigidBody;
-use crate::ecs::System;
-use crate::ecs::World;
 use crate::interpreter::evaluator::Evaluator;
 use crate::interpreter::lexer::Lexer;
 use crate::interpreter::object::{Command, Environment, Object};
 use crate::interpreter::parser::Parser;
+use crate::systems::System;
+use crate::world::World;
 
 pub struct InterpreterSystem {}
 

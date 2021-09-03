@@ -1,18 +1,19 @@
 mod components;
-mod ecs;
 mod interpreter;
 mod systems;
+mod world;
 
 extern crate wasm_bindgen;
 
 use components::physics_mode::PhysicsMode;
 use components::rigid_body::{RigidBody, Transform};
 use components::shape::{ColorRGBA, Point, Shape};
-use ecs::{System, World};
 use systems::interpreter::InterpreterSystem;
 use systems::renderer::RenderSystem;
 use systems::simulation::SimulationSystem;
+use systems::System;
 use wasm_bindgen::prelude::*;
+use world::World;
 
 #[wasm_bindgen]
 pub struct Game {

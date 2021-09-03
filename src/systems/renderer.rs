@@ -2,7 +2,8 @@ use wasm_bindgen::{JsCast, JsValue};
 
 use crate::components::rigid_body::RigidBody;
 use crate::components::shape::{Point, Shape};
-use crate::ecs::{System, World};
+use crate::systems::System;
+use crate::world::World;
 
 struct Viewport {
     position: Point,
