@@ -3,6 +3,7 @@ mod interpreter;
 mod systems;
 mod world;
 
+extern crate console_error_panic_hook;
 extern crate wasm_bindgen;
 
 use components::physics_mode::PhysicsMode;
@@ -25,6 +26,7 @@ pub struct Game {
 impl Game {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Game {
+        console_error_panic_hook::set_once();
         let mut world = World::new();
         let color_cyan = ColorRGBA {
             r: 0,
