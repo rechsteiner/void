@@ -11,7 +11,12 @@ const EDITOR_DOCUMENT = "editor-document";
 /// by passing in a `onChange` function to the options. The changes made inside
 /// the editor will be cached using local storage.
 export class Editor {
-  constructor(element, options) {
+  editorView: EditorView;
+
+  constructor(
+    element: HTMLElement,
+    options: { onChange?: (document: string) => void }
+  ) {
     const updateListener = () => {
       return EditorView.updateListener.of((view) => {
         if (view.docChanged && options.onChange) {
@@ -24,7 +29,7 @@ export class Editor {
 
     this.editorView = new EditorView({
       state: EditorState.create({
-        doc: window.localStorage.getItem(EDITOR_DOCUMENT),
+        doc: window.localStorage.getItem(EDITOR_DOCUMENT) || undefined,
         extensions: [
           updateListener(),
           lineNumbers(),
@@ -37,9 +42,10 @@ export class Editor {
       // and uppercases them. This might be possible do on a language level, but
       // will look into that when we add our own language plugin.
       dispatch: (transaction) => {
+        // @ts-ignore: TODO: Figure out how to modify the transaction using the public types.
         transaction.changes.inserted.forEach((insertion) => {
           if (insertion.text !== undefined) {
-            insertion.text = insertion.text.map((text) => {
+            insertion.text = insertion.text.map((text: string) => {
               return text.toUpperCase();
             });
           }

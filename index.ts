@@ -1,10 +1,10 @@
 import { Editor } from "./editor";
 
 import("./pkg/static_void.js").then((lib) => {
-  const pauseButton = document.getElementById("pause-button");
-  const runButton = document.getElementById("run-button");
+  const pauseButton = document.getElementById("pause-button")!;
+  const runButton = document.getElementById("run-button")!;
   const canvas = document.getElementsByTagName("canvas")[0];
-  const editorElement = document.getElementById("editor");
+  const editorElement = document.getElementById("editor")!;
 
   let game = new lib.Game();
 
@@ -22,8 +22,8 @@ import("./pkg/static_void.js").then((lib) => {
   };
 
   // Set canvas size attributes to match physical size of window
-  canvas.setAttribute("height", window.innerHeight);
-  canvas.setAttribute("width", window.innerWidth);
+  canvas.setAttribute("height", `${window.innerHeight}`);
+  canvas.setAttribute("width", `${window.innerWidth}`);
 
   // Hide buttons when not in use
   runButton.classList.add("hidden");
@@ -43,15 +43,15 @@ import("./pkg/static_void.js").then((lib) => {
 
   // Update canvas dimension attributes on window resize
   window.addEventListener("resize", function () {
-    canvas.setAttribute("height", window.innerHeight);
-    canvas.setAttribute("width", window.innerWidth);
+    canvas.setAttribute("height", `${window.innerHeight}`);
+    canvas.setAttribute("width", `${window.innerWidth}`);
   });
 
   // Navigate viewport
   window.addEventListener("keydown", (e) => {
     // Possibly a hack, but the idea is to only move the viewport when "nothing" is selected.
     // Otherwise the viewport moves when typing into textarea.
-    if (document.activeElement.nodeName !== "BODY") return;
+    if (document.activeElement?.nodeName !== "BODY") return;
 
     // TODO: abstract away specific keys from this code
     switch (e.key) {
@@ -79,7 +79,7 @@ import("./pkg/static_void.js").then((lib) => {
   window.addEventListener("keyup", (e) => {
     // Possibly a hack, but the idea is to only move the viewport when "nothing" is selected.
     // Otherwise the viewport moves when typing into textarea.
-    if (document.activeElement.nodeName !== "BODY") return;
+    if (document.activeElement?.nodeName !== "BODY") return;
 
     // TODO: abstract away specific keys from this code
     switch (e.key) {
