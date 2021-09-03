@@ -10,7 +10,7 @@ trait ComponentVec {
 	fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
-impl<T: 'static> ComponentVec for Vec<T> {
+impl<T: 'static> ComponentVec for Vec<Option<T>> {
 	fn as_any(&self) -> &dyn Any {
 		self
 	}
@@ -36,20 +36,24 @@ impl World {
 		}
 	}
 
-	pub fn query<T: 'static>(&self) -> Option<&Vec<T>> {
+	pub fn query<T: 'static>(&self) -> Option<Vec<&T>> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
 
 		// Look for all component for that type identifier. Downcast the dynamic
 		// trait to our generic type. If the downcast fails the program will
 		// panic.
-		return self
-			.components
-			.get(&id)
-			.map(|c| c.as_any().downcast_ref::<Vec<T>>().unwrap());
+		return self.components.get(&id).map(|c| {
+			c.as_any()
+				.downcast_ref::<Vec<Option<T>>>()
+				.unwrap()
+				.into_iter()
+				.flatten()
+				.collect()
+		});
 	}
 
-	pub fn query_mut<T: 'static>(&mut self) -> &mut Vec<T> {
+	pub fn query_mut<T: 'static>(&mut self) -> Vec<&mut T> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
 
@@ -58,33 +62,38 @@ impl World {
 		let components_vec = self
 			.components
 			.entry(id)
-			.or_insert(Box::new(Vec::<T>::new()));
+			.or_insert(Box::new(Vec::<Option<T>>::new()));
 
 		// Downcast the dynamic trait to our generic type. If the downcast fails
 		// the program will panic.
 		return components_vec
 			.as_any_mut()
-			.downcast_mut::<Vec<T>>()
-			.unwrap();
+			.downcast_mut::<Vec<Option<T>>>()
+			.unwrap()
+			.into_iter()
+			.flatten()
+			.collect();
 	}
 
 	pub fn query2<T: 'static, U: 'static>(&self) -> Vec<(&T, &U)> {
 		let first = self.query::<T>().unwrap();
 		let second = self.query::<U>().unwrap();
-		return first.iter().zip(second.iter()).collect();
+		first
+			.iter()
+			.zip(second.iter())
+			.map(|(first, second)| (*first, *second))
+			.collect()
 	}
 
 	pub fn query3<T: 'static, U: 'static, V: 'static>(&self) -> Vec<(&T, &U, &V)> {
 		let first = self.query::<T>().unwrap();
 		let second = self.query::<U>().unwrap();
 		let third = self.query::<V>().unwrap();
-
-		let combined = first
+		first
 			.iter()
 			.zip(second.iter().zip(third.iter()))
-			.map(|(first, (second, third))| (first, second, third));
-
-		return combined.collect();
+			.map(|(first, (second, third))| (*first, *second, *third))
+			.collect()
 	}
 
 	// TODO: Replace this with a more advanced Entity builder.
@@ -95,12 +104,12 @@ impl World {
 			Some(components) => {
 				components
 					.as_any_mut()
-					.downcast_mut::<Vec<T>>()
+					.downcast_mut::<Vec<Option<T>>>()
 					.unwrap()
-					.push(component);
+					.push(Some(component));
 			}
 			None => {
-				self.components.insert(id, Box::new(vec![component]));
+				self.components.insert(id, Box::new(vec![Some(component)]));
 			}
 		}
 	}
