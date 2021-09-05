@@ -42,117 +42,126 @@ impl Game {
             a: 1.0,
         };
 
+        // Register components
+
+        world.register_component::<RigidBody>();
+        world.register_component::<Shape>();
+        world.register_component::<PhysicsMode>();
+
         // Entity 1
 
-        world.insert_component(RigidBody {
-            transform: Transform {
-                position: Point { x: 200.0, y: 200.0 },
-                rotation: 0.0,
-            },
-            mass: 1.0,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
-            angular_velocity: 0.0,
-        });
-
-        world.insert_component(Shape {
-            vertices: vec![
-                Point { x: -10.0, y: -15.0 },
-                Point { x: 10.0, y: -15.0 },
-                Point { x: 15.0, y: 10.0 },
-                Point { x: -15.0, y: 10.0 },
-            ],
-            color: color_cyan,
-        });
-
-        world.insert_component(PhysicsMode::Dynamic);
+        world
+            .create_entity()
+            .with_component(RigidBody {
+                transform: Transform {
+                    position: Point { x: 200.0, y: 200.0 },
+                    rotation: 0.0,
+                },
+                mass: 1.0,
+                linear_velocity: Point { x: 0.0, y: 0.0 },
+                angular_velocity: 0.0,
+            })
+            .with_component(Shape {
+                vertices: vec![
+                    Point { x: -10.0, y: -15.0 },
+                    Point { x: 10.0, y: -15.0 },
+                    Point { x: 15.0, y: 10.0 },
+                    Point { x: -15.0, y: 10.0 },
+                ],
+                color: color_cyan,
+            })
+            .with_component(PhysicsMode::Dynamic);
 
         // Entity 2
 
-        world.insert_component(RigidBody {
-            transform: Transform {
-                position: Point { x: 200.0, y: 160.0 },
-                rotation: 0.0,
-            },
-            mass: 0.2,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
-            angular_velocity: 0.0,
-        });
-
-        world.insert_component(Shape {
-            vertices: vec![
-                Point { x: -10.0, y: -10.0 },
-                Point { x: 10.0, y: -10.0 },
-                Point { x: 10.0, y: 10.0 },
-                Point { x: -10.0, y: 10.0 },
-            ],
-            color: color_orange,
-        });
-
-        world.insert_component(PhysicsMode::Dynamic);
+        world
+            .create_entity()
+            .with_component(RigidBody {
+                transform: Transform {
+                    position: Point { x: 200.0, y: 160.0 },
+                    rotation: 0.0,
+                },
+                mass: 0.2,
+                linear_velocity: Point { x: 0.0, y: 0.0 },
+                angular_velocity: 0.0,
+            })
+            .with_component(Shape {
+                vertices: vec![
+                    Point { x: -10.0, y: -10.0 },
+                    Point { x: 10.0, y: -10.0 },
+                    Point { x: 10.0, y: 10.0 },
+                    Point { x: -10.0, y: 10.0 },
+                ],
+                color: color_orange,
+            })
+            .with_component(PhysicsMode::Dynamic);
 
         // Entity 3
 
-        world.insert_component(RigidBody {
-            transform: Transform {
-                position: Point { x: 200.0, y: 400.0 },
-                rotation: 0.0,
-            },
-            mass: 1.0,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
-            angular_velocity: 0.0,
-        });
-
-        world.insert_component(Shape {
-            vertices: vec![
-                Point {
-                    x: -300.0,
-                    y: -10.0,
+        world
+            .create_entity()
+            .with_component(RigidBody {
+                transform: Transform {
+                    position: Point { x: 200.0, y: 400.0 },
+                    rotation: 0.0,
                 },
-                Point { x: 300.0, y: -10.0 },
-                Point { x: 300.0, y: 0.0 },
-                Point { x: -300.0, y: 0.0 },
-            ],
-            color: ColorRGBA {
-                r: 255,
-                g: 255,
-                b: 255,
-                a: 1.0,
-            },
-        });
-
-        world.insert_component(PhysicsMode::Static);
+                mass: 1.0,
+                linear_velocity: Point { x: 0.0, y: 0.0 },
+                angular_velocity: 0.0,
+            })
+            .with_component(Shape {
+                vertices: vec![
+                    Point {
+                        x: -300.0,
+                        y: -10.0,
+                    },
+                    Point { x: 300.0, y: -10.0 },
+                    Point { x: 300.0, y: 0.0 },
+                    Point { x: -300.0, y: 0.0 },
+                ],
+                color: ColorRGBA {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 1.0,
+                },
+            })
+            .with_component(PhysicsMode::Static);
 
         // Entity 4
 
-        world.insert_component(RigidBody {
-            transform: Transform {
-                position: Point { x: 0.0, y: 390.0 },
-                rotation: 0.0,
-            },
-            mass: 1.0,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
-            angular_velocity: 0.0,
-        });
-
-        world.insert_component(Shape {
-            vertices: vec![
-                Point {
-                    x: -40.0,
-                    y: -120.0,
+        world
+            .create_entity()
+            .with_component(RigidBody {
+                transform: Transform {
+                    position: Point { x: 0.0, y: 390.0 },
+                    rotation: 0.0,
                 },
-                Point { x: 40.0, y: -120.0 },
-                Point { x: 40.0, y: 0.0 },
-                Point { x: -40.0, y: 0.0 },
-            ],
-            color: ColorRGBA {
-                r: 255,
-                g: 255,
-                b: 255,
-                a: 1.0,
-            },
-        });
+                mass: 1.0,
+                linear_velocity: Point { x: 0.0, y: 0.0 },
+                angular_velocity: 0.0,
+            })
+            .with_component(Shape {
+                vertices: vec![
+                    Point {
+                        x: -40.0,
+                        y: -120.0,
+                    },
+                    Point { x: 40.0, y: -120.0 },
+                    Point { x: 40.0, y: 0.0 },
+                    Point { x: -40.0, y: 0.0 },
+                ],
+                color: ColorRGBA {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 1.0,
+                },
+            })
+            .with_component(PhysicsMode::Static);
 
-        world.insert_component(PhysicsMode::Static);
+        // Initialize the game with our systems
+
         Game {
             world: world,
             systems: vec![

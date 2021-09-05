@@ -21,6 +21,26 @@ impl World {
 		}
 	}
 
+	pub fn register_component<T: 'static>(&mut self) {
+		let id = TypeId::of::<T>();
+		self.components.insert(id, vec![]);
+	}
+
+	pub fn create_entity(&mut self) -> &mut Self {
+		for (_key, value) in self.components.iter_mut() {
+			value.push(None);
+		}
+		self
+	}
+
+	pub fn with_component<T: 'static>(&mut self, component: T) -> &mut Self {
+		let id = TypeId::of::<T>();
+		let components = self.components.get_mut(&id).unwrap();
+		let index = components.len() - 1;
+		components[index] = Some(Box::new(component));
+		self
+	}
+
 	pub fn query<T: 'static>(&self) -> Option<Vec<&T>> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
@@ -74,28 +94,15 @@ impl World {
 			.map(|(first, (second, third))| (*first, *second, *third))
 			.collect()
 	}
-
-	// TODO: Replace this with a more advanced Entity builder.
-	pub fn insert_component<T: 'static>(&mut self, component: T) {
-		let id = TypeId::of::<T>();
-
-		match self.components.get_mut(&id) {
-			Some(components) => {
-				components.push(Some(Box::new(component)));
-			}
-			None => {
-				self.components.insert(id, vec![Some(Box::new(component))]);
-			}
-		}
-	}
 }
 
 #[cfg(test)]
 mod test {
 	use super::*;
 
+	#[derive(Debug, PartialEq, Clone)]
 	struct Size(f32);
-	#[derive(Debug, PartialEq)]
+	#[derive(Debug, PartialEq, Clone)]
 	struct Location {
 		x: f32,
 		y: f32,
@@ -104,7 +111,10 @@ mod test {
 	#[test]
 	fn test_query() {
 		let mut world = World::new();
-		world.insert_component(Location { x: 10.0, y: 10.0 });
+		world.register_component::<Location>();
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 });
 		let locations = world.query::<Location>().unwrap();
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
@@ -114,10 +124,58 @@ mod test {
 	#[test]
 	fn test_query_mut() {
 		let mut world = World::new();
-		world.insert_component(Location { x: 10.0, y: 10.0 });
+		world.register_component::<Location>();
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 });
 		let locations = world.query_mut::<Location>();
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
 		assert_eq!(locations[0].y, 10.0);
+	}
+
+	#[test]
+	fn test_register_component() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+
+		assert!(world.components.contains_key(&TypeId::of::<Location>()));
+		assert!(world.components.contains_key(&TypeId::of::<Size>()));
+	}
+
+	#[test]
+	fn test_create_entity() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world.create_entity();
+
+		let locations = world.components.get(&TypeId::of::<Location>()).unwrap();
+		let sizes = world.components.get(&TypeId::of::<Size>()).unwrap();
+
+		assert_eq!(sizes.len(), 1);
+		assert_eq!(locations.len(), 1);
+		assert!(sizes[0].is_none());
+		assert!(locations[0].is_none());
+	}
+
+	#[test]
+	fn test_with_component() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world
+			.create_entity()
+			.with_component(Location { x: 1.0, y: 1.0 })
+			.with_component(Size(20.0));
+
+		let locations = world.query::<Location>().unwrap();
+		let sizes = world.query::<Size>().unwrap();
+
+		assert_eq!(sizes.len(), 1);
+		assert_eq!(locations.len(), 1);
+		assert_eq!(*sizes[0], Size(20.0));
+		assert_eq!(*locations[0], Location { x: 1.0, y: 1.0 });
 	}
 }
