@@ -1,4 +1,3 @@
-use crate::interpreter::object::Command;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
@@ -7,16 +6,12 @@ pub type Components = Vec<Option<Box<dyn Any>>>;
 // Our world holds all our components. It's stored in a hash map where each
 // component type is the key and the value is all the components of that type.
 pub struct World {
-	pub program: String,
-	pub commands: Vec<Command>,
 	components: HashMap<TypeId, Components>,
 }
 
 impl World {
 	pub fn new() -> Self {
 		World {
-			program: String::new(),
-			commands: vec![],
 			components: HashMap::new(),
 		}
 	}

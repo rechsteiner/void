@@ -1,4 +1,5 @@
 use crate::components::physics_mode::PhysicsMode;
+use crate::components::program::Program;
 use crate::components::rigid_body::{RigidBody, Transform};
 use crate::components::shape::{Point, Shape};
 use crate::interpreter::object::Command;
@@ -85,21 +86,22 @@ impl System for SimulationSystem {
         // TODO: Apply force on a specfic body with the correct vector
         let spaceship_body = self.bodies.get_mut(self.spaceship_handle.unwrap()).unwrap();
 
-        for command in world.commands.iter() {
-            match command {
-                Command::SetThrust { force } => {
-                    let rotation = spaceship_body.position().rotation.angle();
-
-                    spaceship_body.apply_impulse(
-                        Vector2::new(
-                            1.0 - (*force as f32) * rotation.sin(), // cos(0) - sin(⍺) = 1 - sin(⍺)
-                            (*force as f32) * rotation.cos(),       // sin(1) + cos(⍺) = 0 + cos(⍺)
-                        ),
-                        true,
-                    );
-                }
-                &Command::SetTorque { force } => {
-                    spaceship_body.apply_torque_impulse(force as f32, true)
+        for program in world.query::<Program>().unwrap() {
+            for command in &program.commands {
+                match command {
+                    Command::SetThrust { force } => {
+                        let rotation = spaceship_body.position().rotation.angle();
+                        spaceship_body.apply_impulse(
+                            Vector2::new(
+                                1.0 - (*force as f32) * rotation.sin(), // cos(0) - sin(⍺) = 1 - sin(⍺)
+                                (*force as f32) * rotation.cos(), // sin(1) + cos(⍺) = 0 + cos(⍺)
+                            ),
+                            true,
+                        );
+                    }
+                    Command::SetTorque { force } => {
+                        spaceship_body.apply_torque_impulse(*force as f32, true)
+                    }
                 }
             }
         }

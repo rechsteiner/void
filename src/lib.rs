@@ -7,6 +7,7 @@ extern crate console_error_panic_hook;
 extern crate wasm_bindgen;
 
 use components::physics_mode::PhysicsMode;
+use components::program::Program;
 use components::rigid_body::{RigidBody, Transform};
 use components::shape::{ColorRGBA, Point, Shape};
 use systems::interpreter::InterpreterSystem;
@@ -44,9 +45,12 @@ impl Game {
 
         // Register components
 
+        // TODO: Would be nice if we didn't have to remember to register
+        // components before using them. Right now it will panic.
         world.register_component::<RigidBody>();
         world.register_component::<Shape>();
         world.register_component::<PhysicsMode>();
+        world.register_component::<Program>();
 
         // Entity 1
 
@@ -70,7 +74,8 @@ impl Game {
                 ],
                 color: color_cyan,
             })
-            .with_component(PhysicsMode::Dynamic);
+            .with_component(PhysicsMode::Dynamic)
+            .with_component(Program::new());
 
         // Entity 2
 
@@ -173,7 +178,9 @@ impl Game {
     }
 
     pub fn change_program(&mut self, input: String) {
-        self.world.program = input;
+        let mut programs = self.world.query_mut::<Program>();
+        let mut program = programs.get_mut(0).unwrap();
+        program.input = input;
     }
 
     pub fn tick(&mut self) {
