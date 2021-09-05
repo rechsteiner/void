@@ -2,29 +2,14 @@ use crate::interpreter::object::Command;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-// A trait used to represent a vector of components. This is needed in order to
-// convert a vector of dynamic components into a specific generic type when
-// querying our world.
-trait ComponentVec {
-	fn as_any(&self) -> &dyn Any;
-	fn as_any_mut(&mut self) -> &mut dyn Any;
-}
-
-impl<T: 'static> ComponentVec for Vec<Option<T>> {
-	fn as_any(&self) -> &dyn Any {
-		self
-	}
-	fn as_any_mut(&mut self) -> &mut dyn Any {
-		self
-	}
-}
+pub type Components = Vec<Option<Box<dyn Any>>>;
 
 // Our world holds all our components. It's stored in a hash map where each
 // component type is the key and the value is all the components of that type.
 pub struct World {
 	pub program: String,
 	pub commands: Vec<Command>,
-	components: HashMap<TypeId, Box<dyn ComponentVec>>,
+	components: HashMap<TypeId, Components>,
 }
 
 impl World {
@@ -43,12 +28,11 @@ impl World {
 		// Look for all component for that type identifier. Downcast the dynamic
 		// trait to our generic type. If the downcast fails the program will
 		// panic.
-		return self.components.get(&id).map(|c| {
-			c.as_any()
-				.downcast_ref::<Vec<Option<T>>>()
-				.unwrap()
+		return self.components.get(&id).map(|components| {
+			components
 				.into_iter()
 				.flatten()
+				.map(|c| c.downcast_ref::<T>().unwrap())
 				.collect()
 		});
 	}
@@ -59,19 +43,14 @@ impl World {
 
 		// Look for all component for that type identifier. If it returns none
 		// we insert an empty array and use that instead.
-		let components_vec = self
-			.components
-			.entry(id)
-			.or_insert(Box::new(Vec::<Option<T>>::new()));
+		let components = self.components.entry(id).or_insert(vec![]);
 
 		// Downcast the dynamic trait to our generic type. If the downcast fails
 		// the program will panic.
-		return components_vec
-			.as_any_mut()
-			.downcast_mut::<Vec<Option<T>>>()
-			.unwrap()
+		return components
 			.into_iter()
 			.flatten()
+			.map(|c| c.downcast_mut::<T>().unwrap())
 			.collect();
 	}
 
@@ -102,15 +81,43 @@ impl World {
 
 		match self.components.get_mut(&id) {
 			Some(components) => {
-				components
-					.as_any_mut()
-					.downcast_mut::<Vec<Option<T>>>()
-					.unwrap()
-					.push(Some(component));
+				components.push(Some(Box::new(component)));
 			}
 			None => {
-				self.components.insert(id, Box::new(vec![Some(component)]));
+				self.components.insert(id, vec![Some(Box::new(component))]);
 			}
 		}
+	}
+}
+
+#[cfg(test)]
+mod test {
+	use super::*;
+
+	struct Size(f32);
+	#[derive(Debug, PartialEq)]
+	struct Location {
+		x: f32,
+		y: f32,
+	}
+
+	#[test]
+	fn test_query() {
+		let mut world = World::new();
+		world.insert_component(Location { x: 10.0, y: 10.0 });
+		let locations = world.query::<Location>().unwrap();
+		assert_eq!(locations.len(), 1);
+		assert_eq!(locations[0].x, 10.0);
+		assert_eq!(locations[0].y, 10.0);
+	}
+
+	#[test]
+	fn test_query_mut() {
+		let mut world = World::new();
+		world.insert_component(Location { x: 10.0, y: 10.0 });
+		let locations = world.query_mut::<Location>();
+		assert_eq!(locations.len(), 1);
+		assert_eq!(locations[0].x, 10.0);
+		assert_eq!(locations[0].y, 10.0);
 	}
 }
