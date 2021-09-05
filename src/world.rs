@@ -39,34 +39,27 @@ impl World {
 	pub fn query<T: 'static>(&self) -> Option<Vec<&T>> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
-
-		// Look for all component for that type identifier. Downcast the dynamic
-		// trait to our generic type. If the downcast fails the program will
-		// panic.
-		return self.components.get(&id).map(|components| {
-			components
-				.into_iter()
+		// Look for all component for that type identifier. Downcast each value
+		// to the given generic type.
+		self.components.get(&id).map(|vec| {
+			vec.into_iter()
 				.flatten()
 				.map(|c| c.downcast_ref::<T>().unwrap())
 				.collect()
-		});
+		})
 	}
 
-	pub fn query_mut<T: 'static>(&mut self) -> Vec<&mut T> {
+	pub fn query_mut<T: 'static>(&mut self) -> Option<Vec<&mut T>> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
-
-		// Look for all component for that type identifier. If it returns none
-		// we insert an empty array and use that instead.
-		let components = self.components.entry(id).or_insert(vec![]);
-
-		// Downcast the dynamic trait to our generic type. If the downcast fails
-		// the program will panic.
-		return components
-			.into_iter()
-			.flatten()
-			.map(|c| c.downcast_mut::<T>().unwrap())
-			.collect();
+		// Look for all component for that type identifier. Downcast each value
+		// to the given generic type.
+		self.components.get_mut(&id).map(|vec| {
+			vec.into_iter()
+				.flatten()
+				.map(|c| c.downcast_mut::<T>().unwrap())
+				.collect()
+		})
 	}
 
 	pub fn query2<T: 'static, U: 'static>(&self) -> Vec<(&T, &U)> {
@@ -123,7 +116,7 @@ mod test {
 		world
 			.create_entity()
 			.with_component(Location { x: 10.0, y: 10.0 });
-		let locations = world.query_mut::<Location>();
+		let locations = world.query_mut::<Location>().unwrap();
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
 		assert_eq!(locations[0].y, 10.0);

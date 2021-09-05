@@ -110,7 +110,12 @@ impl System for InterpreterSystem {
 
         // TODO: Add support for querying multiple components mutably so we can
         // just update the program in the above for loop directly.
-        for (index, program) in world.query_mut::<Program>().into_iter().enumerate() {
+        for (index, program) in world
+            .query_mut::<Program>()
+            .unwrap()
+            .into_iter()
+            .enumerate()
+        {
             program.commands = commands[index].clone();
         }
     }
