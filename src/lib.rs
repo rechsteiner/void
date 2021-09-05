@@ -10,6 +10,7 @@ use components::physics_mode::PhysicsMode;
 use components::program::Program;
 use components::rigid_body::{RigidBody, Transform};
 use components::shape::{ColorRGBA, Point, Shape};
+use components::viewport::Viewport;
 use systems::interpreter::InterpreterSystem;
 use systems::renderer::RenderSystem;
 use systems::simulation::SimulationSystem;
@@ -51,6 +52,7 @@ impl Game {
         world.register_component::<Shape>();
         world.register_component::<PhysicsMode>();
         world.register_component::<Program>();
+        world.register_component::<Viewport>();
 
         // Entity 1
 
@@ -165,6 +167,15 @@ impl Game {
             })
             .with_component(PhysicsMode::Static);
 
+        // Viewport entity
+
+        world.create_entity().with_component(Viewport {
+            position: Point { x: 200.0, y: 200.0 },
+            zoom: 1.0,
+            target_position: Point { x: 200.0, y: 200.0 },
+            target_zoom: 1.0,
+        });
+
         // Initialize the game with our systems
 
         Game {
@@ -184,14 +195,17 @@ impl Game {
     }
 
     pub fn tick(&mut self) {
-        // self.renderer.move_viewport_toward_target(); // For smooth viewport motion
-
+        let mut viewports = self.world.query_mut::<Viewport>();
+        let viewport = viewports.get_mut(0).unwrap();
+        viewport.move_toward_target();
         for system in self.systems.iter_mut() {
             system.update(&mut self.world);
         }
     }
 
     pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
-        // self.renderer.move_viewport_target(delta_x, delta_y, delta_zoom);
+        let mut viewports = self.world.query_mut::<Viewport>();
+        let viewport = viewports.get_mut(0).unwrap();
+        viewport.move_target(delta_x, delta_y, delta_zoom);
     }
 }
