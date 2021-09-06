@@ -1,4 +1,5 @@
 mod components;
+mod entities;
 mod interpreter;
 mod query;
 mod systems;

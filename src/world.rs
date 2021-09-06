@@ -1,29 +1,27 @@
+use crate::entities::Entities;
 use crate::query::Query;
-use std::any::{Any, TypeId};
-use std::collections::HashMap;
-
-pub type Components = HashMap<TypeId, Vec<Option<Box<dyn Any>>>>;
+use std::any::TypeId;
 
 // Our world holds all our components. It's stored in a hash map where each
 // component type is the key and the value is all the components of that type.
 pub struct World {
-	components: Components,
+	entities: Entities,
 }
 
 impl World {
 	pub fn new() -> Self {
 		World {
-			components: HashMap::new(),
+			entities: Entities::new(),
 		}
 	}
 
 	pub fn register_component<T: 'static>(&mut self) {
 		let id = TypeId::of::<T>();
-		self.components.insert(id, vec![]);
+		self.entities.components.insert(id, vec![]);
 	}
 
 	pub fn create_entity(&mut self) -> &mut Self {
-		for (_key, value) in self.components.iter_mut() {
+		for (_key, value) in self.entities.components.iter_mut() {
 			value.push(None);
 		}
 		self
@@ -31,28 +29,18 @@ impl World {
 
 	pub fn with_component<T: 'static>(&mut self, component: T) -> &mut Self {
 		let id = TypeId::of::<T>();
-		let components = self.components.get_mut(&id).unwrap();
+		let components = self.entities.components.get_mut(&id).unwrap();
 		let index = components.len() - 1;
 		components[index] = Some(Box::new(component));
 		self
 	}
 
 	pub fn query<'a, T: Query<'a>>(&'a self) -> Vec<T::QueryItem> {
-		T::query(&self.components)
+		T::query(&self.entities)
 	}
 
 	pub fn query_mut<T: 'static>(&mut self) -> Vec<&mut T> {
-		// Generate a unique identifier based on the generic type
-		let id = TypeId::of::<T>();
-		// Look for all component for that type identifier. Downcast each value
-		// to the given generic type.
-		self.components
-			.get_mut(&id)
-			.unwrap()
-			.into_iter()
-			.flatten()
-			.map(|c| c.downcast_mut::<T>().unwrap())
-			.collect()
+		self.entities.get_components_mut::<T>()
 	}
 }
 
@@ -100,8 +88,14 @@ mod test {
 		world.register_component::<Location>();
 		world.register_component::<Size>();
 
-		assert!(world.components.contains_key(&TypeId::of::<Location>()));
-		assert!(world.components.contains_key(&TypeId::of::<Size>()));
+		assert!(world
+			.entities
+			.components
+			.contains_key(&TypeId::of::<Location>()));
+		assert!(world
+			.entities
+			.components
+			.contains_key(&TypeId::of::<Size>()));
 	}
 
 	#[test]
@@ -111,8 +105,16 @@ mod test {
 		world.register_component::<Size>();
 		world.create_entity();
 
-		let locations = world.components.get(&TypeId::of::<Location>()).unwrap();
-		let sizes = world.components.get(&TypeId::of::<Size>()).unwrap();
+		let locations = world
+			.entities
+			.components
+			.get(&TypeId::of::<Location>())
+			.unwrap();
+		let sizes = world
+			.entities
+			.components
+			.get(&TypeId::of::<Size>())
+			.unwrap();
 
 		assert_eq!(sizes.len(), 1);
 		assert_eq!(locations.len(), 1);
