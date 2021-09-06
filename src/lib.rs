@@ -1,5 +1,6 @@
 mod components;
 mod interpreter;
+mod query;
 mod systems;
 mod world;
 
@@ -189,13 +190,13 @@ impl Game {
     }
 
     pub fn change_program(&mut self, input: String) {
-        let mut programs = self.world.query_mut::<Program>().unwrap();
+        let mut programs = self.world.query_mut::<Program>();
         let mut program = programs.get_mut(0).unwrap();
         program.input = input;
     }
 
     pub fn tick(&mut self) {
-        let mut viewports = self.world.query_mut::<Viewport>().unwrap();
+        let mut viewports = self.world.query_mut::<Viewport>();
         let viewport = viewports.get_mut(0).unwrap();
         viewport.move_toward_target();
         for system in self.systems.iter_mut() {
@@ -204,7 +205,7 @@ impl Game {
     }
 
     pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
-        let mut viewports = self.world.query_mut::<Viewport>().unwrap();
+        let mut viewports = self.world.query_mut::<Viewport>();
         let viewport = viewports.get_mut(0).unwrap();
         viewport.move_target(delta_x, delta_y, delta_zoom);
     }

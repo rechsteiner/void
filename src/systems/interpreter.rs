@@ -18,7 +18,7 @@ impl InterpreterSystem {
 impl System for InterpreterSystem {
     fn update(&mut self, world: &mut World) {
         let mut commands: Vec<Vec<Command>> = vec![];
-        for (program, rigid_body) in world.query2::<Program, RigidBody>() {
+        for (program, rigid_body) in world.query::<(&Program, &RigidBody)>() {
             let lexer = Lexer::new(&program.input);
             let mut parser = Parser::new(lexer);
             let parsed_program = parser.parse_program();
@@ -110,12 +110,7 @@ impl System for InterpreterSystem {
 
         // TODO: Add support for querying multiple components mutably so we can
         // just update the program in the above for loop directly.
-        for (index, program) in world
-            .query_mut::<Program>()
-            .unwrap()
-            .into_iter()
-            .enumerate()
-        {
+        for (index, program) in world.query_mut::<Program>().into_iter().enumerate() {
             program.commands = commands[index].clone();
         }
     }

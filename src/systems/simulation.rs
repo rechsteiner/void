@@ -48,7 +48,7 @@ impl System for SimulationSystem {
         // adding and removing components.
         if self.bodies.len() == 0 {
             for (index, (rigid_body, shape, physics_mode)) in world
-                .query3::<RigidBody, Shape, PhysicsMode>()
+                .query::<(&RigidBody, &Shape, &PhysicsMode)>()
                 .iter()
                 .enumerate()
             {
@@ -86,7 +86,7 @@ impl System for SimulationSystem {
         // TODO: Apply force on a specfic body with the correct vector
         let spaceship_body = self.bodies.get_mut(self.spaceship_handle.unwrap()).unwrap();
 
-        for program in world.query::<Program>().unwrap() {
+        for program in world.query::<&Program>() {
             for command in &program.commands {
                 match command {
                     Command::SetThrust { force } => {
@@ -119,7 +119,7 @@ impl System for SimulationSystem {
         );
 
         let physics_bodies = self.bodies.iter();
-        let rigid_bodies = world.query_mut::<RigidBody>().unwrap().into_iter();
+        let rigid_bodies = world.query_mut::<RigidBody>().into_iter();
 
         for ((_handle, physics_body), rigid_body) in physics_bodies.zip(rigid_bodies) {
             rigid_body.transform = Transform {

@@ -1,12 +1,13 @@
+use crate::query::Query;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-pub type Components = Vec<Option<Box<dyn Any>>>;
+pub type Components = HashMap<TypeId, Vec<Option<Box<dyn Any>>>>;
 
 // Our world holds all our components. It's stored in a hash map where each
 // component type is the key and the value is all the components of that type.
 pub struct World {
-	components: HashMap<TypeId, Components>,
+	components: Components,
 }
 
 impl World {
@@ -36,50 +37,21 @@ impl World {
 		self
 	}
 
-	pub fn query<T: 'static>(&self) -> Option<Vec<&T>> {
+	pub fn query<'a, T: Query<'a>>(&'a self) -> Vec<T::QueryItem> {
+		T::query(&self.components)
+	}
+
+	pub fn query_mut<T: 'static>(&mut self) -> Vec<&mut T> {
 		// Generate a unique identifier based on the generic type
 		let id = TypeId::of::<T>();
 		// Look for all component for that type identifier. Downcast each value
 		// to the given generic type.
-		self.components.get(&id).map(|vec| {
-			vec.into_iter()
-				.flatten()
-				.map(|c| c.downcast_ref::<T>().unwrap())
-				.collect()
-		})
-	}
-
-	pub fn query_mut<T: 'static>(&mut self) -> Option<Vec<&mut T>> {
-		// Generate a unique identifier based on the generic type
-		let id = TypeId::of::<T>();
-		// Look for all component for that type identifier. Downcast each value
-		// to the given generic type.
-		self.components.get_mut(&id).map(|vec| {
-			vec.into_iter()
-				.flatten()
-				.map(|c| c.downcast_mut::<T>().unwrap())
-				.collect()
-		})
-	}
-
-	pub fn query2<T: 'static, U: 'static>(&self) -> Vec<(&T, &U)> {
-		let first = self.query::<T>().unwrap();
-		let second = self.query::<U>().unwrap();
-		first
-			.iter()
-			.zip(second.iter())
-			.map(|(first, second)| (*first, *second))
-			.collect()
-	}
-
-	pub fn query3<T: 'static, U: 'static, V: 'static>(&self) -> Vec<(&T, &U, &V)> {
-		let first = self.query::<T>().unwrap();
-		let second = self.query::<U>().unwrap();
-		let third = self.query::<V>().unwrap();
-		first
-			.iter()
-			.zip(second.iter().zip(third.iter()))
-			.map(|(first, (second, third))| (*first, *second, *third))
+		self.components
+			.get_mut(&id)
+			.unwrap()
+			.into_iter()
+			.flatten()
+			.map(|c| c.downcast_mut::<T>().unwrap())
 			.collect()
 	}
 }
@@ -103,7 +75,7 @@ mod test {
 		world
 			.create_entity()
 			.with_component(Location { x: 10.0, y: 10.0 });
-		let locations = world.query::<Location>().unwrap();
+		let locations = world.query::<&Location>();
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
 		assert_eq!(locations[0].y, 10.0);
@@ -116,7 +88,7 @@ mod test {
 		world
 			.create_entity()
 			.with_component(Location { x: 10.0, y: 10.0 });
-		let locations = world.query_mut::<Location>().unwrap();
+		let locations = world.query_mut::<Location>();
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
 		assert_eq!(locations[0].y, 10.0);
@@ -158,8 +130,8 @@ mod test {
 			.with_component(Location { x: 1.0, y: 1.0 })
 			.with_component(Size(20.0));
 
-		let locations = world.query::<Location>().unwrap();
-		let sizes = world.query::<Size>().unwrap();
+		let locations = world.query::<&Location>();
+		let sizes = world.query::<&Size>();
 
 		assert_eq!(sizes.len(), 1);
 		assert_eq!(locations.len(), 1);
