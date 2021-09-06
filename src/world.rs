@@ -1,8 +1,9 @@
 use crate::entities::Entities;
 use crate::query::Query;
 
-// Our world holds all our components. It's stored in a hash map where each
-// component type is the key and the value is all the components of that type.
+// Our world holds all our entities and components. The actual components are
+// stored inside the Entites struct so we can reuse the implementation between
+// this struct and our Query implementation.
 pub struct World {
 	entities: Entities,
 }
@@ -14,24 +15,34 @@ impl World {
 		}
 	}
 
+	/// Register a component of a given type. Must be called before using the
+	/// `create_entity` method, or querying for that type.
 	pub fn register_component<T: 'static>(&mut self) {
 		self.entities.register_component::<T>();
 	}
 
+	/// Create a new entity. Returns an instance of self that can be used to add
+	/// components for that entity.
 	pub fn create_entity(&mut self) -> &mut Self {
 		self.entities.create_entity();
 		self
 	}
 
+	/// Inserts the given component at the index of the current entity.
 	pub fn with_component<T: 'static>(&mut self, component: T) -> &mut Self {
 		self.entities.insert_component(component);
 		self
 	}
 
+	/// Query the world for components based on the generic type. See the Query
+	/// trait for which generic types are allowed.
 	pub fn query<'a, T: Query<'a>>(&'a self) -> Vec<T::QueryItem> {
 		T::query(&self.entities)
 	}
 
+	/// Query the world for components of a type that returns a mutable
+	/// reference to each component. Mutable queries can only be done for one
+	/// component type at the time to satisfy the borrow checker.
 	pub fn query_mut<T: 'static>(&mut self) -> Vec<&mut T> {
 		self.entities.get_components_mut::<T>()
 	}
