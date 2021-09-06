@@ -1,6 +1,5 @@
 use crate::entities::Entities;
 use crate::query::Query;
-use std::any::TypeId;
 
 // Our world holds all our components. It's stored in a hash map where each
 // component type is the key and the value is all the components of that type.
@@ -16,22 +15,16 @@ impl World {
 	}
 
 	pub fn register_component<T: 'static>(&mut self) {
-		let id = TypeId::of::<T>();
-		self.entities.components.insert(id, vec![]);
+		self.entities.register_component::<T>();
 	}
 
 	pub fn create_entity(&mut self) -> &mut Self {
-		for (_key, value) in self.entities.components.iter_mut() {
-			value.push(None);
-		}
+		self.entities.create_entity();
 		self
 	}
 
 	pub fn with_component<T: 'static>(&mut self, component: T) -> &mut Self {
-		let id = TypeId::of::<T>();
-		let components = self.entities.components.get_mut(&id).unwrap();
-		let index = components.len() - 1;
-		components[index] = Some(Box::new(component));
+		self.entities.insert_component(component);
 		self
 	}
 
@@ -83,47 +76,7 @@ mod test {
 	}
 
 	#[test]
-	fn test_register_component() {
-		let mut world = World::new();
-		world.register_component::<Location>();
-		world.register_component::<Size>();
-
-		assert!(world
-			.entities
-			.components
-			.contains_key(&TypeId::of::<Location>()));
-		assert!(world
-			.entities
-			.components
-			.contains_key(&TypeId::of::<Size>()));
-	}
-
-	#[test]
-	fn test_create_entity() {
-		let mut world = World::new();
-		world.register_component::<Location>();
-		world.register_component::<Size>();
-		world.create_entity();
-
-		let locations = world
-			.entities
-			.components
-			.get(&TypeId::of::<Location>())
-			.unwrap();
-		let sizes = world
-			.entities
-			.components
-			.get(&TypeId::of::<Size>())
-			.unwrap();
-
-		assert_eq!(sizes.len(), 1);
-		assert_eq!(locations.len(), 1);
-		assert!(sizes[0].is_none());
-		assert!(locations[0].is_none());
-	}
-
-	#[test]
-	fn test_with_component() {
+	fn test_create_entity_with_component() {
 		let mut world = World::new();
 		world.register_component::<Location>();
 		world.register_component::<Size>();
