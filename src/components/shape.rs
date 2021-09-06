@@ -7,9 +7,8 @@ pub struct Point {
 
 pub struct Shape {
     pub vertices: Vec<Point>,
-    // pub width: f32,
-    // pub height: f32,
     pub color: ColorRGBA, //Mosly for debug
+    pub is_sensor: bool,
 }
 
 pub struct ColorRGBA {

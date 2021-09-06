@@ -5,13 +5,16 @@ use crate::components::shape::{Point, Shape};
 use crate::interpreter::object::Command;
 use crate::systems::System;
 use crate::world::World;
+use rapier2d::crossbeam;
 use rapier2d::geometry::{BroadPhase, ColliderSet, NarrowPhase};
 use rapier2d::pipeline::PhysicsPipeline;
 use rapier2d::{dynamics::BodyStatus, na::Vector2};
 use rapier2d::{
     dynamics::{IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodyHandle, RigidBodySet},
-    geometry::ColliderBuilder,
+    geometry::{ColliderBuilder, ContactEvent, IntersectionEvent},
+    pipeline::{ChannelEventCollector, EventHandler},
 };
+use web_sys::console;
 
 pub struct SimulationSystem {
     spaceship_handle: Option<RigidBodyHandle>,
@@ -77,7 +80,10 @@ impl System for SimulationSystem {
                     points.push(rapier2d::na::Point2::new(point.x, point.y));
                 }
 
-                let entity_collider = ColliderBuilder::convex_hull(&points).unwrap().build();
+                let entity_collider = ColliderBuilder::convex_hull(&points)
+                    .unwrap()
+                    .sensor(shape.is_sensor)
+                    .build();
                 self.colliders
                     .insert(entity_collider, entity_handle, &mut self.bodies);
             }
@@ -106,6 +112,10 @@ impl System for SimulationSystem {
             }
         }
 
+        let (contact_send, contact_recv) = crossbeam::channel::unbounded();
+        let (intersection_send, intersection_recv) = crossbeam::channel::unbounded();
+        let event_handler = ChannelEventCollector::new(intersection_send, contact_send);
+
         self.physics_pipeline.step(
             &self.gravity,
             &self.integration_parameters,
@@ -115,7 +125,7 @@ impl System for SimulationSystem {
             &mut self.colliders,
             &mut self.joints,
             &(),
-            &(),
+            &event_handler,
         );
 
         let physics_bodies = self.bodies.iter();
@@ -134,6 +144,24 @@ impl System for SimulationSystem {
                 y: physics_body.linvel().y,
             };
             rigid_body.angular_velocity = physics_body.angvel();
+        }
+
+        while let Ok(intersection_event) = intersection_recv.try_recv() {
+            let parent = self
+                .colliders
+                .get(intersection_event.collider1)
+                .unwrap()
+                .parent();
+
+            unsafe {
+                console::log_1(&"It intersects".into());
+            }
+        }
+
+        while let Ok(contact_event) = contact_recv.try_recv() {
+            unsafe {
+                console::log_1(&"It contacts".into());
+            }
         }
     }
 }
