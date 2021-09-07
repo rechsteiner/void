@@ -5,7 +5,6 @@ use crate::components::shape::{ColorRGBA, Point, Shape};
 use crate::components::viewport::Viewport;
 use crate::scene::Scene;
 use crate::systems::interpreter::InterpreterSystem;
-use crate::systems::objectives_system::ObjectivesSystem;
 use crate::systems::renderer::RenderSystem;
 use crate::systems::simulation::SimulationSystem;
 use crate::world::World;
@@ -197,7 +196,6 @@ pub fn generate_scene() -> Scene {
         vec![
             Box::new(InterpreterSystem::new()),
             Box::new(SimulationSystem::new()),
-            Box::new(ObjectivesSystem::new()),
             Box::new(RenderSystem::new()),
         ],
     )
