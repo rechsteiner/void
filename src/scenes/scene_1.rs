@@ -4,6 +4,10 @@ use crate::components::rigid_body::{RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Point, Shape};
 use crate::components::viewport::Viewport;
 use crate::scene::Scene;
+use crate::systems::interpreter::InterpreterSystem;
+use crate::systems::objectives_system::ObjectivesSystem;
+use crate::systems::renderer::RenderSystem;
+use crate::systems::simulation::SimulationSystem;
 use crate::world::World;
 
 pub fn generate_scene() -> Scene {
@@ -188,5 +192,13 @@ pub fn generate_scene() -> Scene {
         target_zoom: 1.0,
     });
 
-    Scene::new(world)
+    Scene::new(
+        world,
+        vec![
+            Box::new(InterpreterSystem::new()),
+            Box::new(SimulationSystem::new()),
+            Box::new(ObjectivesSystem::new()),
+            Box::new(RenderSystem::new()),
+        ],
+    )
 }

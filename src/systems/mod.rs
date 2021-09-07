@@ -1,4 +1,5 @@
 pub mod interpreter;
+pub mod objectives_system;
 pub mod renderer;
 pub mod simulation;
 

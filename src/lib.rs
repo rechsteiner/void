@@ -14,16 +14,11 @@ use components::program::Program;
 use components::viewport::Viewport;
 use scene::Scene;
 use scenes::scene_1;
-use systems::interpreter::InterpreterSystem;
-use systems::renderer::RenderSystem;
-use systems::simulation::SimulationSystem;
-use systems::System;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Game {
     scene: Scene,
-    systems: Vec<Box<dyn System>>,
 }
 
 #[wasm_bindgen]
@@ -32,14 +27,7 @@ impl Game {
     pub fn new() -> Game {
         console_error_panic_hook::set_once();
         let scene = scene_1::generate_scene();
-        Game {
-            scene: scene,
-            systems: vec![
-                Box::new(InterpreterSystem::new()),
-                Box::new(SimulationSystem::new()),
-                Box::new(RenderSystem::new()),
-            ],
-        }
+        Game { scene: scene }
     }
 
     pub fn change_program(&mut self, input: String) {
@@ -52,7 +40,7 @@ impl Game {
         let mut viewports = self.scene.world.query_mut::<Viewport>();
         let viewport = viewports.get_mut(0).unwrap();
         viewport.move_toward_target();
-        for system in self.systems.iter_mut() {
+        for system in self.scene.systems.iter_mut() {
             system.update(&mut self.scene.world);
         }
     }
