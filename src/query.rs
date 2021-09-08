@@ -64,7 +64,7 @@ pub trait QueryMut<'a> {
 impl<'a, T: Downcastable<'a>> QueryMut<'a> for T {
     type QueryItem = T::Item;
     fn query(entities: &'a mut Entities) -> Vec<Self::QueryItem> {
-        let mut vec = entities.components.get_mut(&T::id()).unwrap();
+        let vec = entities.components.get_mut(&T::id()).unwrap();
         T::downcast(vec)
     }
 }

@@ -11,10 +11,9 @@ use rapier2d::pipeline::PhysicsPipeline;
 use rapier2d::{dynamics::BodyStatus, na::Vector2};
 use rapier2d::{
     dynamics::{IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodyHandle, RigidBodySet},
-    geometry::{ColliderBuilder, ContactEvent, IntersectionEvent},
-    pipeline::{ChannelEventCollector, EventHandler},
+    geometry::ColliderBuilder,
+    pipeline::ChannelEventCollector,
 };
-use web_sys::console;
 
 pub struct SimulationSystem {
     spaceship_handle: Option<RigidBodyHandle>,
@@ -147,21 +146,13 @@ impl System for SimulationSystem {
         }
 
         while let Ok(intersection_event) = intersection_recv.try_recv() {
-            let parent = self
+            let _parent = self
                 .colliders
                 .get(intersection_event.collider1)
                 .unwrap()
                 .parent();
-
-            unsafe {
-                console::log_1(&"It intersects".into());
-            }
         }
 
-        while let Ok(contact_event) = contact_recv.try_recv() {
-            unsafe {
-                console::log_1(&"It contacts".into());
-            }
-        }
+        while let Ok(_contact_event) = contact_recv.try_recv() {}
     }
 }
