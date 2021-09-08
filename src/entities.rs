@@ -1,5 +1,5 @@
+use hashbrown::HashMap;
 use std::any::{Any, TypeId};
-use std::collections::HashMap;
 
 /// A type-alias for our vector of components. Each item in the vector is either
 /// None or Some(Any). This is done so that we can use the index of the vector
@@ -12,7 +12,7 @@ pub type Components = Vec<Option<Box<dyn Any>>>;
 /// the underlying data structures, while allowing us to create and get
 /// components from both our World and Query types.
 pub struct Entities {
-    components: HashMap<TypeId, Components>,
+    pub components: HashMap<TypeId, Components>,
 }
 
 impl Entities {
@@ -57,21 +57,6 @@ impl Entities {
             .into_iter()
             .flatten()
             .map(|c| c.downcast_ref::<T>().unwrap())
-            .collect()
-    }
-
-    /// Get a mutable reference to all the components of a given type.
-    pub fn get_components_mut<T: 'static>(&mut self) -> Vec<&mut T> {
-        // Generate a unique identifier based on the generic type
-        let id = TypeId::of::<T>();
-        // Look for all component for that type identifier. Downcast each value
-        // to the given generic type.
-        self.components
-            .get_mut(&id)
-            .unwrap()
-            .into_iter()
-            .flatten()
-            .map(|c| c.downcast_mut::<T>().unwrap())
             .collect()
     }
 }

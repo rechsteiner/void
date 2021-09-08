@@ -129,7 +129,7 @@ impl System for SimulationSystem {
         );
 
         let physics_bodies = self.bodies.iter();
-        let rigid_bodies = world.query_mut::<RigidBody>().into_iter();
+        let rigid_bodies = world.query_mut::<&mut RigidBody>().into_iter();
 
         for ((_handle, physics_body), rigid_body) in physics_bodies.zip(rigid_bodies) {
             rigid_body.transform = Transform {

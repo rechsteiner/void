@@ -1,5 +1,5 @@
 use crate::entities::Entities;
-use crate::query::Query;
+use crate::query::{Query, QueryMut};
 
 // Our world holds all our entities and components. The actual components are
 // stored inside the Entites struct so we can reuse the implementation between
@@ -34,17 +34,17 @@ impl World {
 		self
 	}
 
-	/// Query the world for components based on the generic type. See the Query
-	/// trait for which generic types are allowed.
+	/// Query the world for components based on the generic type. See the
+	/// `Query` trait for which generic types are allowed.
 	pub fn query<'a, T: Query<'a>>(&'a self) -> Vec<T::QueryItem> {
 		T::query(&self.entities)
 	}
 
 	/// Query the world for components of a type that returns a mutable
-	/// reference to each component. Mutable queries can only be done for one
-	/// component type at the time to satisfy the borrow checker.
-	pub fn query_mut<T: 'static>(&mut self) -> Vec<&mut T> {
-		self.entities.get_components_mut::<T>()
+	/// reference to each component. See the `QueryMut` trait for which generic
+	/// types are allowed.
+	pub fn query_mut<'a, T: QueryMut<'a>>(&'a mut self) -> Vec<T::QueryItem> {
+		T::query(&mut self.entities)
 	}
 }
 
@@ -80,7 +80,7 @@ mod test {
 		world
 			.create_entity()
 			.with_component(Location { x: 10.0, y: 10.0 });
-		let locations = world.query_mut::<Location>();
+		let locations = world.query_mut::<&mut Location>();
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
 		assert_eq!(locations[0].y, 10.0);
