@@ -1,25 +1,23 @@
-use simulation::Simulation;
-use wasm_bindgen::prelude::*;
+mod components;
+mod entities;
 mod interpreter;
-mod renderer;
+mod query;
 mod scene;
 mod scenes;
-mod setup_environment;
-mod simulation;
+mod systems;
+mod world;
 
+extern crate console_error_panic_hook;
 extern crate wasm_bindgen;
-use crate::interpreter::evaluator::Evaluator;
-use crate::interpreter::lexer::Lexer;
-use crate::interpreter::object::Environment;
-use crate::interpreter::parser::Parser;
-use crate::renderer::Renderer;
-use crate::scene::Scene;
-use crate::scenes::scene_1;
+
+use components::program::Program;
+use components::viewport::Viewport;
+use scene::Scene;
+use scenes::scene_1;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Game {
-    renderer: Renderer,
-    simulation: Simulation,
     scene: Scene,
 }
 
@@ -27,35 +25,29 @@ pub struct Game {
 impl Game {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Game {
+        console_error_panic_hook::set_once();
         let scene = scene_1::generate_scene();
-        Game {
-            renderer: Renderer::new(),
-            simulation: Simulation::new(&scene),
-            scene,
-        }
+        Game { scene: scene }
     }
 
     pub fn change_program(&mut self, input: String) {
-        let lexer = Lexer::new(&input);
-        let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
-        let mut environment = Environment::new();
-        let mut evaluator = Evaluator::new();
-
-        setup_environment::set_up(&self, &mut environment);
-
-        let _ = evaluator.eval(program, &mut environment);
-        self.simulation.commands = evaluator.commands;
+        let mut programs = self.scene.world.query_mut::<&mut Program>();
+        let mut program = programs.get_mut(0).unwrap();
+        program.input = input;
     }
 
-    pub fn next_simulation_step(&mut self) {
-        self.renderer.move_viewport_toward_target(); // For smooth viewport motion
-        self.simulation.next_state();
-        self.renderer.draw(&self.scene, &self.simulation);
+    pub fn tick(&mut self) {
+        let mut viewports = self.scene.world.query_mut::<&mut Viewport>();
+        let viewport = viewports.get_mut(0).unwrap();
+        viewport.move_toward_target();
+        for system in self.scene.systems.iter_mut() {
+            system.update(&mut self.scene.world);
+        }
     }
 
     pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
-        self.renderer
-            .move_viewport_target(delta_x, delta_y, delta_zoom);
+        let mut viewports = self.scene.world.query_mut::<&mut Viewport>();
+        let viewport = viewports.get_mut(0).unwrap();
+        viewport.move_target(delta_x, delta_y, delta_zoom);
     }
 }

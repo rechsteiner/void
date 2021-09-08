@@ -2,7 +2,7 @@ use crate::interpreter::ast::BlockStatement;
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Command {
     SetThrust { force: f64 },
     SetTorque { force: f64 },
