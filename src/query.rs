@@ -19,7 +19,11 @@ impl<'a, T: 'static> Query<'a> for &T {
     type QueryItem = &'a T;
     fn query(entities: &'a Entities) -> Vec<Self::QueryItem> {
         // Get all the components for the given generic type.
-        entities.get_components::<T>()
+        entities
+            .get_components::<T>()
+            .into_iter()
+            .flatten()
+            .collect()
     }
 }
 
@@ -31,7 +35,14 @@ impl<'a, T: 'static, U: 'static> Query<'a> for (&T, &U) {
         // zip them together into a single tuple.
         let first = entities.get_components::<T>().into_iter();
         let second = entities.get_components::<U>().into_iter();
-        first.zip(second).collect()
+
+        first
+            .zip(second)
+            .filter_map(|option| match option {
+                (Some(a), Some(b)) => Some((a, b)),
+                _ => None,
+            })
+            .collect()
     }
 }
 
@@ -44,10 +55,14 @@ impl<'a, T: 'static, U: 'static, V: 'static> Query<'a> for (&T, &U, &V) {
         let first = entities.get_components::<T>().into_iter();
         let second = entities.get_components::<U>().into_iter();
         let third = entities.get_components::<V>().into_iter();
+
         first
             .zip(second)
             .zip(third)
-            .map(|((first, second), third)| (first, second, third))
+            .filter_map(|option| match option {
+                ((Some(a), Some(b)), Some(c)) => Some((a, b, c)),
+                _ => None,
+            })
             .collect()
     }
 }
@@ -65,7 +80,7 @@ impl<'a, T: Downcastable<'a>> QueryMut<'a> for T {
     type QueryItem = T::Item;
     fn query(entities: &'a mut Entities) -> Vec<Self::QueryItem> {
         let vec = entities.components.get_mut(&T::id()).unwrap();
-        T::downcast(vec)
+        T::downcast(vec).into_iter().flatten().collect()
     }
 }
 
@@ -76,7 +91,14 @@ impl<'a, T: Downcastable<'a>, U: Downcastable<'a>> QueryMut<'a> for (T, U) {
         if let [Ok(first), Ok(second)] = entities.components.get_each_mut([&T::id(), &U::id()]) {
             let first = T::downcast(first).into_iter();
             let second = U::downcast(second).into_iter();
-            first.zip(second).collect()
+
+            first
+                .zip(second)
+                .filter_map(|option| match option {
+                    (Some(a), Some(b)) => Some((a, b)),
+                    _ => None,
+                })
+                .collect()
         } else {
             panic!("could not find any components of the given generic type. Make sure you have called register_component for all types.")
         }
@@ -98,7 +120,10 @@ impl<'a, T: Downcastable<'a>, U: Downcastable<'a>, V: Downcastable<'a>> QueryMut
             first
                 .zip(second)
                 .zip(third)
-                .map(|((first, second), third)| (first, second, third))
+                .filter_map(|option| match option {
+                    ((Some(a), Some(b)), Some(c)) => Some((a, b, c)),
+                    _ => None,
+                })
                 .collect()
         } else {
             panic!("could not find any components of the given generic type. Make sure you have called register_component for all types.")
@@ -116,7 +141,7 @@ impl<'a, T: Downcastable<'a>, U: Downcastable<'a>, V: Downcastable<'a>> QueryMut
 pub trait Downcastable<'a> {
     type Item;
     fn id() -> TypeId;
-    fn downcast(vec: &'a mut Vec<Option<Box<dyn Any>>>) -> Vec<Self::Item>;
+    fn downcast(vec: &'a mut Vec<Option<Box<dyn Any>>>) -> Vec<Option<Self::Item>>;
 }
 
 /// Implements downcasting to a normal reference.
@@ -125,10 +150,13 @@ impl<'a, T: 'static> Downcastable<'a> for &T {
     fn id() -> TypeId {
         TypeId::of::<T>()
     }
-    fn downcast(vec: &'a mut Vec<Option<Box<dyn Any>>>) -> Vec<Self::Item> {
+    fn downcast(vec: &'a mut Vec<Option<Box<dyn Any>>>) -> Vec<Option<Self::Item>> {
         vec.into_iter()
-            .flatten()
-            .map(|c| c.downcast_ref::<T>().unwrap())
+            .map(|option| {
+                option
+                    .as_ref()
+                    .map(|value| value.downcast_ref::<T>().unwrap())
+            })
             .collect()
     }
 }
@@ -139,10 +167,13 @@ impl<'a, T: 'static> Downcastable<'a> for &mut T {
     fn id() -> TypeId {
         TypeId::of::<T>()
     }
-    fn downcast(vec: &'a mut Vec<Option<Box<dyn Any>>>) -> Vec<Self::Item> {
+    fn downcast(vec: &'a mut Vec<Option<Box<dyn Any>>>) -> Vec<Option<Self::Item>> {
         vec.into_iter()
-            .flatten()
-            .map(|c| c.downcast_mut::<T>().unwrap())
+            .map(|option| {
+                option
+                    .as_mut()
+                    .map(|value| value.downcast_mut::<T>().unwrap())
+            })
             .collect()
     }
 }

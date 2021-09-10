@@ -74,6 +74,47 @@ mod test {
 	}
 
 	#[test]
+	fn test_query_tuple_two() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 });
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 });
+
+		let components = world.query::<(&Location, &Size)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+	}
+
+	#[test]
+	fn test_query_tuple_three() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world.register_component::<bool>();
+
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 })
+			.with_component(false);
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 })
+			.with_component(true);
+
+		let components = world.query::<(&Location, &Size, &bool)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+		assert_eq!(*components.2, true);
+	}
+
+	#[test]
 	fn test_query_mut() {
 		let mut world = World::new();
 		world.register_component::<Location>();
@@ -84,6 +125,47 @@ mod test {
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
 		assert_eq!(locations[0].y, 10.0);
+	}
+
+	#[test]
+	fn test_query_mut_tuple_two() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 });
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 });
+
+		let components = world.query_mut::<(&Location, &Size)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+	}
+
+	#[test]
+	fn test_query_mut_tuple_three() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world.register_component::<bool>();
+
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 })
+			.with_component(false);
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 })
+			.with_component(true);
+
+		let components = world.query_mut::<(&Location, &Size, &bool)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+		assert_eq!(*components.2, true);
 	}
 
 	#[test]

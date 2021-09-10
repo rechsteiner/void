@@ -46,7 +46,7 @@ impl Entities {
     }
 
     /// Get a reference to all the components of a given type.
-    pub fn get_components<T: 'static>(&self) -> Vec<&T> {
+    pub fn get_components<T: 'static>(&self) -> Vec<Option<&T>> {
         // Generate a unique identifier based on the generic type
         let id = TypeId::of::<T>();
         // Look for all component for that type identifier. Downcast each value
@@ -55,8 +55,11 @@ impl Entities {
             .get(&id)
             .unwrap()
             .into_iter()
-            .flatten()
-            .map(|c| c.downcast_ref::<T>().unwrap())
+            .map(|option| {
+                option
+                    .as_ref()
+                    .map(|value| value.downcast_ref::<T>().unwrap())
+            })
             .collect()
     }
 }
@@ -105,7 +108,7 @@ mod test {
 
         assert_eq!(u32s.len(), 1);
         assert_eq!(isizes.len(), 1);
-        assert_eq!(*u32s[0], 1);
-        assert_eq!(*isizes[0], 2);
+        assert_eq!(*u32s[0].unwrap(), 1);
+        assert_eq!(*isizes[0].unwrap(), 2);
     }
 }
