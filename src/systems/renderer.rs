@@ -41,7 +41,7 @@ impl System for RenderSystem {
         self.context
             .clear_rect(0.0, 0.0, screen_width as f64, screen_height as f64);
 
-        let viewport = world.query::<&Viewport>()[0];
+        let viewport = world.get_resource::<Viewport>().unwrap();
 
         self.context
             .set_line_width(f64::max((viewport.zoom as f64) * 2.0, 2.0)); // Let line width be adaptive to zoom (but min 2.0)
