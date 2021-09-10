@@ -15,12 +15,12 @@ impl Evaluator {
     pub fn new() -> Evaluator {
         Evaluator { commands: vec![] }
     }
-    pub fn eval(&mut self, program: Program, environment: &mut Environment) -> Object {
+    pub fn eval(&mut self, program: &Program, environment: &mut Environment) -> Object {
         // Reset commands each time eval is called so we don't keep commands
         // from previous executions.
         self.commands = vec![];
         let mut result = Object::Null;
-        for statement in program.statements {
+        for statement in &program.statements {
             result = self.eval_statement(statement, environment);
             match result {
                 Object::Return(return_value) => return *return_value,
@@ -30,7 +30,7 @@ impl Evaluator {
         }
         result
     }
-    fn eval_statement(&mut self, statement: Statement, environment: &mut Environment) -> Object {
+    fn eval_statement(&mut self, statement: &Statement, environment: &mut Environment) -> Object {
         match statement {
             Statement::Return { expression } => {
                 let return_value = self.eval_expression(expression, environment);
@@ -48,60 +48,64 @@ impl Evaluator {
                 if let Object::Error(_) = object {
                     return object;
                 }
-                environment.set(identifier, object.clone());
+                environment.set(identifier.clone(), object.clone());
                 object
             }
         }
     }
-    fn eval_expression(&mut self, expression: Expression, environment: &mut Environment) -> Object {
+    fn eval_expression(
+        &mut self,
+        expression: &Expression,
+        environment: &mut Environment,
+    ) -> Object {
         match expression {
-            Expression::Int(value) => Object::Integer(value),
-            Expression::Float(value) => Object::Float(value),
-            Expression::Boolean(value) => Object::Boolean(value),
+            Expression::Int(value) => Object::Integer(*value),
+            Expression::Float(value) => Object::Float(*value),
+            Expression::Boolean(value) => Object::Boolean(*value),
             Expression::Prefix { operator, right } => {
-                let object = self.eval_expression(*right, environment);
+                let object = self.eval_expression(right, environment);
                 if let Object::Error(_) = object {
                     return object;
                 }
-                self.eval_prefix_expression(operator, object)
+                self.eval_prefix_expression(*operator, object)
             }
             Expression::Infix {
                 operator,
                 left,
                 right,
             } => {
-                let left = self.eval_expression(*left, environment);
+                let left = self.eval_expression(left, environment);
                 if let Object::Error(_) = left {
                     return left;
                 }
-                let right = self.eval_expression(*right, environment);
+                let right = self.eval_expression(right, environment);
                 if let Object::Error(_) = right {
                     return right;
                 }
-                self.eval_infix_expression(operator, left, right)
+                self.eval_infix_expression(*operator, left, right)
             }
             Expression::If {
                 condition,
                 consequence,
                 alternative,
             } => {
-                let condition = self.eval_expression(*condition, environment);
+                let condition = self.eval_expression(condition, environment);
                 if let Object::Error(_) = condition {
                     return condition;
                 }
                 self.eval_if_expression(condition, consequence, alternative, environment)
             }
-            Expression::Identifier(name) => self.eval_identifier(name, environment),
+            Expression::Identifier(name) => self.eval_identifier(name.clone(), environment),
             Expression::Function { parameters, body } => Object::Function {
-                parameters: parameters,
-                body: body,
+                parameters: parameters.clone(),
+                body: body.clone(),
                 environment: environment.clone(),
             },
             Expression::Call {
                 function,
                 arguments,
             } => {
-                let function = self.eval_expression(*function, environment);
+                let function = self.eval_expression(function, environment);
                 let arguments = self.eval_expressions(arguments, environment);
                 // TODO: Validate arguments
                 match function {
@@ -113,7 +117,7 @@ impl Evaluator {
                     } => {
                         let mut extended_environment =
                             self.extend_function_environment(environment, parameters, arguments);
-                        let evaluated = self.eval_block_statement(body, &mut extended_environment);
+                        let evaluated = self.eval_block_statement(&body, &mut extended_environment);
                         match evaluated {
                             Object::Return(return_value) => *return_value,
                             _ => evaluated,
@@ -147,7 +151,7 @@ impl Evaluator {
     }
     fn eval_expressions(
         &mut self,
-        arguments: Vec<Expression>,
+        arguments: &Vec<Expression>,
         environment: &mut Environment,
     ) -> Vec<Object> {
         let mut result: Vec<Object> = vec![];
@@ -256,11 +260,11 @@ impl Evaluator {
     }
     fn eval_block_statement(
         &mut self,
-        statement: BlockStatement,
+        statement: &BlockStatement,
         environment: &mut Environment,
     ) -> Object {
         let mut object = Object::Null;
-        for statement in statement.statements {
+        for statement in &statement.statements {
             object = self.eval_statement(statement, environment);
             match object {
                 Object::Return(_) | Object::Error(_) => {
@@ -274,8 +278,8 @@ impl Evaluator {
     fn eval_if_expression(
         &mut self,
         condition: Object,
-        consequence: BlockStatement,
-        alternative: Option<BlockStatement>,
+        consequence: &BlockStatement,
+        alternative: &Option<BlockStatement>,
         environment: &mut Environment,
     ) -> Object {
         if self.is_truthy(condition) {
@@ -676,7 +680,7 @@ mod tests {
                     },
                 },
             );
-            let object = evaluator.eval(program, &mut environment);
+            let object = evaluator.eval(&program, &mut environment);
             assert_eq!(object, expected_output);
             assert_eq!(evaluator.commands, expected_commands);
         }
@@ -688,6 +692,6 @@ mod tests {
         let program = parser.parse_program();
         let mut environment = Environment::new();
         let mut evaluator = Evaluator::new();
-        return evaluator.eval(program, &mut environment);
+        return evaluator.eval(&program, &mut environment);
     }
 }
