@@ -1,9 +1,7 @@
 use crate::components::program::Program;
 use crate::components::rigid_body::RigidBody;
 use crate::interpreter::evaluator::Evaluator;
-use crate::interpreter::lexer::Lexer;
 use crate::interpreter::object::{Command, Environment, Object};
-use crate::interpreter::parser::Parser;
 use crate::systems::System;
 use crate::world::World;
 
@@ -18,9 +16,6 @@ impl InterpreterSystem {
 impl System for InterpreterSystem {
     fn update(&mut self, world: &mut World) {
         for (program, rigid_body) in world.query_mut::<(&mut Program, &RigidBody)>() {
-            let lexer = Lexer::new(&program.input);
-            let mut parser = Parser::new(lexer);
-            let parsed_program = parser.parse_program();
             let mut environment = Environment::new();
             let mut evaluator = Evaluator::new();
 
@@ -102,7 +97,7 @@ impl System for InterpreterSystem {
                 Object::Integer(rigid_body.angular_velocity as isize), // multiply to convert radians to deg
             );
 
-            let _ = evaluator.eval(parsed_program, &mut environment);
+            let _ = evaluator.eval(&program.program, &mut environment);
 
             program.commands = evaluator.commands;
         }

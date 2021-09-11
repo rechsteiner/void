@@ -32,8 +32,8 @@ impl Game {
 
     pub fn change_program(&mut self, input: String) {
         let mut programs = self.scene.world.query_mut::<&mut Program>();
-        let mut program = programs.get_mut(0).unwrap();
-        program.input = input;
+        let program = programs.get_mut(0).unwrap();
+        program.update(input);
     }
 
     pub fn tick(&mut self) {
