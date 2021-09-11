@@ -182,9 +182,9 @@ pub fn generate_scene() -> Scene {
         })
         .with_component(PhysicsMode::Static);
 
-    // Viewport entity
+    // Viewport resource
 
-    world.create_entity().with_component(Viewport {
+    world.create_resource(Viewport {
         position: Point { x: 200.0, y: 200.0 },
         zoom: 1.0,
         target_position: Point { x: 200.0, y: 200.0 },
