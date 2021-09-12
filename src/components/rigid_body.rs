@@ -1,6 +1,7 @@
 use crate::components::shape::Point;
 
 pub struct RigidBody {
+    pub id: usize,
     pub transform: Transform,
     pub mass: f32,
     pub linear_velocity: Point,

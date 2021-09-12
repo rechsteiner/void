@@ -2,7 +2,7 @@ use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::physics_mode::PhysicsMode;
 use crate::components::program::Program;
 use crate::components::rigid_body::{RigidBody, Transform};
-use crate::components::shape::{ColorRGBA, Point, Shape};
+use crate::components::shape::{ColorRGBA, Point, Polygon, Shape};
 use crate::components::viewport::Viewport;
 use crate::scene::Scene;
 use crate::systems::interpreter::InterpreterSystem;
@@ -38,17 +38,20 @@ pub fn generate_scene() -> Scene {
     world.register_component::<GravitySource>();
     world.register_component::<GravityAffected>();
 
-    // Entity 1
-
+    // Entity 1: Spaceship
     world
         .create_entity()
         .with_component(RigidBody {
+            id: 1,
             transform: Transform {
-                position: Point { x: 200.0, y: 200.0 },
+                position: Point {
+                    x: 200.0,
+                    y: -600.0,
+                },
                 rotation: 0.0,
             },
             mass: 1.0,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
+            linear_velocity: Point { x: 350.0, y: 0.0 },
             angular_velocity: 0.0,
         })
         .with_component(Shape {
@@ -65,17 +68,20 @@ pub fn generate_scene() -> Scene {
         .with_component(GravityAffected {})
         .with_component(Program::new());
 
-    // Entity 2
-
+    // Entity 2: Orange box
     world
         .create_entity()
         .with_component(RigidBody {
+            id: 2,
             transform: Transform {
-                position: Point { x: 200.0, y: 160.0 },
+                position: Point {
+                    x: 200.0,
+                    y: -650.0,
+                },
                 rotation: 0.0,
             },
-            mass: 0.2,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
+            mass: 0.1,
+            linear_velocity: Point { x: 350.0, y: 0.0 },
             angular_velocity: 0.0,
         })
         .with_component(Shape {
@@ -88,15 +94,16 @@ pub fn generate_scene() -> Scene {
             ],
             color: color_orange,
         })
-        .with_component(PhysicsMode::Dynamic);
+        .with_component(PhysicsMode::Dynamic)
+        .with_component(GravityAffected {});
 
-    // Entity 3
-
+    // Entity 3: Big world
     world
         .create_entity()
         .with_component(RigidBody {
+            id: 3,
             transform: Transform {
-                position: Point { x: 200.0, y: 160.0 },
+                position: Point { x: 200.0, y: 900.0 },
                 rotation: 0.0,
             },
             mass: 0.2,
@@ -104,6 +111,7 @@ pub fn generate_scene() -> Scene {
             angular_velocity: 0.0,
         })
         .with_component(Shape {
+            is_sensor: false,
             vertices: Polygon::planetoid(800.0, 64, 10),
             color: ColorRGBA {
                 r: 255,
@@ -113,18 +121,23 @@ pub fn generate_scene() -> Scene {
             },
         })
         .with_component(PhysicsMode::Static)
-        .with_component(GravitySource { magnitude: 100.0 });
+        .with_component(GravitySource {
+            strength: 100000.0, // Not super user-friendly with these kinds of large numbers
+        });
 
-    // Entity 4
-
+    // Entity 4: Moon
     world
         .create_entity()
         .with_component(RigidBody {
+            id: 4,
             transform: Transform {
-                position: Point { x: 200.0, y: 400.0 },
+                position: Point {
+                    x: 4000.0,
+                    y: -300.0,
+                },
                 rotation: 0.0,
             },
-            mass: 1.0,
+            mass: 0.2,
             linear_velocity: Point { x: 0.0, y: 0.0 },
             angular_velocity: 0.0,
         })
@@ -138,48 +151,18 @@ pub fn generate_scene() -> Scene {
                 a: 1.0,
             },
         })
-        .with_component(PhysicsMode::Static);
-
-    // Entity 5
-
-    world
-        .create_entity()
-        .with_component(RigidBody {
-            transform: Transform {
-                position: Point { x: 0.0, y: 390.0 },
-                rotation: 0.0,
-            },
-            mass: 1.0,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
-            angular_velocity: 0.0,
+        .with_component(PhysicsMode::Static)
+        .with_component(GravitySource {
+            strength: 1000.0, // Not super user-friendly with these kinds of large numbers
         })
-        .with_component(Shape {
-            is_sensor: false,
-            vertices: vec![
-                Point {
-                    x: -40.0,
-                    y: -120.0,
-                },
-                Point { x: 40.0, y: -120.0 },
-                Point { x: 40.0, y: 0.0 },
-                Point { x: -40.0, y: 0.0 },
-            ],
-            color: ColorRGBA {
-                r: 255,
-                g: 255,
-                b: 255,
-                a: 1.0,
-            },
-        })
-        .with_component(PhysicsMode::Static);
-
+        .with_component(GravityAffected {});
     // Viewport resource
 
     world.create_resource(Viewport {
         position: Point { x: 200.0, y: 200.0 },
-        zoom: 1.0,
+        zoom: 0.2,
         target_position: Point { x: 200.0, y: 200.0 },
-        target_zoom: 1.0,
+        target_zoom: 0.2,
     });
 
     Scene::new(

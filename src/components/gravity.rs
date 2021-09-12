@@ -1,5 +1,5 @@
 pub struct GravitySource {
-    pub magnitude: f32,
+    pub strength: f32,
 }
 
 pub struct GravityAffected {}

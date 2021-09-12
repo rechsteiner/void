@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::physics_mode::PhysicsMode;
 use crate::components::program::Program;
@@ -15,9 +17,8 @@ use rapier2d::{
     geometry::ColliderBuilder,
     pipeline::ChannelEventCollector,
 };
-use web_sys::console;
-
 pub struct SimulationSystem {
+    body_handles: HashMap<usize, Option<RigidBodyHandle>>,
     spaceship_handle: Option<RigidBodyHandle>,
     physics_pipeline: PhysicsPipeline,
     gravity: Vector2<f32>,
@@ -32,9 +33,10 @@ pub struct SimulationSystem {
 impl SimulationSystem {
     pub fn new() -> SimulationSystem {
         SimulationSystem {
+            body_handles: HashMap::new(),
             spaceship_handle: None,
             physics_pipeline: PhysicsPipeline::new(),
-            gravity: Vector2::new(0.0, 100.0),
+            gravity: Vector2::new(0.0, 0.0),
             integration_parameters: IntegrationParameters::default(),
             broad_phase: BroadPhase::new(),
             narrow_phase: NarrowPhase::new(),
@@ -66,10 +68,13 @@ impl System for SimulationSystem {
                         rigid_body.transform.position.y,
                     )
                     .rotation(rigid_body.transform.rotation)
+                    .linvel(rigid_body.linear_velocity.x, rigid_body.linear_velocity.y)
                     .mass(rigid_body.mass)
                     .build();
 
+                // Add loose mapping between rigid_body components and physics bodies
                 let entity_handle = self.bodies.insert(entity_rb);
+                self.body_handles.insert(rigid_body.id, Some(entity_handle));
 
                 // TODO: We should probably apply commands to all entities with "Program" component instead of doing this
                 if index == 0 {
@@ -115,13 +120,6 @@ impl System for SimulationSystem {
         }
 
         {
-            {
-                console::log_1(&format!("{}", String::from("---")).into());
-                for rb in world.query::<&RigidBody>() {
-                    let pos = &rb.transform.position;
-                    console::log_1(&format!("{}", pos.y).into());
-                }
-            }
             // Sum and apply all gravity forces a body is subjected to.
             // Get all the gravity sources in the world and store them for later iteration by each entity
             let gravity_sources = world.query::<(&GravitySource, &RigidBody)>();
@@ -131,21 +129,24 @@ impl System for SimulationSystem {
                 let mut sum_gravity_vector = Vector2::new(0.0, 0.0);
 
                 // For each gravity source, accumulate its force into the sum_gravity_vector
-                for (gravity_source, gravity_rb) in &gravity_sources {
-                    // let sum_y = rigid_body.transform.position.y - gravity_position.translation.y;
+                for (gravity, gravity_rb) in &gravity_sources {
+                    let offset = Vector2::new(
+                        gravity_rb.transform.position.x - rigid_body.transform.position.x,
+                        gravity_rb.transform.position.y - rigid_body.transform.position.y,
+                    );
+                    let distance = offset.magnitude();
 
-
-                    sum_gravity_vector += gravity_source.magnitude
-                        * Vector2::new(
-                            rigid_body.transform.position.x - gravity_rb.transform.position.x,
-                            rigid_body.transform.position.y - gravity_rb.transform.position.y,
-                        )
+                    // Make sure we don't divide by near-zero
+                    if distance >= 0.01 {
+                        sum_gravity_vector += offset * (gravity.strength / (distance * distance));
+                    }
                 }
 
                 let handle = self.body_handles.get(&rigid_body.id).unwrap().unwrap();
                 let body = self.bodies.get_mut(handle).unwrap();
 
-                body.apply_impulse(sum_gravity_vector, true)
+                // Multiply gravity force with object mass to get consistent acceleration for bodies of different masses
+                body.apply_force(sum_gravity_vector * body.mass(), true);
             }
         }
 
