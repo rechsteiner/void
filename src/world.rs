@@ -1,18 +1,49 @@
 use crate::entities::Entities;
 use crate::query::{Query, QueryMut};
+use hashbrown::HashMap;
+use std::any::{Any, TypeId};
 
 // Our world holds all our entities and components. The actual components are
 // stored inside the Entites struct so we can reuse the implementation between
 // this struct and our Query implementation.
 pub struct World {
+	resources: HashMap<TypeId, Box<dyn Any>>,
 	entities: Entities,
 }
 
 impl World {
 	pub fn new() -> Self {
 		World {
+			resources: HashMap::new(),
 			entities: Entities::new(),
 		}
+	}
+
+	/// Returns a resource of the given type.
+	pub fn get_resource<T: 'static>(&self) -> Option<&T> {
+		let id = TypeId::of::<T>();
+		if let Some(data) = self.resources.get(&id) {
+			data.downcast_ref()
+		} else {
+			None
+		}
+	}
+
+	/// Returns a mutable reference to the resource of the given type.
+	pub fn get_resource_mut<T: 'static>(&mut self) -> Option<&mut T> {
+		let id = TypeId::of::<T>();
+		if let Some(data) = self.resources.get_mut(&id) {
+			data.downcast_mut()
+		} else {
+			None
+		}
+	}
+
+	/// Inserts the given resource. This will override any existing resource
+	/// with the same type.
+	pub fn create_resource<T: 'static>(&mut self, resource: T) {
+		let id = TypeId::of::<T>();
+		self.resources.insert(id, Box::new(resource));
 	}
 
 	/// Register a component of a given type. Must be called before using the
@@ -74,6 +105,47 @@ mod test {
 	}
 
 	#[test]
+	fn test_query_tuple_two() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 });
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 });
+
+		let components = world.query::<(&Location, &Size)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+	}
+
+	#[test]
+	fn test_query_tuple_three() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world.register_component::<bool>();
+
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 })
+			.with_component(false);
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 })
+			.with_component(true);
+
+		let components = world.query::<(&Location, &Size, &bool)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+		assert_eq!(*components.2, true);
+	}
+
+	#[test]
 	fn test_query_mut() {
 		let mut world = World::new();
 		world.register_component::<Location>();
@@ -84,6 +156,47 @@ mod test {
 		assert_eq!(locations.len(), 1);
 		assert_eq!(locations[0].x, 10.0);
 		assert_eq!(locations[0].y, 10.0);
+	}
+
+	#[test]
+	fn test_query_mut_tuple_two() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 });
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 });
+
+		let components = world.query_mut::<(&Location, &Size)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+	}
+
+	#[test]
+	fn test_query_mut_tuple_three() {
+		let mut world = World::new();
+		world.register_component::<Location>();
+		world.register_component::<Size>();
+		world.register_component::<bool>();
+
+		world
+			.create_entity()
+			.with_component(Location { x: 10.0, y: 10.0 })
+			.with_component(false);
+		world
+			.create_entity()
+			.with_component(Size(40.0))
+			.with_component(Location { x: 20.0, y: 20.0 })
+			.with_component(true);
+
+		let components = world.query_mut::<(&Location, &Size, &bool)>()[0];
+		assert_eq!(components.0.x, 20.0);
+		assert_eq!(components.1 .0, 40.0);
+		assert_eq!(*components.2, true);
 	}
 
 	#[test]
@@ -103,5 +216,36 @@ mod test {
 		assert_eq!(locations.len(), 1);
 		assert_eq!(*sizes[0], Size(20.0));
 		assert_eq!(*locations[0], Location { x: 1.0, y: 1.0 });
+	}
+
+	#[test]
+
+	fn test_get_resource() {
+		let mut world = World::new();
+		let id = TypeId::of::<bool>();
+		world.resources.insert(id, Box::new(true));
+
+		let resource = world.get_resource::<bool>().unwrap();
+		assert_eq!(*resource, true);
+	}
+
+	#[test]
+
+	fn test_get_resource_mut() {
+		let mut world = World::new();
+		let id = TypeId::of::<usize>();
+		world.resources.insert(id, Box::new(1_usize));
+
+		let mut resource = world.get_resource_mut::<usize>().unwrap();
+		*resource += 1;
+		assert_eq!(*resource, 2);
+	}
+
+	fn test_create_resource() {
+		let mut world = World::new();
+		world.create_resource(10_usize);
+
+		let resource = world.get_resource::<usize>().unwrap();
+		assert_eq!(*resource, 10);
 	}
 }

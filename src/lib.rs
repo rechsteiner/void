@@ -32,13 +32,12 @@ impl Game {
 
     pub fn change_program(&mut self, input: String) {
         let mut programs = self.scene.world.query_mut::<&mut Program>();
-        let mut program = programs.get_mut(0).unwrap();
-        program.input = input;
+        let program = programs.get_mut(0).unwrap();
+        program.update(input);
     }
 
     pub fn tick(&mut self) {
-        let mut viewports = self.scene.world.query_mut::<&mut Viewport>();
-        let viewport = viewports.get_mut(0).unwrap();
+        let viewport = self.scene.world.get_resource_mut::<Viewport>().unwrap();
         viewport.move_toward_target();
         for system in self.scene.systems.iter_mut() {
             system.update(&mut self.scene.world);
@@ -46,8 +45,7 @@ impl Game {
     }
 
     pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
-        let mut viewports = self.scene.world.query_mut::<&mut Viewport>();
-        let viewport = viewports.get_mut(0).unwrap();
+        let viewport = self.scene.world.get_resource_mut::<Viewport>().unwrap();
         viewport.move_target(delta_x, delta_y, delta_zoom);
     }
 }
