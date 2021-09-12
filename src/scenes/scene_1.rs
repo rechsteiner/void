@@ -104,13 +104,7 @@ pub fn generate_scene() -> Scene {
             angular_velocity: 0.0,
         })
         .with_component(Shape {
-            is_sensor: true,
-            vertices: vec![
-                Point { x: -10.0, y: -10.0 },
-                Point { x: 10.0, y: -10.0 },
-                Point { x: 10.0, y: 10.0 },
-                Point { x: -10.0, y: 10.0 },
-            ],
+            vertices: Polygon::planetoid(800.0, 64, 10),
             color: ColorRGBA {
                 r: 255,
                 g: 255,
@@ -136,15 +130,7 @@ pub fn generate_scene() -> Scene {
         })
         .with_component(Shape {
             is_sensor: false,
-            vertices: vec![
-                Point {
-                    x: -300.0,
-                    y: -10.0,
-                },
-                Point { x: 300.0, y: -10.0 },
-                Point { x: 300.0, y: 0.0 },
-                Point { x: -300.0, y: 0.0 },
-            ],
+            vertices: Polygon::planetoid(300.0, 32, 20),
             color: ColorRGBA {
                 r: 255,
                 g: 255,
