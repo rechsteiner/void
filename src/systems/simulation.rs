@@ -1,3 +1,4 @@
+use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::physics_mode::PhysicsMode;
 use crate::components::program::Program;
 use crate::components::rigid_body::{RigidBody, Transform};
@@ -14,6 +15,7 @@ use rapier2d::{
     geometry::ColliderBuilder,
     pipeline::ChannelEventCollector,
 };
+use web_sys::console;
 
 pub struct SimulationSystem {
     spaceship_handle: Option<RigidBodyHandle>,
@@ -69,6 +71,7 @@ impl System for SimulationSystem {
 
                 let entity_handle = self.bodies.insert(entity_rb);
 
+                // TODO: We should probably apply commands to all entities with "Program" component instead of doing this
                 if index == 0 {
                     self.spaceship_handle = Some(entity_handle);
                 }
@@ -108,6 +111,41 @@ impl System for SimulationSystem {
                         spaceship_body.apply_torque_impulse(*force as f32, true)
                     }
                 }
+            }
+        }
+
+        {
+            {
+                console::log_1(&format!("{}", String::from("---")).into());
+                for rb in world.query::<&RigidBody>() {
+                    let pos = &rb.transform.position;
+                    console::log_1(&format!("{}", pos.y).into());
+                }
+            }
+            // Sum and apply all gravity forces a body is subjected to.
+            // Get all the gravity sources in the world and store them for later iteration by each entity
+            let gravity_sources = world.query::<(&GravitySource, &RigidBody)>();
+
+            // Find all the entities that are supposed to be affected by gravity
+            for (_gravity_affected, rigid_body) in world.query::<(&GravityAffected, &RigidBody)>() {
+                let mut sum_gravity_vector = Vector2::new(0.0, 0.0);
+
+                // For each gravity source, accumulate its force into the sum_gravity_vector
+                for (gravity_source, gravity_rb) in &gravity_sources {
+                    // let sum_y = rigid_body.transform.position.y - gravity_position.translation.y;
+
+
+                    sum_gravity_vector += gravity_source.magnitude
+                        * Vector2::new(
+                            rigid_body.transform.position.x - gravity_rb.transform.position.x,
+                            rigid_body.transform.position.y - gravity_rb.transform.position.y,
+                        )
+                }
+
+                let handle = self.body_handles.get(&rigid_body.id).unwrap().unwrap();
+                let body = self.bodies.get_mut(handle).unwrap();
+
+                body.apply_impulse(sum_gravity_vector, true)
             }
         }
 
