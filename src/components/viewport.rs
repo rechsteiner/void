@@ -14,10 +14,10 @@ impl Viewport {
         self.target_position.x += delta_x / self.zoom;
         self.target_position.y += delta_y / self.zoom;
 
-        if self.target_zoom + delta_zoom > 0.2 {
+        if self.target_zoom + delta_zoom > 0.1 {
             self.target_zoom += delta_zoom * self.target_zoom;
         } else {
-            self.target_zoom = 0.2;
+            self.target_zoom = 0.1;
         }
     }
 
