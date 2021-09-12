@@ -1,3 +1,4 @@
+use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::physics_mode::PhysicsMode;
 use crate::components::program::Program;
 use crate::components::rigid_body::{RigidBody, Transform};
@@ -34,6 +35,8 @@ pub fn generate_scene() -> Scene {
     world.register_component::<PhysicsMode>();
     world.register_component::<Program>();
     world.register_component::<Viewport>();
+    world.register_component::<GravitySource>();
+    world.register_component::<GravityAffected>();
 
     // Entity 1
 
@@ -59,6 +62,7 @@ pub fn generate_scene() -> Scene {
             color: color_cyan,
         })
         .with_component(PhysicsMode::Dynamic)
+        .with_component(GravityAffected {})
         .with_component(Program::new());
 
     // Entity 2
@@ -114,7 +118,8 @@ pub fn generate_scene() -> Scene {
                 a: 1.0,
             },
         })
-        .with_component(PhysicsMode::Static);
+        .with_component(PhysicsMode::Static)
+        .with_component(GravitySource { magnitude: 100.0 });
 
     // Entity 4
 
