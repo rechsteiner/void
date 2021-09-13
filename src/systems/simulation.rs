@@ -129,6 +129,7 @@ impl System for SimulationSystem {
                 let mut sum_gravity_vector = Vector2::new(0.0, 0.0);
 
                 // For each gravity source, accumulate its force into the sum_gravity_vector
+                // This enables the support for multiple gravity sources in a world
                 for (gravity, gravity_rb) in &gravity_sources {
                     let offset = Vector2::new(
                         gravity_rb.transform.position.x - rigid_body.transform.position.x,
@@ -137,6 +138,7 @@ impl System for SimulationSystem {
                     let distance = offset.magnitude();
 
                     // Make sure we don't divide by near-zero
+                    // (Got some strange bugs if I didn't do this and objects overlapped with gravity sources)
                     if distance >= 0.01 {
                         sum_gravity_vector += offset * (gravity.strength / (distance * distance));
                     }

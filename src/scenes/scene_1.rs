@@ -137,8 +137,8 @@ pub fn generate_scene() -> Scene {
                 },
                 rotation: 0.0,
             },
-            mass: 0.2,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
+            mass: 200.0,
+            linear_velocity: Point { x: 0.0, y: 280.0 },
             angular_velocity: 0.0,
         })
         .with_component(Shape {
@@ -151,9 +151,9 @@ pub fn generate_scene() -> Scene {
                 a: 1.0,
             },
         })
-        .with_component(PhysicsMode::Static)
+        .with_component(PhysicsMode::Dynamic)
         .with_component(GravitySource {
-            strength: 1000.0, // Not super user-friendly with these kinds of large numbers
+            strength: 5000.0, // Not super user-friendly with these kinds of large numbers
         })
         .with_component(GravityAffected {});
     // Viewport resource
