@@ -135,12 +135,12 @@ impl System for SimulationSystem {
                         gravity_rb.transform.position.x - rigid_body.transform.position.x,
                         gravity_rb.transform.position.y - rigid_body.transform.position.y,
                     );
-                    let distance = offset.magnitude();
+                    let distance: f32 = offset.magnitude();
 
                     // Make sure we don't divide by near-zero
                     // (Got some strange bugs if I didn't do this and objects overlapped with gravity sources)
                     if distance >= 0.01 {
-                        sum_gravity_vector += offset * (gravity.strength / (distance * distance));
+                        sum_gravity_vector += offset * (gravity.strength / distance.powf(2.0));
                     }
                 }
 
