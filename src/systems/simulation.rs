@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
 use crate::components::gravity::{GravityAffected, GravitySource};
-use crate::components::physics_mode::PhysicsMode;
 use crate::components::program::Program;
-use crate::components::rigid_body::{RigidBody, Transform};
+use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{Point, Shape};
 use crate::interpreter::object::Command;
 use crate::systems::System;
@@ -53,12 +52,10 @@ impl System for SimulationSystem {
         // so we only insert our components once. This won't work when we start
         // adding and removing components.
         if self.bodies.len() == 0 {
-            for (index, (rigid_body, shape, physics_mode)) in world
-                .query::<(&RigidBody, &Shape, &PhysicsMode)>()
-                .iter()
-                .enumerate()
+            for (index, (rigid_body, shape)) in
+                world.query::<(&RigidBody, &Shape)>().iter().enumerate()
             {
-                let body_status = match physics_mode {
+                let body_status = match rigid_body.physics_mode {
                     PhysicsMode::Dynamic => BodyStatus::Dynamic,
                     PhysicsMode::Static => BodyStatus::Static,
                 };

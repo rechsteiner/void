@@ -1,7 +1,6 @@
 use crate::components::gravity::{GravityAffected, GravitySource};
-use crate::components::physics_mode::PhysicsMode;
 use crate::components::program::Program;
-use crate::components::rigid_body::{RigidBody, Transform};
+use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Point, Polygon, Shape};
 use crate::components::viewport::Viewport;
 use crate::scene::Scene;
@@ -53,6 +52,7 @@ pub fn generate_scene() -> Scene {
             mass: 1.0,
             linear_velocity: Point { x: 350.0, y: 0.0 },
             angular_velocity: 0.0,
+            physics_mode: PhysicsMode::Dynamic,
         })
         .with_component(Shape {
             is_sensor: false,
@@ -64,7 +64,6 @@ pub fn generate_scene() -> Scene {
             ],
             color: color_cyan,
         })
-        .with_component(PhysicsMode::Dynamic)
         .with_component(GravityAffected {})
         .with_component(Program::new());
 
@@ -83,6 +82,7 @@ pub fn generate_scene() -> Scene {
             mass: 0.1,
             linear_velocity: Point { x: 350.0, y: 0.0 },
             angular_velocity: 0.0,
+            physics_mode: PhysicsMode::Dynamic,
         })
         .with_component(Shape {
             is_sensor: false,
@@ -94,7 +94,6 @@ pub fn generate_scene() -> Scene {
             ],
             color: color_orange,
         })
-        .with_component(PhysicsMode::Dynamic)
         .with_component(GravityAffected {});
 
     // Entity 3: Big world
@@ -109,6 +108,7 @@ pub fn generate_scene() -> Scene {
             mass: 0.2,
             linear_velocity: Point { x: 0.0, y: 0.0 },
             angular_velocity: 0.0,
+            physics_mode: PhysicsMode::Static,
         })
         .with_component(Shape {
             is_sensor: false,
@@ -120,7 +120,6 @@ pub fn generate_scene() -> Scene {
                 a: 1.0,
             },
         })
-        .with_component(PhysicsMode::Static)
         .with_component(GravitySource {
             strength: 100000.0, // Not super user-friendly with these kinds of large numbers
         });
@@ -140,6 +139,7 @@ pub fn generate_scene() -> Scene {
             mass: 200.0,
             linear_velocity: Point { x: 0.0, y: 280.0 },
             angular_velocity: 0.0,
+            physics_mode: PhysicsMode::Dynamic,
         })
         .with_component(Shape {
             is_sensor: false,
@@ -151,13 +151,12 @@ pub fn generate_scene() -> Scene {
                 a: 1.0,
             },
         })
-        .with_component(PhysicsMode::Dynamic)
         .with_component(GravitySource {
             strength: 5000.0, // Not super user-friendly with these kinds of large numbers
         })
         .with_component(GravityAffected {});
-    // Viewport resource
 
+    // Viewport resource
     world.create_resource(Viewport {
         position: Point { x: 200.0, y: 200.0 },
         zoom: 0.2,
