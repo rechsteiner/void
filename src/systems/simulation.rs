@@ -66,6 +66,7 @@ impl System for SimulationSystem {
                     )
                     .rotation(rigid_body.transform.rotation)
                     .linvel(rigid_body.linear_velocity.x, rigid_body.linear_velocity.y)
+                    .angvel(rigid_body.angular_velocity)
                     .mass(rigid_body.mass)
                     .build();
 

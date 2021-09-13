@@ -43,14 +43,11 @@ pub fn generate_scene() -> Scene {
         .with_component(RigidBody {
             id: 1,
             transform: Transform {
-                position: Point {
-                    x: 200.0,
-                    y: -600.0,
-                },
+                position: Point { x: 200.0, y: 0.0 },
                 rotation: 0.0,
             },
             mass: 1.0,
-            linear_velocity: Point { x: 350.0, y: 0.0 },
+            linear_velocity: Point { x: 0.0, y: 0.0 },
             angular_velocity: 0.0,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -73,14 +70,11 @@ pub fn generate_scene() -> Scene {
         .with_component(RigidBody {
             id: 2,
             transform: Transform {
-                position: Point {
-                    x: 200.0,
-                    y: -650.0,
-                },
+                position: Point { x: 200.0, y: -50.0 },
                 rotation: 0.0,
             },
             mass: 0.1,
-            linear_velocity: Point { x: 350.0, y: 0.0 },
+            linear_velocity: Point { x: 0.0, y: 0.0 },
             angular_velocity: 0.0,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -96,16 +90,50 @@ pub fn generate_scene() -> Scene {
         })
         .with_component(GravityAffected {});
 
-    // Entity 3: Big world
+    // Entity 3: Orbital object
     world
         .create_entity()
         .with_component(RigidBody {
             id: 3,
             transform: Transform {
+                position: Point {
+                    x: 200.0,
+                    y: -700.0,
+                },
+                rotation: 0.0,
+            },
+            mass: 2.0,
+            linear_velocity: Point { x: 300.0, y: 0.0 },
+            angular_velocity: 0.1,
+            physics_mode: PhysicsMode::Dynamic,
+        })
+        .with_component(Shape {
+            is_sensor: false,
+            vertices: vec![
+                Point { x: -30.0, y: -40.0 },
+                Point { x: 30.0, y: -40.0 },
+                Point { x: 30.0, y: 40.0 },
+                Point { x: -30.0, y: 40.0 },
+            ],
+            color: ColorRGBA {
+                r: 50,
+                g: 50,
+                b: 60,
+                a: 1.0,
+            },
+        })
+        .with_component(GravityAffected {});
+
+    // Entity 3: Big world
+    world
+        .create_entity()
+        .with_component(RigidBody {
+            id: 4,
+            transform: Transform {
                 position: Point { x: 200.0, y: 900.0 },
                 rotation: 0.0,
             },
-            mass: 0.2,
+            mass: 1000.0,
             linear_velocity: Point { x: 0.0, y: 0.0 },
             angular_velocity: 0.0,
             physics_mode: PhysicsMode::Static,
@@ -128,17 +156,14 @@ pub fn generate_scene() -> Scene {
     world
         .create_entity()
         .with_component(RigidBody {
-            id: 4,
+            id: 5,
             transform: Transform {
-                position: Point {
-                    x: 4000.0,
-                    y: -300.0,
-                },
+                position: Point { x: 7000.0, y: 0.0 },
                 rotation: 0.0,
             },
             mass: 200.0,
             linear_velocity: Point { x: 0.0, y: 280.0 },
-            angular_velocity: 0.0,
+            angular_velocity: 0.5,
             physics_mode: PhysicsMode::Dynamic,
         })
         .with_component(Shape {
