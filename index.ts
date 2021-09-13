@@ -1,4 +1,5 @@
 import { Editor } from "./editor";
+import { keys } from "./config";
 
 import("./pkg/static_void.js").then((lib) => {
   const pauseButton = document.getElementById("pause-button")!;
@@ -57,22 +58,22 @@ import("./pkg/static_void.js").then((lib) => {
 
     // TODO: abstract away specific keys from this code
     switch (e.key) {
-      case "w":
+      case keys.VIEWPORT_UP:
         viewport_movement_input.y = -1;
         break;
-      case "s":
+      case keys.VIEWPORT_DOWN:
         viewport_movement_input.y = 1;
         break;
-      case "a":
+      case keys.VIEWPORT_LEFT:
         viewport_movement_input.x = -1;
         break;
-      case "d":
+      case keys.VIEWPORT_RIGHT:
         viewport_movement_input.x = 1;
         break;
-      case "z":
+      case keys.VIEWPORT_ZOOM_OUT:
         viewport_movement_input.zoom = -1;
         break;
-      case "x":
+      case keys.VIEWPORT_ZOOM_IN:
         viewport_movement_input.zoom = 1;
         break;
     }
@@ -85,22 +86,22 @@ import("./pkg/static_void.js").then((lib) => {
 
     // TODO: abstract away specific keys from this code
     switch (e.key) {
-      case "w":
+      case keys.VIEWPORT_UP:
         viewport_movement_input.y = 0;
         break;
-      case "s":
+      case keys.VIEWPORT_DOWN:
         viewport_movement_input.y = 0;
         break;
-      case "a":
+      case keys.VIEWPORT_LEFT:
         viewport_movement_input.x = 0;
         break;
-      case "d":
+      case keys.VIEWPORT_RIGHT:
         viewport_movement_input.x = 0;
         break;
-      case "z":
+      case keys.VIEWPORT_ZOOM_OUT:
         viewport_movement_input.zoom = 0;
         break;
-      case "x":
+      case keys.VIEWPORT_ZOOM_IN:
         viewport_movement_input.zoom = 0;
         break;
     }
