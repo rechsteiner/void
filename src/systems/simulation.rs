@@ -1,6 +1,8 @@
-use crate::components::physics_mode::PhysicsMode;
+use std::collections::HashMap;
+
+use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::program::Program;
-use crate::components::rigid_body::{RigidBody, Transform};
+use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{Point, Shape};
 use crate::interpreter::object::Command;
 use crate::systems::System;
@@ -14,8 +16,8 @@ use rapier2d::{
     geometry::ColliderBuilder,
     pipeline::ChannelEventCollector,
 };
-
 pub struct SimulationSystem {
+    body_handles: HashMap<usize, Option<RigidBodyHandle>>,
     spaceship_handle: Option<RigidBodyHandle>,
     physics_pipeline: PhysicsPipeline,
     gravity: Vector2<f32>,
@@ -30,9 +32,10 @@ pub struct SimulationSystem {
 impl SimulationSystem {
     pub fn new() -> SimulationSystem {
         SimulationSystem {
+            body_handles: HashMap::new(),
             spaceship_handle: None,
             physics_pipeline: PhysicsPipeline::new(),
-            gravity: Vector2::new(0.0, 100.0),
+            gravity: Vector2::new(0.0, 0.0),
             integration_parameters: IntegrationParameters::default(),
             broad_phase: BroadPhase::new(),
             narrow_phase: NarrowPhase::new(),
@@ -49,12 +52,10 @@ impl System for SimulationSystem {
         // so we only insert our components once. This won't work when we start
         // adding and removing components.
         if self.bodies.len() == 0 {
-            for (index, (rigid_body, shape, physics_mode)) in world
-                .query::<(&RigidBody, &Shape, &PhysicsMode)>()
-                .iter()
-                .enumerate()
+            for (index, (rigid_body, shape)) in
+                world.query::<(&RigidBody, &Shape)>().iter().enumerate()
             {
-                let body_status = match physics_mode {
+                let body_status = match rigid_body.physics_mode {
                     PhysicsMode::Dynamic => BodyStatus::Dynamic,
                     PhysicsMode::Static => BodyStatus::Static,
                 };
@@ -64,11 +65,16 @@ impl System for SimulationSystem {
                         rigid_body.transform.position.y,
                     )
                     .rotation(rigid_body.transform.rotation)
+                    .linvel(rigid_body.linear_velocity.x, rigid_body.linear_velocity.y)
+                    .angvel(rigid_body.angular_velocity)
                     .mass(rigid_body.mass)
                     .build();
 
+                // Add loose mapping between rigid_body components and physics bodies
                 let entity_handle = self.bodies.insert(entity_rb);
+                self.body_handles.insert(rigid_body.id, Some(entity_handle));
 
+                // TODO: We should probably apply commands to all entities with "Program" component instead of doing this
                 if index == 0 {
                     self.spaceship_handle = Some(entity_handle);
                 }
@@ -108,6 +114,39 @@ impl System for SimulationSystem {
                         spaceship_body.apply_torque_impulse(*force as f32, true)
                     }
                 }
+            }
+        }
+
+        {
+            // Sum and apply all gravity forces a body is subjected to.
+            // Get all the gravity sources in the world and store them for later iteration by each entity
+            let gravity_sources = world.query::<(&GravitySource, &RigidBody)>();
+
+            // Find all the entities that are supposed to be affected by gravity
+            for (_gravity_affected, rigid_body) in world.query::<(&GravityAffected, &RigidBody)>() {
+                let mut sum_gravity_vector = Vector2::new(0.0, 0.0);
+
+                // For each gravity source, accumulate its force into the sum_gravity_vector
+                // This enables the support for multiple gravity sources in a world
+                for (gravity, gravity_rb) in &gravity_sources {
+                    let offset = Vector2::new(
+                        gravity_rb.transform.position.x - rigid_body.transform.position.x,
+                        gravity_rb.transform.position.y - rigid_body.transform.position.y,
+                    );
+                    let distance: f32 = offset.magnitude();
+
+                    // Make sure we don't divide by near-zero
+                    // (Got some strange bugs if I didn't do this and objects overlapped with gravity sources)
+                    if distance >= 0.01 {
+                        sum_gravity_vector += offset * (gravity.strength / distance.powf(2.0));
+                    }
+                }
+
+                let handle = self.body_handles.get(&rigid_body.id).unwrap().unwrap();
+                let body = self.bodies.get_mut(handle).unwrap();
+
+                // Multiply gravity force with object mass to get consistent acceleration for bodies of different masses
+                body.apply_force(sum_gravity_vector * body.mass(), true);
             }
         }
 

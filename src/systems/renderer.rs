@@ -81,6 +81,7 @@ impl System for RenderSystem {
                 (shape.vertices[0].y * viewport.zoom) as f64,
             );
 
+            self.context.close_path();
             self.context.stroke();
 
             // Debugging: dot at center of object
