@@ -117,9 +117,9 @@ pub fn generate_scene() -> Scene {
                 Point { x: -30.0, y: 40.0 },
             ],
             color: ColorRGBA {
-                r: 50,
-                g: 50,
-                b: 60,
+                r: 90,
+                g: 90,
+                b: 90,
                 a: 1.0,
             },
         })
