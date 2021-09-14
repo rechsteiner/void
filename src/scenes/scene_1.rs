@@ -103,7 +103,7 @@ pub fn generate_scene() -> Scene {
                 rotation: 0.0,
             },
             mass: 2.0,
-            linear_velocity: Point { x: 300.0, y: 0.0 },
+            linear_velocity: Point { x: 400.0, y: 0.0 },
             angular_velocity: 0.1,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -133,7 +133,7 @@ pub fn generate_scene() -> Scene {
                 position: Point { x: 200.0, y: 900.0 },
                 rotation: 0.0,
             },
-            mass: 1000.0,
+            mass: 10000.0,
             linear_velocity: Point { x: 0.0, y: 0.0 },
             angular_velocity: 0.0,
             physics_mode: PhysicsMode::Static,
@@ -149,7 +149,7 @@ pub fn generate_scene() -> Scene {
             },
         })
         .with_component(GravitySource {
-            strength: 100000.0, // Not super user-friendly with these kinds of large numbers
+            strength: 300000000.0, // Not super user-friendly with these kinds of large numbers
         });
 
     // Entity 4: Moon
@@ -162,7 +162,7 @@ pub fn generate_scene() -> Scene {
                 rotation: 0.0,
             },
             mass: 200.0,
-            linear_velocity: Point { x: 0.0, y: 280.0 },
+            linear_velocity: Point { x: 0.0, y: 180.0 },
             angular_velocity: 0.5,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -177,7 +177,7 @@ pub fn generate_scene() -> Scene {
             },
         })
         .with_component(GravitySource {
-            strength: 5000.0, // Not super user-friendly with these kinds of large numbers
+            strength: 10000.0, // Not super user-friendly with these kinds of large numbers
         })
         .with_component(GravityAffected {});
 

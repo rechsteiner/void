@@ -138,7 +138,7 @@ impl System for SimulationSystem {
                     // Make sure we don't divide by near-zero
                     // (Got some strange bugs if I didn't do this and objects overlapped with gravity sources)
                     if distance >= 0.01 {
-                        sum_gravity_vector += offset * (gravity.strength / distance.powf(2.0));
+                        sum_gravity_vector += offset.normalize() * (gravity.strength / distance.powf(2.0));
                     }
                 }
 
