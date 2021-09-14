@@ -40,13 +40,15 @@ pub fn generate_scene() -> Scene {
     world.register_component::<GravityAffected>();
 
     // Entity 1: Spaceship
+    // Note that it's upside down, and then rotated 90deg (1 PI).
+    // That is because the game Z+ axis points downward.
     world
         .create_entity()
         .with_component(RigidBody {
             id: 1,
             transform: Transform {
                 position: Vector2::new(200.0, 0.0),
-                rotation: 0.0,
+                rotation: 3.1415,
             },
             mass: 1.0,
             linear_velocity: Vector2::new(0.0, 0.0),
@@ -56,10 +58,10 @@ pub fn generate_scene() -> Scene {
         .with_component(Shape {
             is_sensor: false,
             vertices: vec![
-                Point { x: -10.0, y: -15.0 },
-                Point { x: 10.0, y: -15.0 },
-                Point { x: 15.0, y: 10.0 },
-                Point { x: -15.0, y: 10.0 },
+                Point { x: -15.0, y: -15.0 },
+                Point { x: 15.0, y: -15.0 },
+                Point { x: 10.0, y: 15.0 },
+                Point { x: -10.0, y: 15.0 },
             ],
             color: color_cyan,
         })
@@ -92,7 +94,7 @@ pub fn generate_scene() -> Scene {
         })
         .with_component(GravityAffected {});
 
-    // Entity 3: Orbital object
+    // Entity 3: Orbital mystical object
     world
         .create_entity()
         .with_component(RigidBody {
@@ -102,7 +104,7 @@ pub fn generate_scene() -> Scene {
                 rotation: 0.0,
             },
             mass: 2.0,
-            linear_velocity: Vector2::new(400.0, 0.0),
+            linear_velocity: Vector2::new(260.0, 0.0),
             angular_velocity: 0.1,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -123,7 +125,7 @@ pub fn generate_scene() -> Scene {
         })
         .with_component(GravityAffected {});
 
-    // Entity 3: Big world
+    // Entity 4: Big world
     world
         .create_entity()
         .with_component(RigidBody {
@@ -148,10 +150,10 @@ pub fn generate_scene() -> Scene {
             },
         })
         .with_component(GravitySource {
-            strength: 300000000.0, // Not super user-friendly with these kinds of large numbers
+            strength: 100000000.0, // Not super user-friendly with these kinds of large numbers
         });
 
-    // Entity 4: Moon
+    // Entity 5: Moon
     world
         .create_entity()
         .with_component(RigidBody {
@@ -161,7 +163,7 @@ pub fn generate_scene() -> Scene {
                 rotation: 0.0,
             },
             mass: 200.0,
-            linear_velocity: Vector2::new(0.0, 180.0),
+            linear_velocity: Vector2::new(0.0, 100.0),
             angular_velocity: 0.5,
             physics_mode: PhysicsMode::Dynamic,
         })
