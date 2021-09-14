@@ -1,8 +1,8 @@
-use super::shape::Point;
+use rapier2d::na::Vector2;
 
 pub struct Viewport {
-    pub position: Point,
-    pub target_position: Point,
+    pub position: Vector2<f32>,
+    pub target_position: Vector2<f32>,
     pub zoom: f32,
     pub target_zoom: f32,
 }

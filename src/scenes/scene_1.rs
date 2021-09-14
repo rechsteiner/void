@@ -1,3 +1,5 @@
+use rapier2d::na::Vector2;
+
 use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
@@ -43,11 +45,11 @@ pub fn generate_scene() -> Scene {
         .with_component(RigidBody {
             id: 1,
             transform: Transform {
-                position: Point { x: 200.0, y: 0.0 },
+                position: Vector2::new(200.0, 0.0),
                 rotation: 0.0,
             },
             mass: 1.0,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
+            linear_velocity: Vector2::new(0.0, 0.0),
             angular_velocity: 0.0,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -70,11 +72,11 @@ pub fn generate_scene() -> Scene {
         .with_component(RigidBody {
             id: 2,
             transform: Transform {
-                position: Point { x: 200.0, y: -50.0 },
+                position: Vector2::new(200.0, -50.0),
                 rotation: 0.0,
             },
             mass: 0.1,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
+            linear_velocity: Vector2::new(0.0, 0.0),
             angular_velocity: 0.0,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -96,14 +98,11 @@ pub fn generate_scene() -> Scene {
         .with_component(RigidBody {
             id: 3,
             transform: Transform {
-                position: Point {
-                    x: 200.0,
-                    y: -700.0,
-                },
+                position: Vector2::new(200.0, -700.0),
                 rotation: 0.0,
             },
             mass: 2.0,
-            linear_velocity: Point { x: 400.0, y: 0.0 },
+            linear_velocity: Vector2::new(400.0, 0.0),
             angular_velocity: 0.1,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -130,11 +129,11 @@ pub fn generate_scene() -> Scene {
         .with_component(RigidBody {
             id: 4,
             transform: Transform {
-                position: Point { x: 200.0, y: 900.0 },
+                position: Vector2::new(200.0, 900.0),
                 rotation: 0.0,
             },
             mass: 10000.0,
-            linear_velocity: Point { x: 0.0, y: 0.0 },
+            linear_velocity: Vector2::new(0.0, 0.0),
             angular_velocity: 0.0,
             physics_mode: PhysicsMode::Static,
         })
@@ -158,11 +157,11 @@ pub fn generate_scene() -> Scene {
         .with_component(RigidBody {
             id: 5,
             transform: Transform {
-                position: Point { x: 7000.0, y: 0.0 },
+                position: Vector2::new(7000.0, 0.0),
                 rotation: 0.0,
             },
             mass: 200.0,
-            linear_velocity: Point { x: 0.0, y: 180.0 },
+            linear_velocity: Vector2::new(0.0, 180.0),
             angular_velocity: 0.5,
             physics_mode: PhysicsMode::Dynamic,
         })
@@ -183,9 +182,9 @@ pub fn generate_scene() -> Scene {
 
     // Viewport resource
     world.create_resource(Viewport {
-        position: Point { x: 200.0, y: 200.0 },
+        position: Vector2::new(200.0, 200.0),
         zoom: 0.2,
-        target_position: Point { x: 200.0, y: 200.0 },
+        target_position: Vector2::new(200.0, 200.0),
         target_zoom: 0.2,
     });
 

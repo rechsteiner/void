@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
-use crate::components::shape::{Point, Shape};
+use crate::components::shape::Shape;
 use crate::interpreter::object::Command;
 use crate::systems::System;
 use crate::world::World;
@@ -138,7 +138,8 @@ impl System for SimulationSystem {
                     // Make sure we don't divide by near-zero
                     // (Got some strange bugs if I didn't do this and objects overlapped with gravity sources)
                     if distance >= 0.01 {
-                        sum_gravity_vector += offset.normalize() * (gravity.strength / distance.powf(2.0));
+                        sum_gravity_vector +=
+                            offset.normalize() * (gravity.strength / distance.powf(2.0));
                     }
                 }
 
@@ -171,16 +172,14 @@ impl System for SimulationSystem {
 
         for ((_handle, physics_body), rigid_body) in physics_bodies.zip(rigid_bodies) {
             rigid_body.transform = Transform {
-                position: Point {
-                    x: physics_body.position().translation.x,
-                    y: physics_body.position().translation.y,
-                },
+                position: Vector2::new(
+                    physics_body.position().translation.x,
+                    physics_body.position().translation.y,
+                ),
                 rotation: physics_body.position().rotation.angle(),
             };
-            rigid_body.linear_velocity = Point {
-                x: physics_body.linvel().x,
-                y: physics_body.linvel().y,
-            };
+            rigid_body.linear_velocity =
+                Vector2::new(physics_body.linvel().x, physics_body.linvel().y);
             rigid_body.angular_velocity = physics_body.angvel();
         }
 
