@@ -50,7 +50,6 @@ impl Polygon {
             let coord_y = progress.cos();
 
             let noise_offset = perlin.get_noise(coord_x, coord_y);
-            console::log_1(&noise_offset.into());
 
             polygon.push(Point {
                 x: (noise_offset * coord_x) as f32 * radius,

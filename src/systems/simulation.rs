@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::components::gravity::{GravityAffected, GravitySource};
+use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::Shape;
@@ -144,7 +144,13 @@ impl System for SimulationSystem {
             let gravity_sources = world.query::<(&GravitySource, &RigidBody)>();
 
             // Find all the entities that are supposed to be affected by gravity
-            for (_gravity_affected, rigid_body) in world.query::<(&GravityAffected, &RigidBody)>() {
+            for rigid_body in world.query::<&RigidBody>() {
+                // It's like I say to the ladies;
+                // I won't process any static bodies
+                if let PhysicsMode::Static = rigid_body.physics_mode {
+                    continue;
+                }
+
                 let mut sum_gravity_vector = Vector2::new(0.0, 0.0);
 
                 // For each gravity source, accumulate its force into the sum_gravity_vector
@@ -230,7 +236,6 @@ mod test {
         world.register_component::<Shape>();
         world.register_component::<Program>();
         world.register_component::<GravitySource>();
-        world.register_component::<GravityAffected>();
         system.update(&mut world);
 
         world
@@ -278,7 +283,6 @@ mod test {
         world.register_component::<Shape>();
         world.register_component::<Program>();
         world.register_component::<GravitySource>();
-        world.register_component::<GravityAffected>();
 
         world
             .create_entity()

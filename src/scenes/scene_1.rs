@@ -1,6 +1,6 @@
 use rapier2d::na::Vector2;
 
-use crate::components::gravity::{GravityAffected, GravitySource};
+use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Point, Polygon, Shape};
@@ -37,7 +37,6 @@ pub fn generate_scene() -> Scene {
     world.register_component::<Program>();
     world.register_component::<Viewport>();
     world.register_component::<GravitySource>();
-    world.register_component::<GravityAffected>();
 
     // Entity 1: Spaceship
     // Note that it's upside down, and then rotated 90deg (1 PI).
@@ -65,7 +64,6 @@ pub fn generate_scene() -> Scene {
             ],
             color: color_cyan,
         })
-        .with_component(GravityAffected {})
         .with_component(Program::new());
 
     // Entity 2: Orange box
@@ -91,8 +89,7 @@ pub fn generate_scene() -> Scene {
                 Point { x: -10.0, y: 10.0 },
             ],
             color: color_orange,
-        })
-        .with_component(GravityAffected {});
+        });
 
     // Entity 3: Orbital mystical object
     world
@@ -122,8 +119,7 @@ pub fn generate_scene() -> Scene {
                 b: 90,
                 a: 1.0,
             },
-        })
-        .with_component(GravityAffected {});
+        });
 
     // Entity 4: Big world
     world
@@ -179,8 +175,7 @@ pub fn generate_scene() -> Scene {
         })
         .with_component(GravitySource {
             strength: 10000.0, // Not super user-friendly with these kinds of large numbers
-        })
-        .with_component(GravityAffected {});
+        });
 
     // Viewport resource
     world.create_resource(Viewport {
