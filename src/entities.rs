@@ -62,6 +62,20 @@ impl Entities {
             })
             .collect()
     }
+
+    /// Removes all components for a given entity identifier.
+    pub fn remove_entity(&mut self, entity_id: usize) {
+        for components in self.components.values_mut() {
+            components.remove(entity_id);
+        }
+    }
+
+    /// Removes the component of the given type for a specific entity.
+    pub fn remove_component<T: 'static>(&mut self, entity_id: usize) {
+        let id = TypeId::of::<T>();
+        let components = self.components.get_mut(&id).unwrap();
+        components[entity_id] = None;
+    }
 }
 
 #[cfg(test)]
@@ -110,5 +124,43 @@ mod test {
         assert_eq!(isizes.len(), 1);
         assert_eq!(*u32s[0].unwrap(), 1);
         assert_eq!(*isizes[0].unwrap(), 2);
+    }
+
+    #[test]
+    fn test_remove_component() {
+        let mut entities = Entities::new();
+        entities.register_component::<u32>();
+        entities.register_component::<isize>();
+        entities.create_entity();
+        entities.insert_component(1_u32);
+        entities.insert_component(2_isize);
+
+        entities.remove_component::<u32>(0);
+
+        let u32s = entities.get_components::<u32>();
+        let isizes = entities.get_components::<isize>();
+
+        assert_eq!(u32s.len(), 1);
+        assert_eq!(isizes.len(), 1);
+        assert!(u32s[0].is_none());
+        assert_eq!(*isizes[0].unwrap(), 2);
+    }
+
+    #[test]
+    fn test_remove_entity() {
+        let mut entities = Entities::new();
+        entities.register_component::<u32>();
+        entities.register_component::<isize>();
+        entities.create_entity();
+        entities.insert_component(1_u32);
+        entities.insert_component(2_isize);
+
+        entities.remove_entity(0);
+
+        let u32s = entities.get_components::<u32>();
+        let isizes = entities.get_components::<isize>();
+
+        assert_eq!(u32s.len(), 0);
+        assert_eq!(isizes.len(), 0);
     }
 }

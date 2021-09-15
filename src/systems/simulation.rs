@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 use crate::components::gravity::{GravityAffected, GravitySource};
 use crate::components::program::Program;
@@ -17,8 +18,7 @@ use rapier2d::{
     pipeline::ChannelEventCollector,
 };
 pub struct SimulationSystem {
-    body_handles: HashMap<usize, Option<RigidBodyHandle>>,
-    spaceship_handle: Option<RigidBodyHandle>,
+    body_handles: HashMap<usize, RigidBodyHandle>,
     physics_pipeline: PhysicsPipeline,
     gravity: Vector2<f32>,
     integration_parameters: IntegrationParameters,
@@ -33,7 +33,6 @@ impl SimulationSystem {
     pub fn new() -> SimulationSystem {
         SimulationSystem {
             body_handles: HashMap::new(),
-            spaceship_handle: None,
             physics_pipeline: PhysicsPipeline::new(),
             gravity: Vector2::new(0.0, 0.0),
             integration_parameters: IntegrationParameters::default(),
@@ -44,65 +43,89 @@ impl SimulationSystem {
             joints: JointSet::new(),
         }
     }
+
+    fn insert_body(&mut self, rigid_body: &RigidBody, shape: &Shape) {
+        let body_status = match rigid_body.physics_mode {
+            PhysicsMode::Dynamic => BodyStatus::Dynamic,
+            PhysicsMode::Static => BodyStatus::Static,
+        };
+
+        let entity_rb = RigidBodyBuilder::new(body_status)
+            .translation(
+                rigid_body.transform.position.x,
+                rigid_body.transform.position.y,
+            )
+            .rotation(rigid_body.transform.rotation)
+            .linvel(rigid_body.linear_velocity.x, rigid_body.linear_velocity.y)
+            .angvel(rigid_body.angular_velocity)
+            .mass(rigid_body.mass)
+            .build();
+
+        // Add loose mapping between rigid_body components and physics bodies
+        let entity_handle = self.bodies.insert(entity_rb);
+        self.body_handles.insert(rigid_body.id, entity_handle);
+
+        let mut points = Vec::new();
+        for point in &shape.vertices {
+            points.push(rapier2d::na::Point2::new(point.x, point.y));
+        }
+
+        let entity_collider = ColliderBuilder::convex_hull(&points)
+            .unwrap()
+            .sensor(shape.is_sensor)
+            .build();
+
+        self.colliders
+            .insert(entity_collider, entity_handle, &mut self.bodies);
+    }
+
+    fn remove_body(&mut self, id: &usize) {
+        let handle = self.body_handles.get(id).unwrap();
+        self.bodies
+            .remove(*handle, &mut self.colliders, &mut self.joints);
+        self.body_handles.remove(id);
+    }
 }
 
 impl System for SimulationSystem {
     fn update(&mut self, world: &mut World) {
-        // TODO: For now we are just checking weather the bodies are empty and
-        // so we only insert our components once. This won't work when we start
-        // adding and removing components.
-        if self.bodies.len() == 0 {
-            for (index, (rigid_body, shape)) in
-                world.query::<(&RigidBody, &Shape)>().iter().enumerate()
-            {
-                let body_status = match rigid_body.physics_mode {
-                    PhysicsMode::Dynamic => BodyStatus::Dynamic,
-                    PhysicsMode::Static => BodyStatus::Static,
-                };
-                let entity_rb = RigidBodyBuilder::new(body_status)
-                    .translation(
-                        rigid_body.transform.position.x,
-                        rigid_body.transform.position.y,
-                    )
-                    .rotation(rigid_body.transform.rotation)
-                    .linvel(rigid_body.linear_velocity.x, rigid_body.linear_velocity.y)
-                    .angvel(rigid_body.angular_velocity)
-                    .mass(rigid_body.mass)
-                    .build();
+        let mut ids = HashSet::<usize>::new();
 
-                // Add loose mapping between rigid_body components and physics bodies
-                let entity_handle = self.bodies.insert(entity_rb);
-                self.body_handles.insert(rigid_body.id, Some(entity_handle));
+        for (rigid_body, shape) in world.query::<(&RigidBody, &Shape)>() {
+            // Store the id of the rigid body in a set that we can use later to
+            // check if any entities have been removed.
+            ids.insert(rigid_body.id);
 
-                // TODO: We should probably apply commands to all entities with "Program" component instead of doing this
-                if index == 0 {
-                    self.spaceship_handle = Some(entity_handle);
-                }
-
-                let mut points = Vec::new();
-
-                for point in &shape.vertices {
-                    points.push(rapier2d::na::Point2::new(point.x, point.y));
-                }
-
-                let entity_collider = ColliderBuilder::convex_hull(&points)
-                    .unwrap()
-                    .sensor(shape.is_sensor)
-                    .build();
-                self.colliders
-                    .insert(entity_collider, entity_handle, &mut self.bodies);
+            // Check if we have a rigid body handle for the given id. If it
+            // doesn't exists we insert it into Rapier.
+            if !self.body_handles.contains_key(&rigid_body.id) {
+                self.insert_body(rigid_body, shape);
             }
         }
 
-        // TODO: Apply force on a specfic body with the correct vector
-        let spaceship_body = self.bodies.get_mut(self.spaceship_handle.unwrap()).unwrap();
+        // Compare the ids stored in the body handles cache with the current
+        // list of ids. If any of them are only present in our cache, it means
+        // that the entity have been removed.
+        let removed_ids: Vec<usize> = self
+            .body_handles
+            .keys()
+            .filter(|id| !ids.contains(id))
+            .map(|id| (*id).clone())
+            .collect();
 
-        for program in world.query::<&Program>() {
+        for id in removed_ids {
+            self.remove_body(&id);
+        }
+
+        for (program, rigid_body) in world.query::<(&Program, &RigidBody)>() {
+            let handle = self.body_handles.get(&rigid_body.id).unwrap();
+            let body = self.bodies.get_mut(*handle).unwrap();
+
             for command in &program.commands {
                 match command {
                     Command::SetThrust { force } => {
-                        let rotation = spaceship_body.position().rotation.angle();
-                        spaceship_body.apply_impulse(
+                        let rotation = rigid_body.transform.rotation;
+                        body.apply_impulse(
                             Vector2::new(
                                 1.0 - (*force as f32) * rotation.sin(), // cos(0) - sin(⍺) = 1 - sin(⍺)
                                 (*force as f32) * rotation.cos(), // sin(1) + cos(⍺) = 0 + cos(⍺)
@@ -110,9 +133,7 @@ impl System for SimulationSystem {
                             true,
                         );
                     }
-                    Command::SetTorque { force } => {
-                        spaceship_body.apply_torque_impulse(*force as f32, true)
-                    }
+                    Command::SetTorque { force } => body.apply_torque_impulse(*force as f32, true),
                 }
             }
         }
@@ -143,8 +164,8 @@ impl System for SimulationSystem {
                     }
                 }
 
-                let handle = self.body_handles.get(&rigid_body.id).unwrap().unwrap();
-                let body = self.bodies.get_mut(handle).unwrap();
+                let handle = self.body_handles.get(&rigid_body.id).unwrap();
+                let body = self.bodies.get_mut(*handle).unwrap();
 
                 // Multiply gravity force with object mass to get consistent acceleration for bodies of different masses
                 body.apply_force(sum_gravity_vector * body.mass(), true);
@@ -192,5 +213,110 @@ impl System for SimulationSystem {
         }
 
         while let Ok(_contact_event) = contact_recv.try_recv() {}
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::components::shape::{ColorRGBA, Point, Shape};
+
+    #[test]
+    fn test_update_inserts_new_bodies() {
+        let mut system = SimulationSystem::new();
+        let mut world = World::new();
+
+        world.register_component::<RigidBody>();
+        world.register_component::<Shape>();
+        world.register_component::<Program>();
+        world.register_component::<GravitySource>();
+        world.register_component::<GravityAffected>();
+        system.update(&mut world);
+
+        world
+            .create_entity()
+            .with_component(Shape {
+                is_sensor: false,
+                vertices: vec![
+                    Point { x: -1.0, y: -1.0 },
+                    Point { x: 1.0, y: -1.0 },
+                    Point { x: 1.0, y: 1.0 },
+                    Point { x: -1.0, y: 1.0 },
+                ],
+                color: ColorRGBA {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 1.0,
+                },
+            })
+            .with_component(RigidBody {
+                id: 0,
+                transform: Transform {
+                    position: Vector2::new(0.0, 0.0),
+                    rotation: 0.0,
+                },
+                mass: 1.0,
+                linear_velocity: Vector2::new(0.0, 0.0),
+                angular_velocity: 0.0,
+                physics_mode: PhysicsMode::Static,
+            });
+
+        system.update(&mut world);
+
+        assert!(system.body_handles.contains_key(&0));
+        assert_eq!(system.colliders.len(), 1);
+        assert_eq!(system.bodies.len(), 1);
+    }
+
+    #[test]
+    fn test_update_removes_old_bodies() {
+        let mut system = SimulationSystem::new();
+        let mut world = World::new();
+
+        world.register_component::<RigidBody>();
+        world.register_component::<Shape>();
+        world.register_component::<Program>();
+        world.register_component::<GravitySource>();
+        world.register_component::<GravityAffected>();
+
+        world
+            .create_entity()
+            .with_component(Shape {
+                is_sensor: false,
+                vertices: vec![
+                    Point { x: -1.0, y: -1.0 },
+                    Point { x: 1.0, y: -1.0 },
+                    Point { x: 1.0, y: 1.0 },
+                    Point { x: -1.0, y: 1.0 },
+                ],
+                color: ColorRGBA {
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 1.0,
+                },
+            })
+            .with_component(RigidBody {
+                id: 0,
+                transform: Transform {
+                    position: Vector2::new(0.0, 0.0),
+                    rotation: 0.0,
+                },
+                mass: 1.0,
+                linear_velocity: Vector2::new(0.0, 0.0),
+                angular_velocity: 0.0,
+                physics_mode: PhysicsMode::Static,
+            });
+
+        system.update(&mut world);
+
+        world.remove_entity(0);
+
+        system.update(&mut world);
+
+        assert!(system.body_handles.contains_key(&0) == false);
+        assert_eq!(system.colliders.len(), 0);
+        assert_eq!(system.bodies.len(), 0);
     }
 }

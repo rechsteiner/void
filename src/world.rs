@@ -65,6 +65,16 @@ impl World {
 		self
 	}
 
+	/// Removes all components for a given entity identifier.
+	pub fn remove_entity(&mut self, entity_id: usize) {
+		self.entities.remove_entity(entity_id);
+	}
+
+	/// Removes the component of the given type for a specific entity.
+	pub fn remove_component<T: 'static>(&mut self, entity_id: usize) {
+		self.entities.remove_component::<T>(entity_id);
+	}
+
 	/// Query the world for components based on the generic type. See the
 	/// `Query` trait for which generic types are allowed.
 	pub fn query<'a, T: Query<'a>>(&'a self) -> Vec<T::QueryItem> {
