@@ -90,6 +90,12 @@ canvas {
   caret-color: #00ffd1;
 }
 
+.cm-line::selection,
+.cm-line ::selection {
+  background: #00ffd1;
+  color: black;
+}
+
 .ͼ1.cm-focused {
   outline: none;
 }
