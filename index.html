@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
     <title>Static Void</title>
   </head>
   <body>
@@ -18,96 +19,5 @@
         <button id="run-button">Run</button>
       </div>
     </section>
-
-    <style>
-      * {
-        box-sizing: border-box;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 13px;
-      }
-
-      body {
-        padding: 0;
-        margin: 0;
-        gap: 0.5em;
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        background: black;
-        color: green;
-      }
-
-      .editor-area {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5em;
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 56, 46, 0.9);
-      }
-
-      #editor {
-        flex: auto;
-        background: none;
-        border: none;
-        color: #00ffd1;
-        padding: 1em;
-        line-height: 1.4;
-        width: 400px;
-      }
-
-      #editor:focus,
-      #editor:hover {
-        outline: none;
-        background: #00ffd009;
-      }
-
-      .button-row {
-        display: flex;
-        gap: 0.5em;
-        padding: 1em;
-      }
-
-      .button-row > * {
-        flex: 1;
-      }
-
-      button {
-        padding: 1em;
-        background: none;
-        border: 2px solid #00ffd083;
-        color: #00ffd1;
-        border-radius: 4px;
-        text-transform: uppercase;
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-      }
-
-      .ͼ2 .cm-gutters {
-        background: none;
-        border-right: none;
-        color: rgba(255, 255, 255, 0.1);
-      }
-
-      .ͼ2 .cm-content {
-        caret-color: #00ffd1;
-      }
-
-      .ͼ1.cm-focused {
-        outline: none;
-      }
-    </style>
   </body>
 </html>
