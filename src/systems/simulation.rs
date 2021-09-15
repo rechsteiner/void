@@ -18,7 +18,6 @@ use rapier2d::{
 };
 pub struct SimulationSystem {
     body_handles: HashMap<usize, Option<RigidBodyHandle>>,
-    spaceship_handle: Option<RigidBodyHandle>,
     physics_pipeline: PhysicsPipeline,
     gravity: Vector2<f32>,
     integration_parameters: IntegrationParameters,
@@ -33,7 +32,6 @@ impl SimulationSystem {
     pub fn new() -> SimulationSystem {
         SimulationSystem {
             body_handles: HashMap::new(),
-            spaceship_handle: None,
             physics_pipeline: PhysicsPipeline::new(),
             gravity: Vector2::new(0.0, 0.0),
             integration_parameters: IntegrationParameters::default(),
@@ -52,9 +50,7 @@ impl System for SimulationSystem {
         // so we only insert our components once. This won't work when we start
         // adding and removing components.
         if self.bodies.len() == 0 {
-            for (index, (rigid_body, shape)) in
-                world.query::<(&RigidBody, &Shape)>().iter().enumerate()
-            {
+            for (rigid_body, shape) in world.query::<(&RigidBody, &Shape)>() {
                 let body_status = match rigid_body.physics_mode {
                     PhysicsMode::Dynamic => BodyStatus::Dynamic,
                     PhysicsMode::Static => BodyStatus::Static,
@@ -74,11 +70,6 @@ impl System for SimulationSystem {
                 let entity_handle = self.bodies.insert(entity_rb);
                 self.body_handles.insert(rigid_body.id, Some(entity_handle));
 
-                // TODO: We should probably apply commands to all entities with "Program" component instead of doing this
-                if index == 0 {
-                    self.spaceship_handle = Some(entity_handle);
-                }
-
                 let mut points = Vec::new();
 
                 for point in &shape.vertices {
@@ -94,15 +85,15 @@ impl System for SimulationSystem {
             }
         }
 
-        // TODO: Apply force on a specfic body with the correct vector
-        let spaceship_body = self.bodies.get_mut(self.spaceship_handle.unwrap()).unwrap();
+        for (program, rigid_body) in world.query::<(&Program, &RigidBody)>() {
+            let handle = self.body_handles.get(&rigid_body.id).unwrap().unwrap();
+            let body = self.bodies.get_mut(handle).unwrap();
 
-        for program in world.query::<&Program>() {
             for command in &program.commands {
                 match command {
                     Command::SetThrust { force } => {
-                        let rotation = spaceship_body.position().rotation.angle();
-                        spaceship_body.apply_impulse(
+                        let rotation = rigid_body.transform.rotation;
+                        body.apply_impulse(
                             Vector2::new(
                                 1.0 - (*force as f32) * rotation.sin(), // cos(0) - sin(⍺) = 1 - sin(⍺)
                                 (*force as f32) * rotation.cos(), // sin(1) + cos(⍺) = 0 + cos(⍺)
@@ -110,9 +101,7 @@ impl System for SimulationSystem {
                             true,
                         );
                     }
-                    Command::SetTorque { force } => {
-                        spaceship_body.apply_torque_impulse(*force as f32, true)
-                    }
+                    Command::SetTorque { force } => body.apply_torque_impulse(*force as f32, true),
                 }
             }
         }
