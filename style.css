@@ -12,7 +12,7 @@ body {
   width: 100vw;
   height: 100vh;
   background: black;
-  color: green;
+  color: #00ffd1;
 }
 
 .editor-area {
@@ -23,27 +23,50 @@ body {
   top: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 56, 46, 0.9);
+  background: rgba(0, 56, 46, 0.5);
   margin: 2em;
   overflow: scroll;
   border-radius: 8px;
-  border: 1px solid #049c7f4d;
+  border: 1px solid rgba(4, 156, 127, 0.3);
+  color: #00ffd1;
+}
+
+.editor-variables {
+  padding: 1em;
+  border-bottom: 1px solid rgba(4, 156, 127, 0.3);
+}
+
+.editor-variables-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.editor-variables-list li {
+  background: rgba(0, 255, 208, 0.1);
+  padding: 0.05em 0.2em;
+}
+
+.editor-heading {
+  color: rgba(2, 249, 206, 0.3);
 }
 
 #editor {
   flex: auto;
   background: none;
   border: none;
-  color: #00ffd1;
   padding: 1em;
   line-height: 1.4;
   width: 460px;
 }
 
-#editor:focus,
-#editor:hover {
+.editor-area:focus,
+.editor-area:hover {
   outline: none;
-  background: #00ffd009;
+  background: rgba(0, 56, 46, 0.6);
 }
 
 .button-row {
@@ -62,10 +85,15 @@ body {
 button {
   padding: 1em;
   background: none;
-  border: 2px solid #00ffd083;
+  border: 2px solid rgba(0, 255, 208, 0.514);
   color: #00ffd1;
   border-radius: 4px;
   text-transform: uppercase;
+}
+
+button:hover {
+  background: rgba(0, 56, 46, 0.8);
+  cursor: pointer;
 }
 
 .hidden {
@@ -83,16 +111,16 @@ canvas {
 .ͼ2 .cm-gutters {
   background: none;
   border-right: none;
-  color: rgb(2 249 206 / 30%);
+  color: rgba(2, 249, 206, 0.3);
 }
 
 .ͼ2 .cm-content {
-  caret-color: #00ffd1;
+  caret-color: rgb(0, 255, 209);
 }
 
 .cm-line::selection,
 .cm-line ::selection {
-  background: #00ffd1;
+  background: rgb(0, 255, 209);
   color: black;
 }
 
