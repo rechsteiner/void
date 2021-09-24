@@ -47,7 +47,12 @@ body {
 
 .editor-variables-list li {
   background: rgba(0, 255, 208, 0.1);
-  padding: 0.05em 0.2em;
+  padding: 0.05em 0.3em;
+}
+
+.variable-value {
+  margin-left: 0.5em;
+  opacity: 0.5;
 }
 
 .editor-heading {
