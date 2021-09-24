@@ -1,11 +1,14 @@
 import { Editor } from "./editor";
 import { keys } from "./config";
 
+type ProgramVariable = { name: string; value: { Integer: any } };
+
 import("./pkg/static_void.js").then((lib) => {
   const pauseButton = document.getElementById("pause-button")!;
   const runButton = document.getElementById("run-button")!;
   const canvas = document.getElementsByTagName("canvas")[0];
   const editorElement = document.getElementById("editor")!;
+  const editorVariablesList = document.getElementById("editor-variables-list")!;
 
   let game = new lib.Game();
 
@@ -128,6 +131,29 @@ import("./pkg/static_void.js").then((lib) => {
       // re-interpret the whole program on each frame which is very unnecessary.
       game.tick();
     }
+
+    let variables: ProgramVariable[] = game.get_program_variables();
+    variables.sort((a, b) => (a.name > b.name ? 1 : -1));
+
+    editorVariablesList.innerHTML = ""; // Clear list
+    variables.forEach((variable) => {
+      let variableElement = document.createElement("li");
+      console.log(variable);
+
+      // Span with name
+      let nameElement = document.createElement("span");
+      nameElement.classList.add("variable-name");
+      nameElement.textContent = variable.name;
+      variableElement.appendChild(nameElement);
+
+      // Span with value
+      let valueElement = document.createElement("span");
+      valueElement.classList.add("variable-value");
+      valueElement.textContent = variable.value.Integer.toString();
+      variableElement.appendChild(valueElement);
+
+      editorVariablesList.appendChild(variableElement);
+    });
 
     requestAnimationFrame(() => animate());
   }

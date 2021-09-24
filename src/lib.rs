@@ -2,6 +2,7 @@ mod components;
 mod entities;
 mod interpreter;
 mod query;
+mod resources;
 mod scene;
 mod scenes;
 mod systems;
@@ -12,6 +13,7 @@ extern crate wasm_bindgen;
 
 use components::program::Program;
 use components::viewport::Viewport;
+use resources::program_environment::ProgramEnvironment;
 use scene::Scene;
 use scenes::scene_1;
 use wasm_bindgen::prelude::*;
@@ -47,5 +49,15 @@ impl Game {
     pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
         let viewport = self.scene.world.get_resource_mut::<Viewport>().unwrap();
         viewport.move_target(delta_x, delta_y, delta_zoom);
+    }
+
+    pub fn get_program_variables(&mut self) -> JsValue {
+        let program_environment = self
+            .scene
+            .world
+            .get_resource_mut::<ProgramEnvironment>()
+            .unwrap();
+
+        JsValue::from_serde(&program_environment.get_variables()).unwrap()
     }
 }

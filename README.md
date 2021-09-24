@@ -62,3 +62,73 @@ ELSE
   SET_TORQUE(13000)
 END
 ```
+
+Here's a program that makes the ship take off and deliver a cargo into orbit, and then return to the surface.
+
+```
+LET GET_ANGLE = FUNC DO
+  IF (TIME < 3500) DO
+    0
+  ELSE
+    IF (TIME < 20000) DO
+      -90
+    ELSE
+      IF (TIME < 26500) DO
+        90
+      ELSE
+        0
+      END
+    END
+  END
+END
+
+
+LET TARGET_ANGLE = GET_ANGLE()
+
+IF (TIME > 6000) DO
+  TARGET_ANGLE = 90
+END
+
+LET ROT_STR = 6000
+
+IF (ANGLE > TARGET_ANGLE) DO
+  SET_TORQUE(ROT_STR)
+END
+
+IF (ANGLE < TARGET_ANGLE) DO
+  SET_TORQUE(-ROT_STR)
+END
+
+IF (ANG_VEL > 10) DO
+  SET_TORQUE(-ROT_STR + 1600)
+END
+
+IF (ANG_VEL < 10) DO
+  SET_TORQUE(ROT_STR - 1600)
+END
+
+
+IF (TIME > 3000) DO
+  SET_THRUST(3200)
+END
+
+IF (TIME > 6500) DO
+  SET_THRUST(-2400)
+END
+
+IF (TIME > 7500) DO
+  SET_THRUST(-400)
+END
+
+IF (TIME > 8500) DO
+  SET_THRUST(-300)
+END
+
+IF (TIME > 14000) DO
+  SET_THRUST(-100)
+END
+
+IF (TIME > 25000) DO
+  SET_THRUST(800)
+END
+```
