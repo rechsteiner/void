@@ -1,7 +1,10 @@
 import { Editor } from "./editor";
 import { keys } from "./config";
 
-type ProgramVariable = { name: string; value: { Integer: any } };
+type ProgramVariable =
+  | { ["Float"]: number }
+  | { ["Integer"]: number }
+  | { ["Boolean"]: boolean };
 
 import("./pkg/static_void.js").then((lib) => {
   const pauseButton = document.getElementById("pause-button")!;
@@ -132,27 +135,39 @@ import("./pkg/static_void.js").then((lib) => {
       game.tick();
     }
 
-    let variables: ProgramVariable[] = game.get_program_variables();
+    let variables: { [k: string]: ProgramVariable } =
+      game.get_program_variables();
     let sortedVariables = Object.entries(variables).sort((a, b) =>
       a[0] > b[0] ? 1 : -1
     );
 
     editorVariablesList.innerHTML = ""; // Clear list
-    sortedVariables.forEach((variable) => {
+    sortedVariables.forEach(([variableName, variableValueObject]) => {
       let variableElement = document.createElement("li");
 
       // Span with name
       let nameElement = document.createElement("span");
       nameElement.classList.add("variable-name");
-      nameElement.textContent = variable[0];
+      nameElement.textContent = variableName;
       variableElement.appendChild(nameElement);
 
       // Span with value
       let valueElement = document.createElement("span");
       valueElement.classList.add("variable-value");
-      let value = Object.values(variable[1])[0];
-      // @ts-ignore
-      valueElement.textContent = (value as number).toFixed(2);
+
+      let [variableType, variableValue] =
+        Object.entries(variableValueObject)[0];
+      let formattedValue;
+
+      if (variableType === "Float") {
+        formattedValue = variableValue.toFixed(2);
+      } else if (variableType === "Integer") {
+        formattedValue = variableValue;
+      } else {
+        formattedValue = variableValue;
+      }
+
+      valueElement.textContent = formattedValue;
       variableElement.appendChild(valueElement);
 
       editorVariablesList.appendChild(variableElement);

@@ -82,7 +82,7 @@ body {
   padding: 1em 1em 2em;
   position: sticky;
   bottom: 0;
-  background: #00332a;
+  border-top: 1px solid rgba(4, 156, 127, 0.3);
 }
 
 .button-row > * {
