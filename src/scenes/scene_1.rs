@@ -5,12 +5,10 @@ use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Point, Polygon, Shape};
 use crate::components::viewport::Viewport;
-use crate::resources::program_environment::ProgramEnvironment;
 use crate::scene::Scene;
 use crate::systems::interpreter::InterpreterSystem;
 use crate::systems::renderer::RenderSystem;
 use crate::systems::simulation::SimulationSystem;
-use crate::systems::System;
 use crate::world::World;
 
 pub fn generate_scene() -> Scene {
@@ -186,8 +184,6 @@ pub fn generate_scene() -> Scene {
         target_position: Vector2::new(200.0, 200.0),
         target_zoom: 0.2,
     });
-
-    world.create_resource(ProgramEnvironment::new());
 
     Scene::new(
         world,

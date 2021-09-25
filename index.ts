@@ -133,23 +133,26 @@ import("./pkg/static_void.js").then((lib) => {
     }
 
     let variables: ProgramVariable[] = game.get_program_variables();
-    variables.sort((a, b) => (a.name > b.name ? 1 : -1));
+    let sortedVariables = Object.entries(variables).sort((a, b) =>
+      a[0] > b[0] ? 1 : -1
+    );
 
     editorVariablesList.innerHTML = ""; // Clear list
-    variables.forEach((variable) => {
+    sortedVariables.forEach((variable) => {
       let variableElement = document.createElement("li");
-      console.log(variable);
 
       // Span with name
       let nameElement = document.createElement("span");
       nameElement.classList.add("variable-name");
-      nameElement.textContent = variable.name;
+      nameElement.textContent = variable[0];
       variableElement.appendChild(nameElement);
 
       // Span with value
       let valueElement = document.createElement("span");
       valueElement.classList.add("variable-value");
-      valueElement.textContent = variable.value.Integer.toString();
+      let value = Object.values(variable[1])[0];
+      // @ts-ignore
+      valueElement.textContent = (value as number).toFixed(2);
       variableElement.appendChild(valueElement);
 
       editorVariablesList.appendChild(variableElement);

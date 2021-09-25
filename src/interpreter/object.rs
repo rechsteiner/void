@@ -1,4 +1,5 @@
 use crate::interpreter::ast::BlockStatement;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -77,6 +78,29 @@ impl Environment {
     pub fn set(&mut self, key: String, value: Object) {
         self.store.insert(key, value);
     }
+
+    pub fn get_variables(&self) -> HashMap<String, ProgramVariable> {
+        self.store
+            .iter()
+            .filter_map(|(key, value)| match value {
+                Object::Integer(int) => Some((key.clone(), ProgramVariable::Integer(*int))),
+                Object::Boolean(bool) => Some((key.clone(), ProgramVariable::Boolean(*bool))),
+                Object::Float(float) => Some((key.clone(), ProgramVariable::Float(*float))),
+                _ => None,
+            })
+            .collect()
+    }
+
+    pub fn clear(&mut self) {
+        self.store.clear();
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub enum ProgramVariable {
+    Integer(isize),
+    Float(f64),
+    Boolean(bool),
 }
 
 // Formatting

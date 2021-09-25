@@ -1,15 +1,12 @@
-use hashbrown::HashMap;
 use rapier2d::na::Vector2;
 use std::f64::consts::PI;
+use web_sys::console;
 
 use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
 use crate::components::rigid_body::RigidBody;
 use crate::interpreter::evaluator::Evaluator;
-use crate::interpreter::object::{Command, Environment, Object};
-use crate::resources::program_environment::{
-    ProgramEnvironment, ProgramVariable, ProgramVariableValue,
-};
+use crate::interpreter::object::{Command, Object};
 use crate::systems::System;
 use crate::world::World;
 
@@ -34,17 +31,13 @@ impl System for InterpreterSystem {
         // Set current frame mission time
         let mission_time = world.start_timestamp.elapsed().as_millis();
 
-        // Storing all program variables here so we can later give it
-        // to the World without angering the borrow checker
-        let mut current_program_variables: HashMap<String, ProgramVariableValue> = HashMap::new();
-
         for (program, rigid_body) in world.query_mut::<(&mut Program, &RigidBody)>() {
-            let mut environment = Environment::new();
             let mut evaluator = Evaluator::new();
 
             let closest_gravity_source = get_closest_gravity_source(rigid_body, &gravity_sources);
 
-            environment.set(
+            program.environment.clear();
+            program.environment.set(
                 String::from("SET_THRUST"),
                 Object::Command {
                     function: |arguments| {
@@ -68,7 +61,7 @@ impl System for InterpreterSystem {
                 },
             );
 
-            environment.set(
+            program.environment.set(
                 String::from("SET_TORQUE"),
                 Object::Command {
                     function: |arguments| {
@@ -93,62 +86,33 @@ impl System for InterpreterSystem {
             );
 
             // --- TIME ---
-            environment.set(String::from("TIME"), Object::Integer(mission_time as isize));
-            current_program_variables.insert(
-                String::from("TIME"),
-                ProgramVariableValue::Integer(mission_time as isize),
-            );
+            program
+                .environment
+                .set(String::from("TIME"), Object::Integer(mission_time as isize));
 
             // --- ALTITUDE ---
-            environment.set(
+            program.environment.set(
                 String::from("ALTITUDE"),
-                Object::Integer(closest_gravity_source.distance as isize),
-            );
-            current_program_variables.insert(
-                String::from("ALTITUDE"),
-                ProgramVariableValue::Integer(closest_gravity_source.distance as isize),
+                Object::Float(closest_gravity_source.distance as f64),
             );
 
             // --- ANGLE ---
-            environment.set(
+            program.environment.set(
                 String::from("ANGLE"),
-                Object::Integer((closest_gravity_source.relative_angle * 57.2958) as isize), // multiply to convert radians to deg
-            );
-            current_program_variables.insert(
-                String::from("ANGLE"),
-                ProgramVariableValue::Integer(
-                    (closest_gravity_source.relative_angle * 57.2958) as isize,
-                ), // multiply to convert radians to deg
+                Object::Float((closest_gravity_source.relative_angle * 57.2958) as f64), // multiply to convert radians to deg
             );
 
             // --- ANG_VEL ---
-            environment.set(
+            program.environment.set(
                 String::from("ANG_VEL"),
-                Object::Integer((rigid_body.angular_velocity * 57.2958) as isize), // multiply to convert radians to deg
-            );
-            current_program_variables.insert(
-                String::from("ANG_VEL"),
-                ProgramVariableValue::Integer((rigid_body.angular_velocity * 57.2958) as isize), // multiply to convert radians to deg
+                Object::Float((rigid_body.angular_velocity * 57.2958) as f64), // multiply to convert radians to deg
             );
 
-            let _ = evaluator.eval(&program.program, &mut environment);
-
+            let result = evaluator.eval(&program.program, &mut program.environment);
+            if let Object::Error(err) = result {
+                console::log_1(&format!("{:?}", err).into())
+            }
             program.commands = evaluator.commands;
-        }
-
-        // Write program variables to World so they can be shown in UI
-        // TODO: This should probably be done somewhere else
-        // And read directly from the already registered Environment variables
-        let world_program_environment = world
-            .get_resource_mut::<ProgramEnvironment>()
-            .unwrap()
-            .clear();
-
-        for (name, value_object) in current_program_variables.iter() {
-            world_program_environment.add_variable(ProgramVariable {
-                name: String::from(name.clone()),
-                value: value_object.clone(),
-            });
         }
     }
 }

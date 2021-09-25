@@ -1,6 +1,5 @@
 use perlin2d::PerlinNoise2D;
 use std::fmt;
-use web_sys::console;
 
 #[derive(Debug)]
 pub struct Point {

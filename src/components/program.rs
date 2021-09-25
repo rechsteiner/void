@@ -1,9 +1,10 @@
 use crate::interpreter::lexer::Lexer;
-use crate::interpreter::object::Command;
+use crate::interpreter::object::{Command, Environment};
 use crate::interpreter::parser::Parser;
 
 pub struct Program {
     pub program: crate::interpreter::ast::Program,
+    pub environment: Environment,
     pub commands: Vec<Command>,
 }
 
@@ -11,6 +12,7 @@ impl Program {
     pub fn new() -> Self {
         Program {
             program: crate::interpreter::ast::Program::new(),
+            environment: Environment::new(),
             commands: vec![],
         }
     }
