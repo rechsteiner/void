@@ -623,7 +623,7 @@ mod tests {
         let tests = vec![
             (
                 "SET_THRUST(10)",
-                vec![Command::SetThrust { force: 10.0 }],
+                vec![Command::SetThrust { throttle: 10.0 }],
                 Object::Null,
             ),
             (
@@ -634,8 +634,8 @@ mod tests {
                 SET_THRUST(B)
                 ",
                 vec![
-                    Command::SetThrust { force: 10.0 },
-                    Command::SetThrust { force: 20.0 },
+                    Command::SetThrust { throttle: 10.0 },
+                    Command::SetThrust { throttle: 20.0 },
                 ],
                 Object::Null,
             ),
@@ -670,7 +670,7 @@ mod tests {
                         }
                         match arguments[0].clone() {
                             Object::Integer(value) => Result::Ok(Command::SetThrust {
-                                force: value as f64,
+                                throttle: value as f64,
                             }),
                             _ => Result::Err(format!(
                                 "argument not supported, got {}",

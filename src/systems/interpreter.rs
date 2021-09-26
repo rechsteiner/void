@@ -47,11 +47,14 @@ impl System for InterpreterSystem {
                                 arguments.len()
                             ));
                         }
+
                         match arguments[0].clone() {
                             Object::Integer(value) => Result::Ok(Command::SetThrust {
-                                force: value as f64,
+                                throttle: (value as f64),
                             }),
-                            Object::Float(value) => Result::Ok(Command::SetThrust { force: value }),
+                            Object::Float(value) => {
+                                Result::Ok(Command::SetThrust { throttle: value })
+                            }
                             _ => Result::Err(format!(
                                 "argument not supported, got {}",
                                 arguments[0].name()

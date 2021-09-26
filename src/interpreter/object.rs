@@ -5,7 +5,7 @@ use std::fmt;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Command {
-    SetThrust { force: f64 },
+    SetThrust { throttle: f64 },
     SetTorque { force: f64 },
 }
 
