@@ -4,11 +4,13 @@ use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Point, Polygon, Shape};
+use crate::components::thrusters::{Thruster, Thrusters};
 use crate::components::viewport::Viewport;
 use crate::scene::Scene;
 use crate::systems::interpreter::InterpreterSystem;
 use crate::systems::renderer::RenderSystem;
 use crate::systems::simulation::SimulationSystem;
+use crate::systems::thrust::ThrusterSystem;
 use crate::world::World;
 
 pub fn generate_scene() -> Scene {
@@ -37,6 +39,7 @@ pub fn generate_scene() -> Scene {
     world.register_component::<Program>();
     world.register_component::<Viewport>();
     world.register_component::<GravitySource>();
+    world.register_component::<Thrusters>();
 
     // Entity 1: Spaceship
     // Note that it's upside down, and then rotated 90deg (1 PI).
@@ -64,7 +67,17 @@ pub fn generate_scene() -> Scene {
             ],
             color: color_cyan,
         })
-        .with_component(Program::new());
+        .with_component(Program::new())
+        .with_component(Thrusters::new(
+            1000.0,
+            1000.0,
+            vec![Thruster {
+                max_thrust_force: 3000.0,
+                position: Vector2::new(0.0, 0.0),
+                rotation: 0.0,
+                fuel_consumption_per_force: 0.001,
+            }],
+        ));
 
     // Entity 2: Orange box
     world
@@ -189,6 +202,7 @@ pub fn generate_scene() -> Scene {
         world,
         vec![
             Box::new(InterpreterSystem::new()),
+            Box::new(ThrusterSystem::new()),
             Box::new(SimulationSystem::new()),
             Box::new(RenderSystem::new()),
         ],
