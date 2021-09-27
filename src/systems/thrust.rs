@@ -1,5 +1,5 @@
 use crate::components::{program::Program, thrusters::Thrusters};
-use crate::interpreter::object::Command;
+use crate::interpreter::object::{Command, Object};
 
 use super::System;
 
@@ -14,13 +14,19 @@ impl ThrusterSystem {
 
 impl System for ThrusterSystem {
     fn update(&mut self, world: &mut crate::world::World) {
-        for (program, thrusters) in world.query_mut::<(&Program, &mut Thrusters)>() {
+        for (program, thrusters) in world.query_mut::<(&mut Program, &mut Thrusters)>() {
             // Read Command to set current throttle (0.0 - 1.0)
             for command in program.commands.iter() {
                 if let Command::SetThrust { throttle } = command {
                     thrusters.set_throttle(*throttle);
                 }
             }
+
+            // TODO: Make `FUEL` variable accessible in Environment
+            // Currently it only renders in UI, but isn't registered by interpreter
+            program
+                .environment
+                .set(String::from("FUEL"), Object::Float(thrusters.fuel));
 
             // Consume fuel based on current throttle
             // Simulation system is responsible for actually applying the force
