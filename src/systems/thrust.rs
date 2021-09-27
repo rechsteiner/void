@@ -3,7 +3,8 @@ use crate::interpreter::object::{Command, Object};
 
 use super::System;
 
-/// Reads set_thrust commands in `Program` and sets current thrust level in `Thrusters` components
+/// Reads SET_THRUST commands from `Program` and sets current thrust level in `Thrusters` components.
+/// Also reduces fuel according to current thrust level.
 pub struct ThrusterSystem {}
 
 impl ThrusterSystem {
