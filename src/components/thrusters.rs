@@ -14,7 +14,7 @@ impl Thrusters {
         Thrusters {
             fuel,
             fuel_max,
-            throttle: 1.0,
+            throttle: 0.0,
             thrusters,
         }
     }
@@ -28,9 +28,9 @@ impl Thrusters {
         self.throttle
     }
 
-    pub fn get_total_thrust(&self, throttle_level: f64) -> f64 {
+    pub fn get_total_thrust(&self) -> f64 {
         self.thrusters.iter().fold(0.0, |acc, thruster| {
-            thruster.get_thrust(throttle_level) + acc
+            thruster.get_thrust(self.throttle) + acc
         })
     }
 
