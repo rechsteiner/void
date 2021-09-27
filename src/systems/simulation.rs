@@ -18,7 +18,6 @@ use rapier2d::{
     geometry::ColliderBuilder,
     pipeline::ChannelEventCollector,
 };
-use web_sys::console;
 pub struct SimulationSystem {
     body_handles: HashMap<usize, RigidBodyHandle>,
     physics_pipeline: PhysicsPipeline,
