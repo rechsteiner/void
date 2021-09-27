@@ -231,7 +231,10 @@ impl System for SimulationSystem {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::components::shape::{ColorRGBA, Point, Shape};
+    use crate::components::{
+        shape::{ColorRGBA, Point, Shape},
+        thrusters::Thruster,
+    };
 
     #[test]
     fn test_update_inserts_new_bodies() {
@@ -242,6 +245,7 @@ mod test {
         world.register_component::<Shape>();
         world.register_component::<Program>();
         world.register_component::<GravitySource>();
+        world.register_component::<Thrusters>();
         system.update(&mut world);
 
         world
@@ -271,7 +275,17 @@ mod test {
                 linear_velocity: Vector2::new(0.0, 0.0),
                 angular_velocity: 0.0,
                 physics_mode: PhysicsMode::Static,
-            });
+            })
+            .with_component(Thrusters::new(
+                1000.0,
+                1000.0,
+                vec![Thruster {
+                    max_thrust_force: 3000.0,
+                    position: Vector2::new(0.0, 0.0),
+                    rotation: 0.0,
+                    fuel_consumption_per_force: 0.001,
+                }],
+            ));
 
         system.update(&mut world);
 
@@ -289,6 +303,7 @@ mod test {
         world.register_component::<Shape>();
         world.register_component::<Program>();
         world.register_component::<GravitySource>();
+        world.register_component::<Thrusters>();
 
         world
             .create_entity()
@@ -317,7 +332,17 @@ mod test {
                 linear_velocity: Vector2::new(0.0, 0.0),
                 angular_velocity: 0.0,
                 physics_mode: PhysicsMode::Static,
-            });
+            })
+            .with_component(Thrusters::new(
+                1000.0,
+                1000.0,
+                vec![Thruster {
+                    max_thrust_force: 3000.0,
+                    position: Vector2::new(0.0, 0.0),
+                    rotation: 0.0,
+                    fuel_consumption_per_force: 0.001,
+                }],
+            ));
 
         system.update(&mut world);
 
