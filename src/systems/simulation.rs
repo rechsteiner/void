@@ -5,6 +5,7 @@ use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::Shape;
+use crate::components::thrusters::Thrusters;
 use crate::interpreter::object::Command;
 use crate::systems::System;
 use crate::world::World;
@@ -17,6 +18,7 @@ use rapier2d::{
     geometry::ColliderBuilder,
     pipeline::ChannelEventCollector,
 };
+use web_sys::console;
 pub struct SimulationSystem {
     body_handles: HashMap<usize, RigidBodyHandle>,
     physics_pipeline: PhysicsPipeline,
@@ -117,23 +119,28 @@ impl System for SimulationSystem {
             self.remove_body(&id);
         }
 
-        for (program, rigid_body) in world.query::<(&Program, &RigidBody)>() {
+        for (program, rigid_body, thrusters) in world.query::<(&Program, &RigidBody, &Thrusters)>()
+        {
             let handle = self.body_handles.get(&rigid_body.id).unwrap();
             let body = self.bodies.get_mut(*handle).unwrap();
 
+            if thrusters.get_throttle() > 0.0 {
+                let ship_rotation = rigid_body.transform.rotation;
+                let thrust_force_magnutude = thrusters.get_total_thrust();
+                let thrust_force = Vector2::new(
+                    1.0 - thrust_force_magnutude as f32 * (ship_rotation).sin(), // cos(0) - sin(⍺) = 1 - sin(⍺)
+                    thrust_force_magnutude as f32 * (ship_rotation).cos(), // sin(1) + cos(⍺) = 0 + cos(⍺)
+                );
+
+                if thrusters.fuel > 0.0 {
+                    body.apply_impulse(thrust_force, true);
+                }
+            }
+
             for command in &program.commands {
                 match command {
-                    Command::SetThrust { force } => {
-                        let rotation = rigid_body.transform.rotation;
-                        body.apply_impulse(
-                            Vector2::new(
-                                1.0 - (*force as f32) * rotation.sin(), // cos(0) - sin(⍺) = 1 - sin(⍺)
-                                (*force as f32) * rotation.cos(), // sin(1) + cos(⍺) = 0 + cos(⍺)
-                            ),
-                            true,
-                        );
-                    }
                     Command::SetTorque { force } => body.apply_torque_impulse(*force as f32, true),
+                    _ => (),
                 }
             }
         }
