@@ -20,24 +20,18 @@ pub fn delta_angle(from: f32, to: f32) -> f32 {
     let a = if from.is_sign_positive() {
         from
     } else {
-        total - from.abs() // a = 348 (-12)
+        total - from.abs()
     };
     let b = if to.is_sign_positive() {
-        to // b = 2
+        to
     } else {
         total - to.abs()
     };
 
-    let x = if b > a {
-        // 2 < 345
-        total - (b - a)
-    } else {
-        a - b // x = (348 - 2) = 346
-    };
+    let x = if b > a { total - (b - a) } else { a - b };
 
     if x > (PI as f32) {
-        // x > 360
-        return total - x; // 360 - 346 = 14
+        return total - x;
     } else {
         return -x;
     }
