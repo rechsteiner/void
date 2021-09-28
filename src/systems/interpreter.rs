@@ -1,7 +1,12 @@
+use rapier2d::na::Vector2;
+use web_sys::console;
+
+use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
 use crate::components::rigid_body::RigidBody;
+use crate::helpers::math::{angle_between_positions, delta_angle};
 use crate::interpreter::evaluator::Evaluator;
-use crate::interpreter::object::{Command, Environment, Object};
+use crate::interpreter::object::{Command, Object};
 use crate::systems::System;
 use crate::world::World;
 
@@ -15,11 +20,24 @@ impl InterpreterSystem {
 
 impl System for InterpreterSystem {
     fn update(&mut self, world: &mut World) {
+        // These are later used by rigid bodies to determine where
+        // the closest gravity source is, i.e. what direction is "down"
+        let gravity_sources: Vec<Vector2<f32>> = world
+            .query_mut::<(&GravitySource, &RigidBody)>()
+            .iter()
+            .map(|(_, rb)| rb.transform.position)
+            .collect();
+
+        // Set current frame mission time
+        let mission_time = world.start_timestamp.elapsed().as_millis();
+
         for (program, rigid_body) in world.query_mut::<(&mut Program, &RigidBody)>() {
-            let mut environment = Environment::new();
             let mut evaluator = Evaluator::new();
 
-            environment.set(
+            let closest_gravity_source = get_closest_gravity_source(rigid_body, &gravity_sources);
+
+            program.environment.clear();
+            program.environment.set(
                 String::from("SET_THRUST"),
                 Object::Command {
                     function: |arguments| {
@@ -29,11 +47,14 @@ impl System for InterpreterSystem {
                                 arguments.len()
                             ));
                         }
+
                         match arguments[0].clone() {
                             Object::Integer(value) => Result::Ok(Command::SetThrust {
-                                force: value as f64,
+                                throttle: (value as f64),
                             }),
-                            Object::Float(value) => Result::Ok(Command::SetThrust { force: value }),
+                            Object::Float(value) => {
+                                Result::Ok(Command::SetThrust { throttle: value })
+                            }
                             _ => Result::Err(format!(
                                 "argument not supported, got {}",
                                 arguments[0].name()
@@ -43,7 +64,7 @@ impl System for InterpreterSystem {
                 },
             );
 
-            environment.set(
+            program.environment.set(
                 String::from("SET_TORQUE"),
                 Object::Command {
                     function: |arguments| {
@@ -67,39 +88,70 @@ impl System for InterpreterSystem {
                 },
             );
 
-            environment.set(
+            // --- TIME ---
+            program
+                .environment
+                .set(String::from("TIME"), Object::Integer(mission_time as isize));
+
+            // --- ALTITUDE ---
+            program.environment.set(
                 String::from("ALTITUDE"),
-                Object::Integer(400 - rigid_body.transform.position.y as isize), // 400 is height of canvas
+                Object::Float(closest_gravity_source.distance as f64),
             );
 
-            environment.set(
-                String::from("LONGITUDE"),
-                Object::Integer(rigid_body.transform.position.x as isize),
-            );
-
-            environment.set(
+            // --- ANGLE ---
+            program.environment.set(
                 String::from("ANGLE"),
-                Object::Integer((rigid_body.transform.rotation * 58.122) as isize), // multiply to convert radians to deg
+                Object::Float((closest_gravity_source.relative_angle * 57.2958) as f64), // multiply to convert radians to deg
             );
 
-            environment.set(
-                String::from("LONG_VEL"),
-                Object::Integer(rigid_body.linear_velocity.x as isize), // multiply to convert radians to deg
-            );
-
-            environment.set(
-                String::from("ALT_VEL"),
-                Object::Integer(rigid_body.linear_velocity.y as isize), // multiply to convert radians to deg
-            );
-
-            environment.set(
+            // --- ANG_VEL ---
+            program.environment.set(
                 String::from("ANG_VEL"),
-                Object::Integer(rigid_body.angular_velocity as isize), // multiply to convert radians to deg
+                Object::Float((rigid_body.angular_velocity * 57.2958) as f64), // multiply to convert radians to deg
             );
 
-            let _ = evaluator.eval(&program.program, &mut environment);
-
+            let result = evaluator.eval(&program.program, &mut program.environment);
+            if let Object::Error(err) = result {
+                console::log_1(&format!("{:?}", err).into())
+            }
             program.commands = evaluator.commands;
         }
+    }
+}
+
+struct ClosestGravitySourceParameters {
+    distance: f32,
+    relative_angle: f32,
+}
+
+fn get_closest_gravity_source(
+    rigid_body: &RigidBody,
+    gravity_sources: &Vec<Vector2<f32>>,
+) -> ClosestGravitySourceParameters {
+    let mut closest_gravity_position = None;
+    let mut closest_gravity_distance = f32::INFINITY;
+
+    for gravity_source_position in gravity_sources {
+        let dist = (rigid_body.transform.position - gravity_source_position).magnitude();
+        if dist < closest_gravity_distance {
+            closest_gravity_position = Some(gravity_source_position);
+            closest_gravity_distance = dist;
+        }
+    }
+
+    let angle_to_closest_gravity_source = angle_between_positions(
+        rigid_body.transform.position,
+        *closest_gravity_position.unwrap(),
+    );
+
+    let relative_angle = delta_angle(
+        rigid_body.transform.rotation,
+        angle_to_closest_gravity_source,
+    );
+
+    ClosestGravitySourceParameters {
+        distance: closest_gravity_distance,
+        relative_angle,
     }
 }

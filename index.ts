@@ -1,11 +1,18 @@
 import { Editor } from "./editor";
 import { keys } from "./config";
 
+type VariablesObject = { [k: string]: ProgramVariable };
+type ProgramVariable =
+  | { ["Float"]: number }
+  | { ["Integer"]: number }
+  | { ["Boolean"]: boolean };
+
 import("./pkg/static_void.js").then((lib) => {
   const pauseButton = document.getElementById("pause-button")!;
   const runButton = document.getElementById("run-button")!;
   const canvas = document.getElementsByTagName("canvas")[0];
   const editorElement = document.getElementById("editor")!;
+  const editorVariablesList = document.getElementById("editor-variables-list")!;
 
   let game = new lib.Game();
 
@@ -128,6 +135,45 @@ import("./pkg/static_void.js").then((lib) => {
       // re-interpret the whole program on each frame which is very unnecessary.
       game.tick();
     }
+
+    // The variables from WASM come in the shape of an object,
+    // so we transform it to an array to iterate over it later,
+    // and so we can access its variable names.
+    let variables: VariablesObject = game.get_program_variables();
+    let sortedVariables = Object.entries(variables)
+      .sort((a, b) => (a[0] > b[0] ? 1 : -1))
+      .map(([name, value]) => ({ name, value }));
+
+    editorVariablesList.innerHTML = ""; // Clear list
+    sortedVariables.forEach(({ name, value }) => {
+      let variableElement = document.createElement("li");
+
+      // Span with name
+      let nameElement = document.createElement("span");
+      nameElement.classList.add("variable-name");
+      nameElement.textContent = name;
+      variableElement.appendChild(nameElement);
+
+      // Span with value
+      let valueElement = document.createElement("span");
+      valueElement.classList.add("variable-value");
+
+      let [valueType, valueData] = Object.entries(value)[0];
+      let formattedValue;
+
+      if (valueType === "Float") {
+        formattedValue = valueData.toFixed(2);
+      } else if (valueType === "Integer") {
+        formattedValue = valueData;
+      } else {
+        formattedValue = valueData;
+      }
+
+      valueElement.textContent = formattedValue;
+      variableElement.appendChild(valueElement);
+
+      editorVariablesList.appendChild(variableElement);
+    });
 
     requestAnimationFrame(() => animate());
   }

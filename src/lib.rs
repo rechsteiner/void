@@ -1,5 +1,6 @@
 mod components;
 mod entities;
+mod helpers;
 mod interpreter;
 mod query;
 mod scene;
@@ -47,5 +48,11 @@ impl Game {
     pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
         let viewport = self.scene.world.get_resource_mut::<Viewport>().unwrap();
         viewport.move_target(delta_x, delta_y, delta_zoom);
+    }
+
+    pub fn get_program_variables(&mut self) -> JsValue {
+        let program = self.scene.world.query::<&Program>()[0];
+
+        JsValue::from_serde(&program.environment.get_variables()).unwrap()
     }
 }

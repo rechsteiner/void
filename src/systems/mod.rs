@@ -1,6 +1,7 @@
 pub mod interpreter;
 pub mod renderer;
 pub mod simulation;
+pub mod thrust;
 
 use crate::world::World;
 
