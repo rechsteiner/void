@@ -1,6 +1,7 @@
 import { Editor } from "./editor";
 import { keys } from "./config";
 
+type VariablesObject = { [k: string]: ProgramVariable };
 type ProgramVariable =
   | { ["Float"]: number }
   | { ["Integer"]: number }
@@ -135,36 +136,37 @@ import("./pkg/static_void.js").then((lib) => {
       game.tick();
     }
 
-    let variables: { [k: string]: ProgramVariable } =
-      game.get_program_variables();
-    let sortedVariables = Object.entries(variables).sort((a, b) =>
-      a[0] > b[0] ? 1 : -1
-    );
+    // The variables from WASM come in the shape of an object,
+    // so we transform it to an array to iterate over it later,
+    // and so we can access its variable names.
+    let variables: VariablesObject = game.get_program_variables();
+    let sortedVariables = Object.entries(variables)
+      .sort((a, b) => (a[0] > b[0] ? 1 : -1))
+      .map(([name, value]) => ({ name, value }));
 
     editorVariablesList.innerHTML = ""; // Clear list
-    sortedVariables.forEach(([variableName, variableValueObject]) => {
+    sortedVariables.forEach(({ name, value }) => {
       let variableElement = document.createElement("li");
 
       // Span with name
       let nameElement = document.createElement("span");
       nameElement.classList.add("variable-name");
-      nameElement.textContent = variableName;
+      nameElement.textContent = name;
       variableElement.appendChild(nameElement);
 
       // Span with value
       let valueElement = document.createElement("span");
       valueElement.classList.add("variable-value");
 
-      let [variableType, variableValue] =
-        Object.entries(variableValueObject)[0];
+      let [valueType, valueData] = Object.entries(value)[0];
       let formattedValue;
 
-      if (variableType === "Float") {
-        formattedValue = variableValue.toFixed(2);
-      } else if (variableType === "Integer") {
-        formattedValue = variableValue;
+      if (valueType === "Float") {
+        formattedValue = valueData.toFixed(2);
+      } else if (valueType === "Integer") {
+        formattedValue = valueData;
       } else {
-        formattedValue = variableValue;
+        formattedValue = valueData;
       }
 
       valueElement.textContent = formattedValue;
