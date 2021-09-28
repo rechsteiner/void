@@ -1,5 +1,6 @@
 mod components;
 mod entities;
+mod helpers;
 mod interpreter;
 mod query;
 mod scene;
