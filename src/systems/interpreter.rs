@@ -1,5 +1,4 @@
 use rapier2d::na::Vector2;
-use web_sys::console;
 
 use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
@@ -32,6 +31,10 @@ impl System for InterpreterSystem {
         let mission_time = world.start_timestamp.elapsed().as_millis();
 
         for (program, rigid_body) in world.query_mut::<(&mut Program, &RigidBody)>() {
+            if !program.errors.is_empty() {
+                break;
+            }
+
             let mut evaluator = Evaluator::new();
 
             let closest_gravity_source = get_closest_gravity_source(rigid_body, &gravity_sources);
@@ -112,9 +115,6 @@ impl System for InterpreterSystem {
             );
 
             let result = evaluator.eval(&program.program, &mut program.environment);
-            if let Object::Error(err) = result {
-                console::log_1(&format!("{:?}", err).into())
-            }
             program.commands = evaluator.commands;
         }
     }
