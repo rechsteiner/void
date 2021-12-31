@@ -4,6 +4,7 @@
   "description": "A code-driven space program to explore the great void.",
   "main": "index.js",
   "scripts": {
+    "wasm": "wasm-pack build",
     "serve": "webpack serve"
   },
   "repository": {
@@ -22,6 +23,7 @@
     "@codemirror/gutter": "^0.18.2",
     "@codemirror/history": "^0.18.1",
     "@codemirror/state": "^0.18.7",
-    "@codemirror/view": "^0.18.11"
+    "@codemirror/view": "^0.18.11",
+    "wasm-pack": "^0.10.2"
   }
 }
