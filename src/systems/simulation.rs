@@ -232,7 +232,8 @@ impl System for SimulationSystem {
 mod test {
     use super::*;
     use crate::components::{
-        shape::{ColorRGBA, Point, Shape},
+        point::Point,
+        shape::{ColorRGBA, Shape},
         thrusters::Thruster,
     };
 

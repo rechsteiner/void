@@ -1,11 +1,7 @@
+use crate::components::point::Point;
 use perlin2d::PerlinNoise2D;
+use std::f64::consts::PI;
 use std::fmt;
-
-#[derive(Debug)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-}
 
 pub struct Shape {
     pub vertices: Vec<Point>,
@@ -42,7 +38,7 @@ impl Polygon {
         let perlin = PerlinNoise2D::new(6, 0.03, 0.4, 1.0, 1.5, (0.30, 0.30), 1.0, noise_seed);
 
         for i in 0..resolution {
-            let pi_2: f64 = 3.1415 * 2.0;
+            let pi_2: f64 = PI * 2.0;
             let progress: f64 = (i as f64) * pi_2 / (resolution as f64);
 
             let coord_x = progress.sin();

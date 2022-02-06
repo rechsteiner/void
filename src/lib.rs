@@ -28,7 +28,7 @@ impl Game {
     pub fn new() -> Game {
         console_error_panic_hook::set_once();
         let scene = scene_1::generate_scene();
-        Game { scene: scene }
+        Game { scene }
     }
 
     pub fn change_program(&mut self, input: String) {
@@ -54,5 +54,11 @@ impl Game {
         let program = self.scene.world.query::<&Program>()[0];
 
         JsValue::from_serde(&program.environment.get_variables()).unwrap()
+    }
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        Self::new()
     }
 }
