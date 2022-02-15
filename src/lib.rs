@@ -36,15 +36,18 @@ impl Game {
         let program = programs.get_mut(0).unwrap();
         program.update(input);
 
-        JsValue::from_serde(&program.errors).unwrap()
+        JsValue::from_serde(&program.parser_errors).unwrap()
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> JsValue {
         let viewport = self.scene.world.get_resource_mut::<Viewport>().unwrap();
         viewport.move_toward_target();
         for system in self.scene.systems.iter_mut() {
             system.update(&mut self.scene.world);
         }
+
+        let program = self.scene.world.query::<&Program>()[0];
+        JsValue::from_serde(&program.runtime_errors).unwrap()
     }
 
     pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {

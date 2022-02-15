@@ -6,6 +6,7 @@ use crate::interpreter::ast::Statement;
 use crate::interpreter::object::Command;
 use crate::interpreter::object::Environment;
 use crate::interpreter::object::Object;
+use crate::interpreter::object::RuntimeError;
 
 pub struct Evaluator {
     pub commands: Vec<Command>,
@@ -128,7 +129,10 @@ impl Evaluator {
                             self.commands.push(command);
                             Object::Null
                         }
-                        Err(error) => Object::Error(error),
+                        Err(error) => {
+                            let error = RuntimeError::new(error);
+                            Object::Error(error)
+                        }
                     },
                     // TODO: Error handling
                     _ => Object::Null,
@@ -167,14 +171,22 @@ impl Evaluator {
     fn eval_identifier(&mut self, name: String, environment: &mut Environment) -> Object {
         match environment.get(&name) {
             Some(value) => value.clone(),
-            None => Object::Error(format!("identifier not found: {}", name)),
+            None => {
+                let message = format!("identifier not found: {}", name);
+                let error = RuntimeError::new(message);
+                Object::Error(error)
+            }
         }
     }
     fn eval_prefix_expression(&mut self, operator: Operator, object: Object) -> Object {
         match operator {
             Operator::Not => self.eval_not_operator_expression(object),
             Operator::Minus => self.eval_minus_prefix_operator(object),
-            _ => Object::Error(format!("unknown operator: {}{}", operator, object.name())),
+            _ => {
+                let message = format!("unknown operator: {}{}", operator, object.name());
+                let error = RuntimeError::new(message);
+                Object::Error(error)
+            }
         }
     }
     fn eval_not_operator_expression(&mut self, object: Object) -> Object {
@@ -189,7 +201,11 @@ impl Evaluator {
         match object {
             Object::Integer(value) => Object::Integer(-value),
             Object::Float(value) => Object::Float(-value),
-            _ => Object::Error(format!("unknown operator: -{}", object.name())),
+            _ => {
+                let message = format!("unknown operator: -{}", object.name());
+                let error = RuntimeError::new(message);
+                Object::Error(error)
+            }
         }
     }
     fn eval_infix_expression(&mut self, operator: Operator, left: Object, right: Object) -> Object {
@@ -206,10 +222,14 @@ impl Evaluator {
             (Object::Float(left), Object::Float(right)) => {
                 self.eval_float_infix_expression(operator, left, right)
             }
-            _ => Object::Error(format!(
-                "type mismatch: {} {} {}",
-                left_string, operator, right_string
-            )),
+            _ => {
+                let message = format!(
+                    "type mismatch: {} {} {}",
+                    left_string, operator, right_string
+                );
+                let error = RuntimeError::new(message);
+                Object::Error(error)
+            }
         }
     }
 
@@ -228,7 +248,11 @@ impl Evaluator {
             Operator::GreaterThan => Object::Boolean(left > right),
             Operator::Equal => Object::Boolean(left == right),
             Operator::NotEqual => Object::Boolean(left != right),
-            _ => Object::Error(format!("unknown operator: integer {} integer", operator)),
+            _ => {
+                let message = format!("unknown operator: integer {} integer", operator);
+                let error = RuntimeError::new(message);
+                Object::Error(error)
+            }
         }
     }
 
@@ -242,7 +266,11 @@ impl Evaluator {
             Operator::GreaterThan => Object::Boolean(left > right),
             Operator::Equal => Object::Boolean(left == right),
             Operator::NotEqual => Object::Boolean(left != right),
-            _ => Object::Error(format!("unknown operator: float {} float", operator)),
+            _ => {
+                let message = format!("unknown operator: float {} float", operator);
+                let error = RuntimeError::new(message);
+                Object::Error(error)
+            }
         }
     }
 
@@ -255,7 +283,11 @@ impl Evaluator {
         match operator {
             Operator::Equal => Object::Boolean(left == right),
             Operator::NotEqual => Object::Boolean(left != right),
-            _ => Object::Error(format!("unknown operator: boolean {} boolean", operator)),
+            _ => {
+                let message = format!("unknown operator: boolean {} boolean", operator);
+                let error = RuntimeError::new(message);
+                Object::Error(error)
+            }
         }
     }
     fn eval_block_statement(

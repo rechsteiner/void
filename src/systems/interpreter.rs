@@ -31,7 +31,7 @@ impl System for InterpreterSystem {
         let mission_time = world.start_timestamp.elapsed().as_millis();
 
         for (program, rigid_body) in world.query_mut::<(&mut Program, &RigidBody)>() {
-            if !program.errors.is_empty() {
+            if !program.parser_errors.is_empty() {
                 break;
             }
 
@@ -115,6 +115,9 @@ impl System for InterpreterSystem {
             );
 
             let result = evaluator.eval(&program.program, &mut program.environment);
+            if let Object::Error(error) = result {
+                program.runtime_errors = vec![error];
+            }
             program.commands = evaluator.commands;
         }
     }

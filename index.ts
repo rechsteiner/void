@@ -7,6 +7,8 @@ type ProgramVariable =
   | { ["Integer"]: number }
   | { ["Boolean"]: boolean };
 
+type Error = { message: string };
+
 import("./pkg/static_void.js").then((lib) => {
   const pauseButton = document.getElementById("pause-button")!;
   const runButton = document.getElementById("run-button")!;
@@ -17,8 +19,7 @@ import("./pkg/static_void.js").then((lib) => {
 
   let game = new lib.Game();
 
-  function changeProgram(document: string) {
-    let errors = game.change_program(document);
+  function showErrors(errors: Error[]) {
     if (errors.length > 0) {
       editorErrors.classList.remove("hidden");
       editorErrors.innerHTML = "";
@@ -30,6 +31,12 @@ import("./pkg/static_void.js").then((lib) => {
     } else {
       editorErrors.classList.add("hidden");
     }
+  }
+
+  function changeProgram(document: string) {
+    let errors = game.change_program(document);
+    console.log(errors);
+    showErrors(errors);
   }
 
   let editor = new Editor(editorElement, {
@@ -147,9 +154,8 @@ import("./pkg/static_void.js").then((lib) => {
     move_viewport();
 
     if (!isPaused) {
-      // TODO: Only update the program when the editor changes. We currently
-      // re-interpret the whole program on each frame which is very unnecessary.
-      game.tick();
+      let errors = game.tick();
+      showErrors(errors);
     }
 
     // The variables from WASM come in the shape of an object,
