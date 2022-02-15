@@ -1,57 +1,39 @@
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsValue;
 
 use crate::components::rigid_body::RigidBody;
 use crate::components::shape::Shape;
 use crate::components::text::Text;
+use crate::resources::canvas::Canvas;
 use crate::resources::viewport::Viewport;
 use crate::systems::System;
 use crate::world::World;
 
-pub struct RenderSystem {
-    context: web_sys::CanvasRenderingContext2d,
-    canvas: web_sys::HtmlCanvasElement,
-}
+pub struct RenderSystem {}
 
 impl RenderSystem {
     pub fn new() -> RenderSystem {
-        let window = web_sys::window().expect("no global `window` exists");
-        let document: web_sys::Document =
-            window.document().expect("should have a document on window");
-        let canvas = document.get_element_by_id("canvas").unwrap();
-        let canvas: web_sys::HtmlCanvasElement = canvas
-            .dyn_into::<web_sys::HtmlCanvasElement>()
-            .map_err(|_| ())
-            .unwrap();
-
-        let context: web_sys::CanvasRenderingContext2d = canvas
-            .get_context("2d")
-            .unwrap()
-            .unwrap()
-            .dyn_into::<web_sys::CanvasRenderingContext2d>()
-            .unwrap();
-
-        RenderSystem { context, canvas }
+        RenderSystem {}
     }
 }
 
 impl System for RenderSystem {
     fn update(&mut self, world: &mut World) {
-        let screen_height = self.canvas.height() as f32;
-        let screen_width = self.canvas.width() as f32;
-
-        self.context
-            .clear_rect(0.0, 0.0, screen_width as f64, screen_height as f64);
-
         let viewport = world.get_resource::<Viewport>().unwrap();
+        let zoom = viewport.zoom;
+        let position = viewport.position;
+        let canvas = world.get_resource::<Canvas>().unwrap();
+        let screen_height = canvas.height();
+        let screen_width = canvas.width();
 
-        self.context
-            .set_line_width(f64::max((viewport.zoom as f64) * 2.0, 2.0)); // Let line width be adaptive to zoom (but min 2.0)
+        canvas.clear_rect(0.0, 0.0, screen_width, screen_height);
+
+        // Let line width be adaptive to zoom (but min 2.0)
+        canvas.set_line_width(f64::max((zoom as f64) * 2.0, 2.0));
 
         for text in world.query::<&Text>() {
-            self.context.set_font(&text.font);
-            self.context
-                .set_fill_style(&JsValue::from(format!("{}", text.color)));
-            self.context.fill_text(
+            canvas.set_font(&text.font);
+            canvas.set_fill_style(&JsValue::from(format!("{}", text.color)));
+            canvas.fill_text(
                 &text.content,
                 text.position.x as f64,
                 text.position.y as f64,
@@ -62,46 +44,37 @@ impl System for RenderSystem {
             let transform = &rigid_body.transform;
             // Move the sheet
             // Magical math to get zoom with focal point in center of screen
-            self.context
-                .translate(
-                    (((transform.position.x - viewport.position.x) * viewport.zoom)
-                        + (screen_width / 2.0)) as f64,
-                    (((transform.position.y - viewport.position.y) * viewport.zoom)
-                        + (screen_height / 2.0)) as f64,
-                )
-                .unwrap();
+            canvas.translate(
+                (((transform.position.x - position.x) * zoom) + (screen_width as f32 / 2.0)) as f64,
+                (((transform.position.y - position.y) * zoom) + (screen_height as f32 / 2.0))
+                    as f64,
+            );
 
             // Rotate the sheet
-            self.context.rotate(transform.rotation as f64).unwrap();
+            canvas.rotate(transform.rotation as f64);
 
             // Pick the right crayon
-            self.context
-                .set_stroke_style(&JsValue::from(format!("{}", shape.color))); // TODO: Might not be idiomatic
+            canvas.set_stroke_style(&JsValue::from(format!("{}", shape.color))); // TODO: Might not be idiomatic
 
             // Draw by numbers
-            self.context.begin_path();
+            canvas.begin_path();
             for vertex in &shape.vertices {
-                self.context.line_to(
-                    (vertex.x * viewport.zoom) as f64,
-                    (vertex.y * viewport.zoom) as f64,
-                );
+                canvas.line_to((vertex.x * zoom) as f64, (vertex.y * zoom) as f64);
             }
 
             // Close the shape
-            self.context.line_to(
-                (shape.vertices[0].x * viewport.zoom) as f64,
-                (shape.vertices[0].y * viewport.zoom) as f64,
+            canvas.line_to(
+                (shape.vertices[0].x * zoom) as f64,
+                (shape.vertices[0].y * zoom) as f64,
             );
 
-            self.context.close_path();
-            self.context.stroke();
+            canvas.close_path();
+            canvas.stroke();
 
             // Debugging: dot at center of object
-            self.context.stroke_rect(-1.0, -1.0, 2.0, 2.0);
-
-            self.context.close_path();
-
-            self.context.reset_transform().unwrap();
+            canvas.stroke_rect(-1.0, -1.0, 2.0, 2.0);
+            canvas.close_path();
+            canvas.reset_transform();
         }
     }
 }

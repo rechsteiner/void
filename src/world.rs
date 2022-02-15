@@ -243,17 +243,17 @@ mod test {
     }
 
     #[test]
-
     fn test_get_resource_mut() {
         let mut world = World::new();
         let id = TypeId::of::<usize>();
         world.resources.insert(id, Box::new(1_usize));
 
-        let mut resource = world.get_resource_mut::<usize>().unwrap();
+        let resource = world.get_resource_mut::<usize>().unwrap();
         *resource += 1;
         assert_eq!(*resource, 2);
     }
 
+    #[test]
     fn test_create_resource() {
         let mut world = World::new();
         world.create_resource(10_usize);

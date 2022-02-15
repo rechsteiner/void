@@ -8,6 +8,7 @@ use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Polygon, Shape};
 use crate::components::text::Text;
 use crate::components::thrusters::{Thruster, Thrusters};
+use crate::resources::canvas::Canvas;
 use crate::resources::viewport::Viewport;
 use crate::scene::Scene;
 use crate::systems::interpreter::InterpreterSystem;
@@ -213,6 +214,9 @@ pub fn generate_scene() -> Scene {
         target_position: Vector2::new(200.0, 200.0),
         target_zoom: 0.2,
     });
+
+    // Rendering canvas resource
+    world.create_resource(Canvas::new());
 
     Scene::new(
         world,
