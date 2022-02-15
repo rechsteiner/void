@@ -3,7 +3,7 @@ use wasm_bindgen::{JsCast, JsValue};
 use crate::components::rigid_body::RigidBody;
 use crate::components::shape::Shape;
 use crate::components::text::Text;
-use crate::components::viewport::Viewport;
+use crate::resources::viewport::Viewport;
 use crate::systems::System;
 use crate::world::World;
 

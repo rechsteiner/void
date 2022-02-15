@@ -8,7 +8,7 @@ use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Polygon, Shape};
 use crate::components::text::Text;
 use crate::components::thrusters::{Thruster, Thrusters};
-use crate::components::viewport::Viewport;
+use crate::resources::viewport::Viewport;
 use crate::scene::Scene;
 use crate::systems::interpreter::InterpreterSystem;
 use crate::systems::renderer::RenderSystem;

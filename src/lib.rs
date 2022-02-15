@@ -3,6 +3,7 @@ mod entities;
 mod helpers;
 mod interpreter;
 mod query;
+mod resources;
 mod scene;
 mod scenes;
 mod systems;
@@ -12,7 +13,7 @@ extern crate console_error_panic_hook;
 extern crate wasm_bindgen;
 
 use components::program::Program;
-use components::viewport::Viewport;
+use resources::viewport::Viewport;
 use scene::Scene;
 use scenes::scene_1;
 use wasm_bindgen::prelude::*;
