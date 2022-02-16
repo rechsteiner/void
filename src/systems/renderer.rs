@@ -2,7 +2,6 @@ use wasm_bindgen::JsValue;
 
 use crate::components::rigid_body::RigidBody;
 use crate::components::shape::Shape;
-use crate::components::text::Text;
 use crate::resources::canvas::Canvas;
 use crate::resources::viewport::Viewport;
 use crate::systems::System;
@@ -25,20 +24,8 @@ impl System for RenderSystem {
         let screen_height = canvas.height();
         let screen_width = canvas.width();
 
-        canvas.clear_rect(0.0, 0.0, screen_width, screen_height);
-
         // Let line width be adaptive to zoom (but min 2.0)
         canvas.set_line_width(f64::max((zoom as f64) * 2.0, 2.0));
-
-        for text in world.query::<&Text>() {
-            canvas.set_font(&text.font);
-            canvas.set_fill_style(&JsValue::from(format!("{}", text.color)));
-            canvas.fill_text(
-                &text.content,
-                text.position.x as f64,
-                text.position.y as f64,
-            );
-        }
 
         for (rigid_body, shape) in world.query::<(&RigidBody, &Shape)>() {
             let transform = &rigid_body.transform;

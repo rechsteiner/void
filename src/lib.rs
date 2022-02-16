@@ -50,12 +50,6 @@ impl Game {
         let viewport = self.scene.world.get_resource_mut::<Viewport>().unwrap();
         viewport.move_target(delta_x, delta_y, delta_zoom);
     }
-
-    pub fn get_program_variables(&mut self) -> JsValue {
-        let program = self.scene.world.query::<&Program>()[0];
-
-        JsValue::from_serde(&program.environment.get_variables()).unwrap()
-    }
 }
 
 impl Default for Game {

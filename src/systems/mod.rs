@@ -1,3 +1,4 @@
+pub mod instruments_renderer;
 pub mod interpreter;
 pub mod renderer;
 pub mod simulation;

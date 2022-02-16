@@ -6,11 +6,11 @@ use crate::components::point::Point;
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Polygon, Shape};
-use crate::components::text::Text;
 use crate::components::thrusters::{Thruster, Thrusters};
 use crate::resources::canvas::Canvas;
 use crate::resources::viewport::Viewport;
 use crate::scene::Scene;
+use crate::systems::instruments_renderer::InstrumentsRenderer;
 use crate::systems::interpreter::InterpreterSystem;
 use crate::systems::renderer::RenderSystem;
 use crate::systems::simulation::SimulationSystem;
@@ -44,19 +44,6 @@ pub fn generate_scene() -> Scene {
     world.register_component::<Viewport>();
     world.register_component::<GravitySource>();
     world.register_component::<Thrusters>();
-    world.register_component::<Text>();
-
-    world.create_entity().with_component(Text {
-        content: "Hello World".to_string(),
-        font: "20px monospace".to_string(),
-        position: Point { x: 300.0, y: 300.0 },
-        color: ColorRGBA {
-            r: 255,
-            g: 255,
-            b: 255,
-            a: 1.0,
-        },
-    });
 
     // Entity 1: Spaceship
     // Note that it's upside down, and then rotated 90deg (1 PI).
@@ -224,6 +211,7 @@ pub fn generate_scene() -> Scene {
             Box::new(InterpreterSystem::new()),
             Box::new(ThrusterSystem::new()),
             Box::new(SimulationSystem::new()),
+            Box::new(InstrumentsRenderer::new()),
             Box::new(RenderSystem::new()),
         ],
     )

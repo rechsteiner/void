@@ -31,36 +31,6 @@ body {
   width: 36em;
 }
 
-.editor-variables {
-  padding: 1em;
-  border-bottom: 1px solid rgba(4, 156, 127, 0.3);
-}
-
-.editor-variables-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template: auto / 1fr 1fr 1fr;
-  gap: 0.5em;
-}
-
-.editor-variables-list li {
-  background: rgba(0, 255, 208, 0.1);
-  padding: 0.05em 0.3em;
-  display: flex;
-  justify-content: space-between;
-}
-
-.variable-value {
-  margin-left: 0.5em;
-  opacity: 0.5;
-}
-
-.editor-heading {
-  color: rgba(2, 249, 206, 0.3);
-}
-
 #editor {
   flex: auto;
   background: none;
