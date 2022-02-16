@@ -7,15 +7,15 @@ use crate::resources::viewport::Viewport;
 use crate::systems::System;
 use crate::world::World;
 
-pub struct RenderSystem {}
+pub struct SceneRenderer {}
 
-impl RenderSystem {
-    pub fn new() -> RenderSystem {
-        RenderSystem {}
+impl SceneRenderer {
+    pub fn new() -> SceneRenderer {
+        SceneRenderer {}
     }
 }
 
-impl System for RenderSystem {
+impl System for SceneRenderer {
     fn update(&mut self, world: &mut World) {
         let viewport = world.get_resource::<Viewport>().unwrap();
         let zoom = viewport.zoom;

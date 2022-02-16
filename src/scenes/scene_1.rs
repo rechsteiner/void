@@ -8,13 +8,15 @@ use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Polygon, Shape};
 use crate::components::thrusters::{Thruster, Thrusters};
 use crate::resources::canvas::Canvas;
+use crate::resources::input::Input;
 use crate::resources::viewport::Viewport;
 use crate::scene::Scene;
 use crate::systems::instruments_renderer::InstrumentsRenderer;
 use crate::systems::interpreter::InterpreterSystem;
-use crate::systems::renderer::RenderSystem;
+use crate::systems::scene_renderer::SceneRenderer;
 use crate::systems::simulation::SimulationSystem;
 use crate::systems::thrust::ThrusterSystem;
+use crate::systems::viewport::ViewportSystem;
 use crate::world::World;
 
 pub fn generate_scene() -> Scene {
@@ -205,14 +207,18 @@ pub fn generate_scene() -> Scene {
     // Rendering canvas resource
     world.create_resource(Canvas::new());
 
+    // Input event handler
+    world.create_resource(Input::default());
+
     Scene::new(
         world,
         vec![
+            Box::new(ViewportSystem::new()),
             Box::new(InterpreterSystem::new()),
             Box::new(ThrusterSystem::new()),
             Box::new(SimulationSystem::new()),
             Box::new(InstrumentsRenderer::new()),
-            Box::new(RenderSystem::new()),
+            Box::new(SceneRenderer::new()),
         ],
     )
 }
