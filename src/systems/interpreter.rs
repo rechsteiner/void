@@ -116,6 +116,11 @@ impl System for InterpreterSystem {
                     );
 
                     let result = evaluator.eval(&parsed_program, &mut program.environment);
+                    if let Object::Error(error) = result {
+                        program.error = Some(error);
+                    } else {
+                        program.error = None;
+                    }
                     program.commands = evaluator.commands;
                 }
                 Err(_) => break,
