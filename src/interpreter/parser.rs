@@ -5,6 +5,7 @@ use crate::interpreter::ast::Program;
 use crate::interpreter::ast::Statement;
 use crate::interpreter::lexer::Lexer;
 use crate::interpreter::token::Token;
+use serde::Serialize;
 
 type PrefixParseFn<'a> = fn(&mut Parser<'a>) -> Option<Expression>;
 type InfixParseFn<'a> = fn(&mut Parser<'a>, Expression) -> Option<Expression>;
@@ -20,11 +21,22 @@ enum Precedence {
     Call,        // myFunction(x)
 }
 
+#[derive(PartialEq, Eq, Debug, Clone, Serialize)]
+pub struct ParserError {
+    message: String,
+}
+
+impl ParserError {
+    pub fn new(message: String) -> ParserError {
+        ParserError { message }
+    }
+}
+
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
     current_token: Token,
     peek_token: Token,
-    errors: Vec<String>,
+    errors: Vec<ParserError>,
 }
 
 impl<'a> Parser<'a> {
@@ -40,7 +52,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_program(&mut self) -> Program {
+    pub fn parse_program(&mut self) -> Result<Program, Vec<ParserError>> {
         let mut program = Program::new();
 
         while self.current_token != Token::Eof {
@@ -57,7 +69,11 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        program
+        if self.errors.len() > 0 {
+            Err(self.errors.clone())
+        } else {
+            Ok(program)
+        }
     }
 
     fn parse_statement(&mut self) -> Option<Statement> {
@@ -167,12 +183,14 @@ impl<'a> Parser<'a> {
             Token::LeftParen => Some(Parser::parse_grouped_expression),
             Token::If => Some(Parser::parse_if_expression),
             Token::Function => Some(Parser::parse_function_expression),
+            Token::Newline => None,
+            Token::Eof => None,
             _ => {
                 let error = format!(
                     "No prefix parse function found for {:?}",
                     self.current_token
                 );
-                self.errors.push(error);
+                self.push_error(error);
                 None
             }
         }
@@ -206,7 +224,7 @@ impl<'a> Parser<'a> {
                 Ok(literal) => Some(Expression::Int(literal)),
                 Err(_) => {
                     let error = format!("Could not parse {} as integer", value);
-                    self.errors.push(error);
+                    self.push_error(error);
                     None
                 }
             },
@@ -220,7 +238,7 @@ impl<'a> Parser<'a> {
                 Ok(literal) => Some(Expression::Float(literal)),
                 Err(_) => {
                     let error = format!("Could not parse {} as float", value);
-                    self.errors.push(error);
+                    self.push_error(error);
                     None
                 }
             },
@@ -345,8 +363,22 @@ impl<'a> Parser<'a> {
 
                 if let Some(Expression::Identifier(identifier)) = self.parse_identifier() {
                     identifiers.push(identifier);
+                } else {
+                    let error = format!(
+                        "Expected function argument, got {:?} instead",
+                        self.current_token
+                    );
+                    self.push_error(error);
+                    return None;
                 }
             }
+        } else {
+            let error = format!(
+                "Expected function argument, got {:?} instead",
+                self.current_token
+            );
+            self.push_error(error);
+            return None;
         }
 
         Some(identifiers)
@@ -428,7 +460,7 @@ impl<'a> Parser<'a> {
             "Expected next token to be {:?}, got {:?} instead",
             token, self.peek_token
         );
-        self.errors.push(error);
+        self.push_error(error);
     }
 
     fn expect_current(&mut self, token: Token) -> bool {
@@ -445,7 +477,7 @@ impl<'a> Parser<'a> {
             "Expected current token to be {:?}, got {:?} instead",
             token, self.current_token
         );
-        self.errors.push(error);
+        self.push_error(error);
     }
 
     fn peek_precedence(&self) -> Precedence {
@@ -470,6 +502,11 @@ impl<'a> Parser<'a> {
             _ => Precedence::Lowest,
         }
     }
+
+    fn push_error(&mut self, message: String) {
+        let error = ParserError::new(message);
+        self.errors.push(error);
+    }
 }
 
 #[test]
@@ -491,9 +528,8 @@ fn test_let_statement() {
 
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![
@@ -523,9 +559,8 @@ fn test_return_statement() {
 
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![
@@ -547,9 +582,8 @@ fn test_identifier_expression() {
     let input = "foobar";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![Statement::Expression {
@@ -563,9 +597,8 @@ fn test_integer_expression() {
     let input = "5";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![Statement::Expression {
@@ -579,9 +612,8 @@ fn test_float_expression() {
     let input = "1.0";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![Statement::Expression {
@@ -598,9 +630,8 @@ fn test_prefix_expression() {
     ";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![
@@ -634,7 +665,7 @@ fn test_infix_expression() {
     ";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
     let expected_expressions = vec![
         (Operator::Plus, 5, 5),
@@ -646,8 +677,6 @@ fn test_infix_expression() {
         (Operator::Equal, 5, 5),
         (Operator::NotEqual, 5, 5),
     ];
-
-    assert_eq!(parser.errors, vec![] as Vec<String>);
 
     for (index, (operator, left, right)) in expected_expressions.iter().enumerate() {
         assert_eq!(
@@ -671,9 +700,8 @@ fn test_boolean_expression() {
     ";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![
@@ -735,9 +763,8 @@ fn test_operator_precedence_parsing() {
     for (input, expected_output) in tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
 
-        assert_eq!(parser.errors, vec![] as Vec<String>);
         assert_eq!(expected_output, program.to_string());
     }
 }
@@ -747,9 +774,8 @@ fn test_if_expression() {
     let input = "IF X < Y DO X END";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![Statement::Expression {
@@ -775,9 +801,8 @@ fn test_if_else_expression() {
     let input = "IF X < Y DO X ELSE Y END";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![Statement::Expression {
@@ -807,9 +832,8 @@ fn test_function_expression() {
     let input = "FUNC X Y DO X + Y END";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![Statement::Expression {
@@ -843,8 +867,7 @@ fn test_function_parameters() {
     for (input, expected_parameters) in tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
-
+        let program = parser.parse_program().unwrap();
         let statement = program.statements.first().unwrap();
 
         match statement {
@@ -863,9 +886,8 @@ fn test_call_expression() {
     let input = "ADD(1, 2 * 3, 4 + 5)";
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    let program = parser.parse_program();
+    let program = parser.parse_program().unwrap();
 
-    assert_eq!(parser.errors, vec![] as Vec<String>);
     assert_eq!(
         program.statements,
         vec![Statement::Expression {
@@ -887,4 +909,19 @@ fn test_call_expression() {
             }
         }]
     );
+}
+
+#[test]
+fn test_parser_error() {
+    let input = "FUNC A";
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    let program = parser.parse_program();
+
+    assert_eq!(
+        program,
+        Err(vec![ParserError::new(String::from(
+            "Expected function argument, got Eof instead"
+        ))])
+    )
 }

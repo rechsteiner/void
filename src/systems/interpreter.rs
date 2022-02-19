@@ -1,5 +1,4 @@
 use rapier2d::na::Vector2;
-use web_sys::console;
 
 use crate::components::gravity::GravitySource;
 use crate::components::program::Program;
@@ -32,90 +31,100 @@ impl System for InterpreterSystem {
         let mission_time = world.start_timestamp.elapsed().as_millis();
 
         for (program, rigid_body) in world.query_mut::<(&mut Program, &RigidBody)>() {
-            let mut evaluator = Evaluator::new();
+            match &program.program {
+                Ok(parsed_program) => {
+                    let mut evaluator = Evaluator::new();
 
-            let closest_gravity_source = get_closest_gravity_source(rigid_body, &gravity_sources);
+                    let closest_gravity_source =
+                        get_closest_gravity_source(rigid_body, &gravity_sources);
 
-            program.environment.clear();
-            program.environment.set(
-                String::from("SET_THRUST"),
-                Object::Command {
-                    function: |arguments| {
-                        if arguments.len() != 1 {
-                            return Result::Err(format!(
-                                "wrong number of arguments. got={}, want=1",
-                                arguments.len()
-                            ));
-                        }
+                    program.environment.clear();
+                    program.environment.set(
+                        String::from("SET_THRUST"),
+                        Object::Command {
+                            function: |arguments| {
+                                if arguments.len() != 1 {
+                                    return Result::Err(format!(
+                                        "wrong number of arguments. got={}, want=1",
+                                        arguments.len()
+                                    ));
+                                }
 
-                        match arguments[0].clone() {
-                            Object::Integer(value) => Result::Ok(Command::SetThrust {
-                                throttle: (value as f64),
-                            }),
-                            Object::Float(value) => {
-                                Result::Ok(Command::SetThrust { throttle: value })
-                            }
-                            _ => Result::Err(format!(
-                                "argument not supported, got {}",
-                                arguments[0].name()
-                            )),
-                        }
-                    },
-                },
-            );
+                                match arguments[0].clone() {
+                                    Object::Integer(value) => Result::Ok(Command::SetThrust {
+                                        throttle: (value as f64),
+                                    }),
+                                    Object::Float(value) => {
+                                        Result::Ok(Command::SetThrust { throttle: value })
+                                    }
+                                    _ => Result::Err(format!(
+                                        "argument not supported, got {}",
+                                        arguments[0].name()
+                                    )),
+                                }
+                            },
+                        },
+                    );
 
-            program.environment.set(
-                String::from("SET_TORQUE"),
-                Object::Command {
-                    function: |arguments| {
-                        if arguments.len() != 1 {
-                            return Result::Err(format!(
-                                "wrong number of arguments. got={}, want=1",
-                                arguments.len()
-                            ));
-                        }
-                        match arguments[0].clone() {
-                            Object::Integer(value) => Result::Ok(Command::SetTorque {
-                                force: value as f64,
-                            }),
-                            Object::Float(value) => Result::Ok(Command::SetTorque { force: value }),
-                            _ => Result::Err(format!(
-                                "argument not supported, got {}",
-                                arguments[0].name()
-                            )),
-                        }
-                    },
-                },
-            );
+                    program.environment.set(
+                        String::from("SET_TORQUE"),
+                        Object::Command {
+                            function: |arguments| {
+                                if arguments.len() != 1 {
+                                    return Result::Err(format!(
+                                        "wrong number of arguments. got={}, want=1",
+                                        arguments.len()
+                                    ));
+                                }
+                                match arguments[0].clone() {
+                                    Object::Integer(value) => Result::Ok(Command::SetTorque {
+                                        force: value as f64,
+                                    }),
+                                    Object::Float(value) => {
+                                        Result::Ok(Command::SetTorque { force: value })
+                                    }
+                                    _ => Result::Err(format!(
+                                        "argument not supported, got {}",
+                                        arguments[0].name()
+                                    )),
+                                }
+                            },
+                        },
+                    );
 
-            // --- TIME ---
-            program
-                .environment
-                .set(String::from("TIME"), Object::Integer(mission_time as isize));
+                    // --- TIME ---
+                    program
+                        .environment
+                        .set(String::from("TIME"), Object::Integer(mission_time as isize));
 
-            // --- ALTITUDE ---
-            program.environment.set(
-                String::from("ALTITUDE"),
-                Object::Float(closest_gravity_source.distance as f64),
-            );
+                    // --- ALTITUDE ---
+                    program.environment.set(
+                        String::from("ALTITUDE"),
+                        Object::Float(closest_gravity_source.distance as f64),
+                    );
 
-            // --- ANGLE ---
-            program.environment.set(
-                String::from("ANGLE"),
-                Object::Float((closest_gravity_source.relative_angle * 57.2958) as f64), // multiply to convert radians to deg
-            );
+                    // --- ANGLE ---
+                    program.environment.set(
+                        String::from("ANGLE"),
+                        Object::Float((closest_gravity_source.relative_angle * 57.2958) as f64), // multiply to convert radians to deg
+                    );
 
-            // --- ANG_VEL ---
-            program.environment.set(
-                String::from("ANG_VEL"),
-                Object::Float((rigid_body.angular_velocity * 57.2958) as f64), // multiply to convert radians to deg
-            );
+                    // --- ANG_VEL ---
+                    program.environment.set(
+                        String::from("ANG_VEL"),
+                        Object::Float((rigid_body.angular_velocity * 57.2958) as f64), // multiply to convert radians to deg
+                    );
 
-            let result = evaluator.eval(&program.program, &mut program.environment);
-            if let Object::Error(err) = result {
-                console::log_1(&format!("{:?}", err).into())
+                    let result = evaluator.eval(&parsed_program, &mut program.environment);
+                    if let Object::Error(error) = result {
+                        program.error = Some(error);
+                    } else {
+                        program.error = None;
+                    }
+                    program.commands = evaluator.commands;
+                }
+                Err(_) => break,
             }
-            program.commands = evaluator.commands;
         }
     }
 }

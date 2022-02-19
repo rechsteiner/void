@@ -17,7 +17,7 @@ pub enum Object {
     Float(f64),
     Boolean(bool),
     Return(Box<Object>),
-    Error(String),
+    Error(RuntimeError),
     Function {
         parameters: Vec<String>,
         body: BlockStatement,
@@ -103,6 +103,17 @@ pub enum ProgramVariable {
     Boolean(bool),
 }
 
+#[derive(Serialize, PartialEq, Debug, Clone)]
+pub struct RuntimeError {
+    pub message: String,
+}
+
+impl RuntimeError {
+    pub fn new(message: String) -> RuntimeError {
+        RuntimeError { message }
+    }
+}
+
 // Formatting
 
 impl fmt::Display for Object {
@@ -112,7 +123,7 @@ impl fmt::Display for Object {
             Object::Float(value) => write!(f, "{}", value),
             Object::Boolean(value) => write!(f, "{}", value),
             Object::Return(expression) => write!(f, "{}", *expression),
-            Object::Error(error) => write!(f, "Error: {}", error),
+            Object::Error(error) => write!(f, "Error: {}", error.message),
             Object::Function {
                 parameters, body, ..
             } => {
