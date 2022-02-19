@@ -72,11 +72,25 @@ import("./pkg/static_void.js").then((lib) => {
 
   // Navigate viewport
   window.addEventListener("keydown", (e) => {
-    game.keydown(e.key);
+    if (!editor.editorView.hasFocus) {
+      game.keydown(e.key);
+    }
   });
 
   window.addEventListener("keyup", (e) => {
-    game.keyup(e.key);
+    if (!editor.editorView.hasFocus) {
+      game.keyup(e.key);
+    }
+  });
+
+  editorElement.addEventListener("click", (e) => {
+    editor.editorView.contentDOM.setAttribute("contentEditable", "true");
+    editor.editorView.contentDOM.focus();
+    e.stopPropagation();
+  });
+
+  window.addEventListener("click", (e) => {
+    editor.editorView.contentDOM.setAttribute("contentEditable", "false");
   });
 
   // Run game loop on each frame
