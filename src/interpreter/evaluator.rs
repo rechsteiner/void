@@ -16,6 +16,7 @@ impl Evaluator {
     pub fn new() -> Evaluator {
         Evaluator { commands: vec![] }
     }
+
     pub fn eval(&mut self, program: &Program, environment: &mut Environment) -> Object {
         // Reset commands each time eval is called so we don't keep commands
         // from previous executions.
@@ -31,6 +32,7 @@ impl Evaluator {
         }
         result
     }
+
     fn eval_statement(&mut self, statement: &Statement, environment: &mut Environment) -> Object {
         match statement {
             Statement::Return { expression } => {
@@ -54,6 +56,7 @@ impl Evaluator {
             }
         }
     }
+
     fn eval_expression(
         &mut self,
         expression: &Expression,
@@ -140,6 +143,7 @@ impl Evaluator {
             }
         }
     }
+
     fn extend_function_environment(
         &mut self,
         environment: Environment,
@@ -153,6 +157,7 @@ impl Evaluator {
         }
         env
     }
+
     fn eval_expressions(
         &mut self,
         arguments: &Vec<Expression>,
@@ -168,6 +173,7 @@ impl Evaluator {
         }
         result
     }
+
     fn eval_identifier(&mut self, name: String, environment: &mut Environment) -> Object {
         match environment.get(&name) {
             Some(value) => value.clone(),
@@ -178,6 +184,7 @@ impl Evaluator {
             }
         }
     }
+
     fn eval_prefix_expression(&mut self, operator: Operator, object: Object) -> Object {
         match operator {
             Operator::Not => self.eval_not_operator_expression(object),
@@ -189,6 +196,7 @@ impl Evaluator {
             }
         }
     }
+
     fn eval_not_operator_expression(&mut self, object: Object) -> Object {
         match object {
             Object::Boolean(true) => Object::Boolean(false),
@@ -197,6 +205,7 @@ impl Evaluator {
             _ => Object::Boolean(false),
         }
     }
+
     fn eval_minus_prefix_operator(&mut self, object: Object) -> Object {
         match object {
             Object::Integer(value) => Object::Integer(-value),
@@ -208,6 +217,7 @@ impl Evaluator {
             }
         }
     }
+
     fn eval_infix_expression(&mut self, operator: Operator, left: Object, right: Object) -> Object {
         // TODO: Figure out why we can't format these directly
         let left_string = left.name();
