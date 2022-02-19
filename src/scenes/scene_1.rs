@@ -6,14 +6,17 @@ use crate::components::point::Point;
 use crate::components::program::Program;
 use crate::components::rigid_body::{PhysicsMode, RigidBody, Transform};
 use crate::components::shape::{ColorRGBA, Polygon, Shape};
-use crate::components::text::Text;
 use crate::components::thrusters::{Thruster, Thrusters};
-use crate::components::viewport::Viewport;
+use crate::resources::canvas::Canvas;
+use crate::resources::input::Input;
+use crate::resources::viewport::Viewport;
 use crate::scene::Scene;
+use crate::systems::instruments_renderer::InstrumentsRenderer;
 use crate::systems::interpreter::InterpreterSystem;
-use crate::systems::renderer::RenderSystem;
+use crate::systems::scene_renderer::SceneRenderer;
 use crate::systems::simulation::SimulationSystem;
 use crate::systems::thrust::ThrusterSystem;
+use crate::systems::viewport::ViewportSystem;
 use crate::world::World;
 
 pub fn generate_scene() -> Scene {
@@ -43,19 +46,6 @@ pub fn generate_scene() -> Scene {
     world.register_component::<Viewport>();
     world.register_component::<GravitySource>();
     world.register_component::<Thrusters>();
-    world.register_component::<Text>();
-
-    world.create_entity().with_component(Text {
-        content: "Hello World".to_string(),
-        font: "20px monospace".to_string(),
-        position: Point { x: 300.0, y: 300.0 },
-        color: ColorRGBA {
-            r: 255,
-            g: 255,
-            b: 255,
-            a: 1.0,
-        },
-    });
 
     // Entity 1: Spaceship
     // Note that it's upside down, and then rotated 90deg (1 PI).
@@ -214,13 +204,21 @@ pub fn generate_scene() -> Scene {
         target_zoom: 0.2,
     });
 
+    // Rendering canvas resource
+    world.create_resource(Canvas::new());
+
+    // Input event handler
+    world.create_resource(Input::default());
+
     Scene::new(
         world,
         vec![
+            Box::new(ViewportSystem::new()),
             Box::new(InterpreterSystem::new()),
             Box::new(ThrusterSystem::new()),
             Box::new(SimulationSystem::new()),
-            Box::new(RenderSystem::new()),
+            Box::new(InstrumentsRenderer::new()),
+            Box::new(SceneRenderer::new()),
         ],
     )
 }

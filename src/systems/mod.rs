@@ -1,7 +1,9 @@
+pub mod instruments_renderer;
 pub mod interpreter;
-pub mod renderer;
+pub mod scene_renderer;
 pub mod simulation;
 pub mod thrust;
+pub mod viewport;
 
 use crate::world::World;
 

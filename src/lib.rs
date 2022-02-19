@@ -3,6 +3,7 @@ mod entities;
 mod helpers;
 mod interpreter;
 mod query;
+mod resources;
 mod scene;
 mod scenes;
 mod systems;
@@ -12,7 +13,8 @@ extern crate console_error_panic_hook;
 extern crate wasm_bindgen;
 
 use components::program::Program;
-use components::viewport::Viewport;
+use resources::input::{Input, KeyCode};
+use resources::viewport::Viewport;
 use scene::Scene;
 use scenes::scene_1;
 use wasm_bindgen::prelude::*;
@@ -45,15 +47,18 @@ impl Game {
         }
     }
 
-    pub fn move_render_viewport(&mut self, delta_x: f32, delta_y: f32, delta_zoom: f32) {
-        let viewport = self.scene.world.get_resource_mut::<Viewport>().unwrap();
-        viewport.move_target(delta_x, delta_y, delta_zoom);
+    pub fn keydown(&mut self, key: String) {
+        let input = self.scene.world.get_resource_mut::<Input>().unwrap();
+        if let Some(key_code) = KeyCode::new(key.as_str()) {
+            input.press(key_code);
+        }
     }
 
-    pub fn get_program_variables(&mut self) -> JsValue {
-        let program = self.scene.world.query::<&Program>()[0];
-
-        JsValue::from_serde(&program.environment.get_variables()).unwrap()
+    pub fn keyup(&mut self, key: String) {
+        let input = self.scene.world.get_resource_mut::<Input>().unwrap();
+        if let Some(key_code) = KeyCode::new(key.as_str()) {
+            input.release(key_code);
+        }
     }
 }
 
