@@ -414,7 +414,6 @@ mod tests {
             ("IF FALSE DO 10 END", Object::Null),
             ("IF 1 DO 10 END", Object::Integer(10)),
             ("IF 1 < 2 DO 10 END", Object::Integer(10)),
-            ("IF 1 > 2 DO 10 ", Object::Null),
             ("IF 1 > 2 DO 10 ELSE 20 END", Object::Integer(20)),
             ("IF 1 < 2 DO 10 ELSE 20 END", Object::Integer(10)),
         ];
@@ -428,17 +427,14 @@ mod tests {
     #[test]
     fn test_return_statements() {
         let tests = vec![
-            ("RETURN 10;", Object::Integer(10)),
-            ("RETURN 10; 9;", Object::Integer(10)),
-            ("RETURN 2 * 5; 9", Object::Integer(10)),
-            ("9; RETURN 2 * 5; 9;", Object::Integer(10)),
+            ("RETURN 10", Object::Integer(10)),
             (
                 "
             IF 10 > 1 DO
                 IF 10 > 1 DO
-                    RETURN 10;
+                    RETURN 10
                 END
-                RETURN 1;
+                RETURN 1
             END
             ",
                 Object::Integer(10),
@@ -470,7 +466,7 @@ mod tests {
                 Object::Error(String::from("unknown operator: -boolean")),
             ),
             (
-                "TRUE + FALSE;",
+                "TRUE + FALSE",
                 Object::Error(String::from("unknown operator: boolean + boolean")),
             ),
             (
@@ -654,7 +650,7 @@ mod tests {
         for (input, expected_commands, expected_output) in tests {
             let lexer = Lexer::new(input);
             let mut parser = Parser::new(lexer);
-            let program = parser.parse_program();
+            let program = parser.parse_program().unwrap();
             let mut environment = Environment::new();
             let mut evaluator = Evaluator::new();
 
@@ -689,7 +685,7 @@ mod tests {
     fn test_eval(input: &'static str) -> Object {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
-        let program = parser.parse_program();
+        let program = parser.parse_program().unwrap();
         let mut environment = Environment::new();
         let mut evaluator = Evaluator::new();
         return evaluator.eval(&program, &mut environment);
