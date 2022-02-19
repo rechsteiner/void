@@ -42,6 +42,20 @@ body {
   overflow: scroll;
 }
 
+#editor-errors {
+  margin: 1em;
+  padding: 0 1em;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(4, 156, 127, 0.3);
+  max-height: 200px;
+  overflow: scroll;
+}
+
+#editor-errors.hidden {
+  display: none;
+}
+
 .editor-area:focus,
 .editor-area:hover {
   outline: none;

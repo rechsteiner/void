@@ -33,10 +33,16 @@ impl Game {
         Game { scene }
     }
 
-    pub fn change_program(&mut self, input: String) {
+    pub fn change_program(&mut self, input: String) -> JsValue {
         let mut programs = self.scene.world.query_mut::<&mut Program>();
         let program = programs.get_mut(0).unwrap();
         program.update(input);
+
+        if let Err(errors) = &program.program {
+            JsValue::from_serde(&errors).unwrap()
+        } else {
+            JsValue::null()
+        }
     }
 
     pub fn tick(&mut self) {

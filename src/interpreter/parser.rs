@@ -5,6 +5,7 @@ use crate::interpreter::ast::Program;
 use crate::interpreter::ast::Statement;
 use crate::interpreter::lexer::Lexer;
 use crate::interpreter::token::Token;
+use serde::Serialize;
 
 type PrefixParseFn<'a> = fn(&mut Parser<'a>) -> Option<Expression>;
 type InfixParseFn<'a> = fn(&mut Parser<'a>, Expression) -> Option<Expression>;
@@ -20,7 +21,7 @@ enum Precedence {
     Call,        // myFunction(x)
 }
 
-#[derive(PartialEq, Eq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone, Serialize)]
 pub struct ParserError {
     message: String,
 }

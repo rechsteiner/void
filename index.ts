@@ -5,16 +5,32 @@ import("./pkg/static_void.js").then((lib) => {
   const runButton = document.getElementById("run-button")!;
   const canvas = document.getElementsByTagName("canvas")[0];
   const editorElement = document.getElementById("editor")!;
+  const editorErrors = document.getElementById("editor-errors")!;
 
   let game = new lib.Game();
 
+  function changeProgram(document: string) {
+    let errors = game.change_program(document);
+    if (errors !== null && errors.length > 0) {
+      editorErrors.classList.remove("hidden");
+      editorErrors.innerHTML = "";
+      for (let error of errors) {
+        let paragraph = window.document.createElement("p");
+        paragraph.textContent = error.message;
+        editorErrors.appendChild(paragraph);
+      }
+    } else {
+      editorErrors.classList.add("hidden");
+    }
+  }
+
   let editor = new Editor(editorElement, {
     onChange: (document) => {
-      game.change_program(document);
+      changeProgram(document);
     },
   });
 
-  game.change_program(editor.document);
+  changeProgram(editor.document);
 
   let isPaused = false;
 
