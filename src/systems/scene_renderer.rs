@@ -1,8 +1,6 @@
-use wasm_bindgen::JsValue;
-
 use crate::components::rigid_body::RigidBody;
 use crate::components::shape::Shape;
-use crate::resources::canvas::Canvas;
+use crate::resources::canvas::{Canvas, Path};
 use crate::resources::viewport::Viewport;
 use crate::systems::System;
 use crate::world::World;
@@ -25,7 +23,7 @@ impl System for SceneRenderer {
         let screen_width = canvas.width();
 
         // Let line width be adaptive to zoom (but min 2.0)
-        canvas.set_line_width(f64::max((zoom as f64) * 2.0, 2.0));
+        let line_width = f32::max(zoom * 2.0, 2.0);
 
         for (rigid_body, shape) in world.query::<(&RigidBody, &Shape)>() {
             let transform = &rigid_body.transform;
@@ -40,27 +38,27 @@ impl System for SceneRenderer {
             // Rotate the sheet
             canvas.rotate(transform.rotation as f64);
 
-            // Pick the right crayon
-            canvas.set_stroke_style(&JsValue::from(format!("{}", shape.color))); // TODO: Might not be idiomatic
-
-            // Draw by numbers
-            canvas.begin_path();
+            // Create path for each vertex
+            let mut path = Path::new();
             for vertex in &shape.vertices {
-                canvas.line_to((vertex.x * zoom) as f64, (vertex.y * zoom) as f64);
+                path.line_to(vertex.x * zoom, vertex.y * zoom);
             }
 
             // Close the shape
-            canvas.line_to(
-                (shape.vertices[0].x * zoom) as f64,
-                (shape.vertices[0].y * zoom) as f64,
-            );
+            path.line_to(shape.vertices[0].x * zoom, shape.vertices[0].y * zoom);
 
-            canvas.close_path();
-            canvas.stroke();
+            // Draw the path
+            canvas.draw_path(path, line_width, &shape.color);
 
             // Debugging: dot at center of object
-            canvas.stroke_rect(-1.0, -1.0, 2.0, 2.0);
-            canvas.close_path();
+            canvas.draw_rectangle(
+                -line_width / 2.,
+                -line_width / 2.,
+                line_width,
+                line_width,
+                &shape.color,
+            );
+
             canvas.reset_transform();
         }
     }
