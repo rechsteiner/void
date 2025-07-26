@@ -1,9 +1,8 @@
 # VOID
 
 A toy, code-driven space game to explore the great void. Built in Rust
-with a custom entity-component system and scripting interpreter,
-players program their spacecraft using a purpose-built language to
-navigate through space.
+with a custom entity-component system and its own interpreter,
+players navigate through space using a custom programming language.
 
 <img width="1579" height="936" alt="Screenshot 2025-07-26 at 16 12 13" src="https://github.com/user-attachments/assets/44f694bf-c006-4024-803d-1a03a091b1af" />
 
