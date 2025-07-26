@@ -2,7 +2,7 @@ use crate::components::point::Point;
 use crate::components::shape::ColorRGBA;
 use std::cell::RefCell;
 use std::rc::Rc;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsCast;
 
 pub struct Path {
     points: Vec<Point>,
@@ -62,14 +62,14 @@ impl Canvas {
 
     pub fn draw_rectangle(&self, x: f32, y: f32, width: f32, height: f32, color: &ColorRGBA) {
         let context = self.context.borrow_mut();
-        context.set_fill_style(&JsValue::from(format!("{}", color)));
+        context.set_fill_style_str(&color.to_string());
         context.fill_rect(x as f64, y as f64, width as f64, height as f64);
     }
 
     pub fn draw_text(&self, x: f32, y: f32, font: &str, text: &str, color: &ColorRGBA) {
         let context = self.context.borrow_mut();
         context.set_font(font);
-        context.set_stroke_style(&JsValue::from(format!("{}", color)));
+        context.set_stroke_style_str(&color.to_string());
         context.fill_text(text, x as f64, y as f64).unwrap();
     }
 
@@ -77,8 +77,8 @@ impl Canvas {
         let context = self.context.borrow_mut();
         context.begin_path();
         context.set_line_width(width as f64);
-        context.set_stroke_style(&JsValue::from(format!("{}", color)));
-        context.set_fill_style(&JsValue::null());
+        context.set_stroke_style_str(&color.to_string());
+        context.set_fill_style_str("null");
 
         for point in path.points {
             context.line_to(point.x as f64, point.y as f64);
