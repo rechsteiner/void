@@ -11,7 +11,7 @@ pub enum Command {
 
 pub type CommandFn = fn(Vec<Object>) -> Result<Command, String>;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum Object {
     Integer(isize),
     Float(f64),
@@ -27,6 +27,33 @@ pub enum Object {
         function: CommandFn,
     },
     Null,
+}
+
+impl PartialEq for Object {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Object::Integer(a), Object::Integer(b)) => a == b,
+            (Object::Float(a), Object::Float(b)) => a == b,
+            (Object::Boolean(a), Object::Boolean(b)) => a == b,
+            (Object::Return(a), Object::Return(b)) => a == b,
+            (Object::Error(a), Object::Error(b)) => a == b,
+            (
+                Object::Function {
+                    parameters: p1,
+                    body: b1,
+                    environment: e1,
+                },
+                Object::Function {
+                    parameters: p2,
+                    body: b2,
+                    environment: e2,
+                },
+            ) => p1 == p2 && b1 == b2 && e1 == e2,
+            (Object::Command { .. }, Object::Command { .. }) => false,
+            (Object::Null, Object::Null) => true,
+            _ => false,
+        }
+    }
 }
 
 impl Object {
