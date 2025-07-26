@@ -13,8 +13,8 @@ rustup override set nightly
 
 ## How to run the project
 
-- Run the continous WASM build with `cargo watch -w "src" -s "wasm-pack build"`
-- Front-end continous build `npm run serve`
+- Run the continous WASM build with `make watch`
+- Front-end continous build `make serve`
 
 ## How to play
 
