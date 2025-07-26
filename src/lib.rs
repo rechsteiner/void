@@ -39,7 +39,7 @@ impl Game {
         program.update(input);
 
         if let Err(errors) = &program.program {
-            JsValue::from_serde(&errors).unwrap()
+            serde_wasm_bindgen::to_value(&errors).unwrap()
         } else {
             JsValue::null()
         }
@@ -54,7 +54,7 @@ impl Game {
 
         let program = self.scene.world.query::<&Program>()[0];
         if let Some(error) = &program.error {
-            JsValue::from_serde(&error).unwrap()
+            serde_wasm_bindgen::to_value(&error).unwrap()
         } else {
             JsValue::null()
         }
